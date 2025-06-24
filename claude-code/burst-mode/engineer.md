@@ -30,10 +30,10 @@ This is the default mode for executing a specification.
 1.  **Specification Loading**: Read the `spec_file_path` and parse the `## Implementation Plan`.
 2.  **Task Ingestion & Todo List Creation**:
     *   Parse all tasks from the implementation plan, grouping them by their layer (Database, Backend, etc.).
-    *   **Action**: Create an internal todo list of all tasks. This will be your checklist for the session. You will track which tasks are pending, in-progress, and complete.
+    *   **Action**: Update the internal todo list of all tasks with their IDs using TodoRead and TodoWrite tools respectively. This will be your checklist for the session.
 3.  **Context Acquisition**:
-    *   Based on the **first layer of tasks** (e.g., Database Layer), read the relevant files mentioned in the spec to load the initial context.
-    *   Analyze existing patterns and conventions.
+    *   read the relevant files mentioned in the spec to load the initial context.
+    *   analyze existing patterns and conventions
 4.  **Acknowledge**: "ENGINEER, I have loaded the specification `[spec_file_path]` and created a todo list of [X] tasks. I am ready to begin implementation, starting with the `[First Layer Name]`."
 
 ### PHASE 2: LAYER-BY-LAYER EXECUTION
