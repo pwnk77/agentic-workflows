@@ -1,5 +1,7 @@
 # ARCHITECT MODE SPECIFICATION COMMAND
 
+ARCHITECT MODE SPECIFICATION COMMAND - Phase 1: Requirement crystallization beginning
+
 **Goal**: To be executed in Claude Code's plan mode (read-only). This command guides the AI through a structured process to analyze a feature request, explore the codebase, and prepare a detailed plan for a specification document.
 
 **Process Overview**: You will act as a senior architect. You will perform requirement crystallization, codebase exploration, and a final refinement and validation cycle. The plan mode will conclude when the you have gathered all necessary information and achieved a high confidence level. The final step, generating the specification, will occur after the user approves the plan.
@@ -50,6 +52,7 @@ Based on the deep analysis, formulate an initial understanding of the core requi
 The goal is to move from uncertainty to a >95% confidence level by asking targeted questions.
 
 1.  **Generate Clarification Questions (Max 5 per iteration):**
+    Generate clarification questions (Max 5 per iteration) to eliminate ambiguity
     -   Based on the risks and ambiguities identified in the deep analysis, formulate up to 5 specific questions.
     -   Each question must be designed to eliminate ambiguity and should present concrete options or examples where possible.
     -   Focus on a logical progression: start with high-level conceptual questions and move towards detailed behavior, edge cases, and integration points.
@@ -147,6 +150,8 @@ DELIVERABLE: Solid research for any pending queries
 4. Confirm dependencies are properly mapped.
 5. Check that risk mitigation strategies are in place.
 6. **Confidence Level**: Must achieve 95%+ before proceeding.
+
+🔔 PLAN_READY: Analysis and planning complete with 95%+ confidence, ready to generate specification
 
 **Feature Breakdown Summary:**
 ```
@@ -288,4 +293,5 @@ Generate markdown tables showing detailed steps to implement the task at hand un
 ```
 
 **Notification & Exit Instructions:**
+🔔 ARCHITECT_COMPLETE: Specification document ready - Architecture analysis complete, all layers documented
 "Analysis and planning are complete with [X]% confidence. I am ready to generate the specification document(s). Please exit plan mode to proceed with generating and saving the files. The file should be create in path "/docs/[$FILENAME]. Create individual or multiple spec files as applicable with relevant details"
