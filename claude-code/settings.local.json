@@ -1,0 +1,44 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(osascript:*)",
+      "Bash(ls:*)"
+    ],
+    "deny": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/pawanraviee/Documents/GitHub/agentic-workflows/.claude/hooks/notification.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/pawanraviee/Documents/GitHub/agentic-workflows/.claude/hooks/notification.sh"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/pawanraviee/Documents/GitHub/agentic-workflows/.claude/hooks/notification.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
