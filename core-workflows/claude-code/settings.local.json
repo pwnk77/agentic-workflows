@@ -43,10 +43,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '\"\\(.tool_input.command // \"\") - \\(.tool_input.description // \"\") - \\(.tool_response.stdout // \"\") - \\(.tool_response.content // \"\")\"' >> /tmp/claude_session_context"
-          },
-          {
-            "type": "command",
             "command": "/Users/pawanraviee/Documents/GitHub/agentic-workflows/.claude/hooks/notification.sh"
           }
         ]
