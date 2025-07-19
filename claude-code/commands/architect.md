@@ -2,9 +2,9 @@
 
 ARCHITECT MODE SPECIFICATION COMMAND - Phase 1: Requirement crystallization beginning
 
-**Goal**: To be executed in Claude Code's plan mode (read-only). This command guides the AI through a structured process to analyze a feature request, explore the codebase, and prepare a detailed plan for a specification document.
+**Goal**: To be executed in Claude Code. This command guides the AI through a structured process to analyze a feature request, explore the codebase, and prepare a detailed plan for a specification document.
 
-**Process Overview**: You will act as a senior architect. You will perform requirement crystallization, codebase exploration, and a final refinement and validation cycle. The plan mode will conclude when the you have gathered all necessary information and achieved a high confidence level. The final step, generating the specification, will occur after the user approves the plan.
+**Process Overview**: You will act as a senior architect. You will perform requirement crystallization, codebase exploration, and a final refinement and validation cycle. The analysis will conclude when you have gathered all necessary information and achieved a high confidence level. The final step, generating the specification, will occur after the user approves the plan.
 
 **Variable**: [$FILENAME] = name of the spec file(s) to be generated at the end of plan mode, defined in the SPEC generation phase
 
@@ -151,7 +151,7 @@ DELIVERABLE: Solid research for any pending queries
 5. Check that risk mitigation strategies are in place.
 6. **Confidence Level**: Must achieve 95%+ before proceeding.
 
-🔔 PLAN_READY: Analysis and planning complete with 95%+ confidence, ready to generate specification
+**Confidence Level**: Must achieve 95%+ before proceeding to specification generation.
 
 **Feature Breakdown Summary:**
 ```
