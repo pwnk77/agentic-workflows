@@ -1,7 +1,5 @@
 # ARCHITECT MODE SPECIFICATION COMMAND
 
-*💡 New to architect mode? Start with our [Story-Driven Introduction](../../../guides/claude-code-story-driven-introduction.md) to see architect mode in action through Sara's authentication journey, then explore [Progressive Examples](../../../guides/claude-code-architect-narrative-examples.md) from simple to enterprise scenarios.*
-
 ARCHITECT MODE SPECIFICATION COMMAND - Phase 1: Requirement crystallization beginning
 
 **Goal**: To be executed in Claude Code. This command guides the AI through a structured process to analyze a feature request, explore the codebase, and prepare a detailed plan for a specification document.
