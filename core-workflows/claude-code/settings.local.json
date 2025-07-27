@@ -1,0 +1,117 @@
+{
+  "permissions": {
+    "allow": [
+      "Read:*",
+      "Write:*",
+      "Edit:*",
+      "MultiEdit:*",
+      "Glob:*",
+      "Grep:*",
+      "LS:*",
+      "NotebookRead:*",
+      "NotebookEdit:*",
+      "Bash(ls:*)",
+      "Bash(pwd:*)",
+      "Bash(echo:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(rg:*)",
+      "Bash(touch:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(git status:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git checkout:*)",
+      "Bash(git branch:*)",
+      "Bash(npm install:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(yarn:*)",
+      "Bash(pnpm:*)",
+      "Bash(bun:*)",
+      "Bash(jest:*)",
+      "Bash(vitest:*)",
+      "Bash(playwright:*)",
+      "Bash(cypress:*)",
+      "Bash(mocha:*)",
+      "Bash(karma:*)",
+      "Bash(tsc:*)",
+      "Bash(webpack:*)",
+      "Bash(vite:*)",
+      "Bash(rollup:*)",
+      "Bash(eslint:*)",
+      "Bash(prettier:*)",
+      "Bash(ruff:*)",
+      "Bash(black:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Bash(serve:*)",
+      "Bash(http-server:*)",
+      "Bash(osascript:*)",
+      "WebFetch(domain:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(rm -r:*)",
+      "Bash(rmdir:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(sudo:*)",
+      "Bash(su:*)",
+      "Bash(chmod +x:*)",
+      "Bash(chown:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm start:*)",
+      "Bash(yarn dev:*)",
+      "Bash(yarn start:*)",
+      "Bash(kill:*)",
+      "Bash(killall:*)",
+      "Bash(pkill:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/pawanraviee/Documents/GitHub/agentic-workflows/.claude/hooks/notification.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/pawanraviee/Documents/GitHub/agentic-workflows/.claude/hooks/notification.sh"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/pawanraviee/Documents/GitHub/agentic-workflows/.claude/hooks/notification.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

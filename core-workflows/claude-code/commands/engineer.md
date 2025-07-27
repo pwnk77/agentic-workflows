@@ -34,7 +34,9 @@ This is the default mode for executing a specification.
 3.  **Context Acquisition**:
     *   read the relevant files mentioned in the spec to load the initial context.
     *   analyze existing patterns and conventions
-4.  **Acknowledge**: "ENGINEER, I have loaded the specification `[spec_file_path]` and created a todo list of [X] tasks. I am ready to begin implementation, starting with the `[First Layer Name]`."
+4.  **Acknowledge**: 
+    ENGINEER mode implementation command - Specification loaded, implementation ready to begin
+    "ENGINEER, I have loaded the specification `[spec_file_path]` and created a todo list of [X] tasks. I am ready to begin implementation, starting with the `[First Layer Name]`."
 
 ### PHASE 2: LAYER-BY-LAYER EXECUTION
 
@@ -85,7 +87,9 @@ This is the default mode for executing a specification.
 
 ### PHASE 4: SESSION COMPLETION
 **Trigger**: Reached when all layers in the implementation plan are completed successfully.
-1.  **Final Summary**: "ENGINEER, the implementation for `[Feature Name]` is complete. All layers from the specification `[spec_file_path]` have been executed and logged successfully."
+1.  **Final Summary**: 
+    🔔 ENGINEER_COMPLETE: Implementation finished successfully - All layers executed, feature implementation complete
+    "ENGINEER, the implementation for `[Feature Name]` is complete. All layers from the specification `[spec_file_path]` have been executed and logged successfully."
 
 ---
 
@@ -96,7 +100,9 @@ This mode is triggered when the user invokes the command with `mode: 'debug'`.
 ### PHASE 1: DEBUG CONTEXT LOADING
 1.  **Load Full Context**: Read the entire `spec_file_path`, including the original specification, the implementation plan, and the full `## Execution Log`.
 2.  **Identify Failure Point**: Analyze the logs to understand which task failed and what the reported error was.
-3.  **Acknowledge**: "ENGINEER, I have loaded the full context for `[spec_file_path]`. I am now analyzing the failure in task `[TASK-ID]` based on your description: `[issue_description]`."
+3.  **Acknowledge**: 
+    ENGINEER debug mode activated - Analyzing failure context and preparing resolution strategy
+    "ENGINEER, I have loaded the full context for `[spec_file_path]`. I am now analyzing the failure in task `[TASK-ID]` based on your description: `[issue_description]`."
 
 ### PHASE 2: ROOT CAUSE ANALYSIS
 **Internal Monologue**:
@@ -114,6 +120,7 @@ This mode is triggered when the user invokes the command with `mode: 'debug'`.
 1.  **Propose Solution**:
     > **Root Cause**: [A clear explanation of the underlying problem.]
     > **Proposed Fix**: [A detailed description of the changes needed.]
+    > 🔔 APPROVAL_REQUEST: User approval required before proceeding with implementation changes
     > "ENGINEER, I have analyzed the issue. Here is my proposal. Awaiting your confirmation to proceed."
 2.  **Implement Fix**: Upon user approval, apply the changes.
 
@@ -126,4 +133,6 @@ This mode is triggered when the user invokes the command with `mode: 'debug'`.
     - **Resolution**: [Description of the fix that was implemented.]
     - **Status**: Resolved / Unresolved.
     ```
-2.  **Notify**: "ENGINEER, the debug session is complete. The results have been logged to spec file."
+2.  **Notify**: 
+    🔔 DEBUG_COMPLETE: Issue analysis and resolution complete - Debug session finished successfully
+    "ENGINEER, the debug session is complete. The results have been logged to spec file."
