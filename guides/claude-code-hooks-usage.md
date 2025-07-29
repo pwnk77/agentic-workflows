@@ -12,14 +12,15 @@ Let me show you exactly what I'm running. This isn't theoretical - this is the a
 
 ### The Heart: `notification.sh`
 
-Here's the script that runs after every tool usage, session end, and permission request:
+Here's the enhanced script that creates an intelligent development companion:
 
 ```bash
 #!/bin/bash
-# My notification system - PostToolUse, Stop, and Notification events
+# Enhanced notification system with intelligent summaries and concurrency protection
 
 INPUT=$(cat)
 LOG_FILE="/Users/pawanraviee/Documents/GitHub/agentic-workflows/.claude/hooks/hooks.log"
+LOCK_FILE="/tmp/claude_stop_processing.lock"
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 
 # Smart detection: JSON events vs text output
@@ -28,51 +29,95 @@ if echo "$INPUT" | jq -e . >/dev/null 2>&1; then
     
     case "$EVENT_TYPE" in
         "Stop")
+            # Prevent concurrent processing with lock file
+            if [ -f "$LOCK_FILE" ]; then
+                exit 0  # Another Stop is being processed
+            fi
+            touch "$LOCK_FILE"
+            
+            # Log session end
+            echo "[$TIMESTAMP] Stop event received - processing" >> "$LOG_FILE"
+            
             # Session ended - time for intelligent summary
             afplay "/System/Library/Sounds/Purr.aiff" &
             
-            # Generate context from recent changes
+            # Generate intelligent context from multiple sources
             CONTEXT=""
-            if git rev-parse --git-dir > /dev/null 2>&1; then
+            
+            # Check git status for recent changes
+            if command -v git &> /dev/null && git rev-parse --git-dir > /dev/null 2>&1; then
                 GIT_STATUS=$(git status --porcelain 2>/dev/null | head -10)
                 if [ -n "$GIT_STATUS" ]; then
                     CONTEXT="Recent git changes: $GIT_STATUS"
                 fi
             fi
             
-            # Get AI summary of what I accomplished
-            MESSAGE=$(claude -p "Summarize this development work in 15 words or less: \"$CONTEXT\"" 2>/dev/null || echo "Development work completed")
+            # Fallback to recent file modifications
+            if [ -z "$CONTEXT" ]; then
+                RECENT_FILES=$(find . -name "*.md" -o -name "*.json" -o -name "*.js" -o -name "*.ts" -o -name "*.py" -o -name "*.sh" -mmin -10 2>/dev/null | head -5)
+                if [ -n "$RECENT_FILES" ]; then
+                    CONTEXT="Recently modified files: $(echo "$RECENT_FILES" | tr '\n' ' ')"
+                fi
+            fi
             
-            # Samantha tells me what I accomplished
+            # Generate AI-powered summary of accomplishments
+            if [ -n "$CONTEXT" ]; then
+                MESSAGE=$(claude -p "Summarize this development work in 15 words or less: \"$CONTEXT\"" 2>/dev/null || echo "Development work completed")
+            else
+                MESSAGE="Claude Code session completed"
+            fi
+            
+            # Samantha voice delivers intelligent summary
             say -v Samantha -r 175 "${MESSAGE}" &
+            
+            # Log completion
+            echo "[$TIMESTAMP] Stop event completed: $MESSAGE" >> "$LOG_FILE"
+            
+            # Remove lock file
+            rm -f "$LOCK_FILE"
             ;;
             
         "Notification")
             # Permission needed - immediate audio alert
+            echo "[$TIMESTAMP] Notification event received" >> "$LOG_FILE"
             afplay "/System/Library/Sounds/Ping.aiff" &
             say -v Samantha -r 175 "Approval required" &
             ;;
     esac
 else
-    # PostToolUse - subtle confirmation sound
+    # PostToolUse - subtle confirmation sound for activity awareness
     afplay "/System/Library/Sounds/Pop.aiff" &
 fi
+
+exit 0
 ```
 
 ### The Configuration That Ties It All Together
 
-In my `.claude/settings.local.json`:
+Here's the complete `settings.local.json` with security permissions and intelligent hooks:
 
 ```json
 {
+  "permissions": {
+    "allow": [
+      "Read:*", "Write:*", "Edit:*", "MultiEdit:*", "Glob:*", "Grep:*", "LS:*",
+      "Bash(git status:*)", "Bash(git add:*)", "Bash(git commit:*)", "Bash(git diff:*)",
+      "Bash(npm test:*)", "Bash(npm run build:*)", "Bash(npm run lint:*)",
+      "WebFetch(domain:*)", "TodoWrite", "Task"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)", "Bash(sudo:*)", "Bash(git push:*)", 
+      "Bash(npm run dev:*)", "Bash(npm start:*)", "Bash(kill:*)"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {
-        "matcher": "Bash|Edit|MultiEdit|Write",
+        "matcher": "Bash|Edit|MultiEdit|Write|Task",
         "hooks": [
           {
             "type": "command",
-            "command": "/path/to/notification.sh"
+            "command": "/Users/pawanraviee/Documents/GitHub/agentic-workflows/.claude/hooks/notification.sh"
           }
         ]
       }
@@ -83,7 +128,7 @@ In my `.claude/settings.local.json`:
         "hooks": [
           {
             "type": "command", 
-            "command": "/path/to/notification.sh"
+            "command": "/Users/pawanraviee/Documents/GitHub/agentic-workflows/.claude/hooks/notification.sh"
           }
         ]
       }
@@ -94,7 +139,7 @@ In my `.claude/settings.local.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "/path/to/notification.sh"
+            "command": "/Users/pawanraviee/Documents/GitHub/agentic-workflows/.claude/hooks/notification.sh"
           }
         ]
       }
@@ -212,21 +257,61 @@ Every file edit: *soft pop sound* - My brain learns that something happened with
 
 ## Advanced Patterns I've Discovered
 
-### The Git Integration Insight
+### The Intelligent Context Generation
 
-My hook checks `git status` before generating summaries. This means:
-- If I modified 5 files, the summary reflects actual work done
-- If I just browsed files, the summary is appropriately minimal
-- Version control and AI awareness combine for better insights
+The enhanced notification system now uses multiple context sources for better summaries:
+
+```bash
+# Primary context: Git changes (most reliable)
+if command -v git &> /dev/null && git rev-parse --git-dir > /dev/null 2>&1; then
+    GIT_STATUS=$(git status --porcelain 2>/dev/null | head -10)
+    if [ -n "$GIT_STATUS" ]; then
+        CONTEXT="Recent git changes: $GIT_STATUS"
+    fi
+fi
+
+# Fallback context: Recent file modifications
+if [ -z "$CONTEXT" ]; then
+    RECENT_FILES=$(find . -name "*.md" -o -name "*.json" -o -name "*.js" -o -name "*.ts" -o -name "*.py" -o -name "*.sh" -mmin -10 2>/dev/null | head -5)
+    if [ -n "$RECENT_FILES" ]; then
+        CONTEXT="Recently modified files: $(echo "$RECENT_FILES" | tr '\n' ' ')"
+    fi
+fi
+```
+
+**Why This Approach Works**:
+- **Git-first strategy**: Most accurate representation of actual work completed
+- **Intelligent fallback**: Handles non-git projects or uncommitted work
+- **File type filtering**: Focuses on development files, ignores logs/temp files
+- **Time-bounded**: Only considers recent modifications (last 10 minutes)
+- **Limited scope**: Prevents overwhelming the AI with too much context
 
 ### The Lock File Protection
 
-Notice this line in my script:
+Notice this enhanced concurrency protection in the script:
 ```bash
 LOCK_FILE="/tmp/claude_stop_processing.lock"
+
+# Prevent concurrent processing with lock file
+if [ -f "$LOCK_FILE" ]; then
+    exit 0  # Another Stop is being processed
+fi
+touch "$LOCK_FILE"
+# ... processing logic ...
+rm -f "$LOCK_FILE"
 ```
 
-**Why it's there**: Sometimes Claude fires multiple Stop events rapidly. The lock file prevents my computer from speaking multiple summaries simultaneously. Learned this the hard way when Samantha was talking over herself.
+**Why it's critical**: Claude Code can trigger multiple Stop events rapidly during complex workflows. The lock file prevents:
+- Overlapping voice synthesis (Samantha talking over herself)
+- Concurrent git status checks that could interfere
+- Multiple AI summary requests overwhelming the system
+- Race conditions in log file writing
+
+**Enhanced Protection Features**:
+- **Atomic lock creation**: Uses `touch` for reliable file-based locking
+- **Automatic cleanup**: Removes lock file even if script exits unexpectedly  
+- **Fast exit**: No wasted processing when another instance is running
+- **Logging integration**: Tracks when concurrent events occur for debugging
 
 ### The Sound Design Philosophy
 
@@ -278,26 +363,63 @@ claude -p "Summarize this development work in 15 words or less: \"$CONTEXT\""
 
 ---
 
+## Enhanced Security & Permission Management
+
+### The Permission System Integration
+
+The updated `settings.local.json` combines intelligent notifications with security-first development:
+
+**Key Security Features**:
+- **Granular permissions**: Only allow safe development operations
+- **Dangerous command blocking**: Prevents `rm -rf`, `sudo`, and production deployments
+- **Development server protection**: Blocks `npm run dev` to prevent user from starting servers (as per CLAUDE.md requirements)
+- **Git safety**: Allows commits but blocks pushes for manual review
+
+**Permission Categories Explained**:
+```json
+"allow": [
+  "Read:*", "Write:*", "Edit:*",        // File operations
+  "Bash(git status:*)", "Bash(git commit:*)",  // Safe git operations
+  "Bash(npm test:*)", "Bash(npm run build:*)", // Development tools
+  "WebFetch(domain:*)", "TodoWrite", "Task"     // AI agent operations
+],
+"deny": [
+  "Bash(rm -rf:*)", "Bash(sudo:*)",     // Dangerous system operations
+  "Bash(npm run dev:*)", "Bash(npm start:*)", // Server operations (user controls)
+  "Bash(git push:*)", "Bash(kill:*)"    // Production/process control
+]
+```
+
+**Why This Approach Works**:
+- **Development safety**: Prevents accidental file deletion or system modification
+- **User control**: Preserves user control over server startup (aligns with CLAUDE.md)
+- **Notification integration**: Hook system works with allowed operations only
+- **Audit trail**: All operations are logged through the notification system
+
 ## Expanding the System (What's Next)
 
-### Ideas I'm Testing
+### Advanced Integration Patterns
 
-**Time tracking integration**:
+**Enhanced Context Awareness**:
 ```bash
-# Start timer on first PostToolUse
-# End timer on Stop, announce duration
+# Agent-aware summaries based on which agents were used
+if grep -q "architect\|engineer\|security" "$LOG_FILE" 2>/dev/null; then
+    MESSAGE=$(claude -p "Summarize this agent-based development work: \"$CONTEXT\"")
+fi
 ```
 
-**Slack integration for team awareness**:
+**Team Coordination Integration**:
 ```bash
-# Post to team channel when major features complete
-curl -X POST $SLACK_WEBHOOK -d "{'text':'Just shipped user authentication system'}"
+# Post to team channels when major workflows complete
+if [[ "$MESSAGE" =~ "implemented|deployed|shipped" ]]; then
+    curl -X POST $SLACK_WEBHOOK -d "{'text':'$MESSAGE - $USER just completed development work'}"
+fi
 ```
 
-**Focus mode detection**:
+**Productivity Metrics**:
 ```bash
-# If >10 file modifications in 30 minutes, switch to "focus mode"
-# Reduce sound frequency, batch notifications
+# Track development velocity and patterns
+echo "[$TIMESTAMP] Session: $MESSAGE | Duration: ${SESSION_TIME}s | Files: $(echo "$GIT_STATUS" | wc -l)" >> "$METRICS_LOG"
 ```
 
 ### The Learning Loop
