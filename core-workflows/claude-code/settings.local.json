@@ -58,7 +58,22 @@
       "Bash(serve:*)",
       "Bash(http-server:*)",
       "Bash(osascript:*)",
-      "WebFetch(domain:*)"
+      "WebFetch(domain:*)",
+      "Bash(rm:*)",
+      "Bash(python -m pytest tests/unit/test_agent_commands.py -v)",
+      "Bash(python3 -m pytest tests/unit/test_agent_commands.py -v)",
+      "Bash(python3 tests:*)",
+      "Bash(python3:*)",
+      "Bash(python -m pytest tests/test_config_settings.py -v)",
+      "Bash(source:*)",
+      "Bash(python:*)",
+      "Bash(venv/bin/python -m pytest tests/test_logging_config.py::TestErrorHandling::test_invalid_log_level -v)",
+      "Bash(venv/bin/python -m pytest tests/test_logging_config.py::TestErrorHandling::test_frame_access_failure -v)",
+      "Bash(venv/bin/python -m pytest tests/test_logging_config.py::TestFormatters::test_colored_formatter -v)",
+      "Bash(venv/bin/python -m pytest tests/test_logging_config.py -v)",
+      "mcp__ide__getDiagnostics",
+      "Bash(streamlit run:*)",
+      "Bash(timeout:*)"
     ],
     "deny": [
       "Bash(rm -rf:*)",
@@ -82,7 +97,7 @@
   "hooks": {
     "PostToolUse": [
       {
-        "matcher": "Bash|Edit|MultiEdit|Write",
+        "matcher": "Bash|Edit|MultiEdit|Write|Task",
         "hooks": [
           {
             "type": "command",
