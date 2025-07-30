@@ -59,7 +59,7 @@ Before generating specifications, achieve radical clarity through systematic ana
 </ultrathink>
 
 **Systematic Questioning Framework**:
-Use these elicitation patterns systematically:
+Use these elicitation patterns systematically, ensuring exactly 5 questions are asked per iteration:
 
 1. **Functional Boundaries**: "What happens when [edge case]?"
 2. **Data Constraints**: "What are the size/format/validation limits?"
@@ -71,9 +71,10 @@ Use these elicitation patterns systematically:
 8. **User Experience**: "How should users feel when completing this task?"
 9. **Compliance Needs**: "What regulatory or compliance requirements apply?"
 10. **Scalability Limits**: "How will this perform with 10x current load?"
+11. **SPEC Grouping Strategy**: "Should this feature be implemented as a single comprehensive SPEC document, or would it be more logical to split it into multiple coordinated SPEC documents (e.g., core functionality, extended features, integration layer)? What would be the optimal grouping?"
 
 **Confidence Building**: Achieve >95% confidence through iterative clarification
-- Maximum 5 strategic questions per iteration
+- **MANDATORY**: Exactly 5 strategic questions per iteration (not maximum - exactly 5)
 - Focus on ambiguities, risks, and integration challenges
 - Present concrete options rather than open-ended questions
 - Continue until confidence threshold met with documented rationale
@@ -89,14 +90,23 @@ Frontend Analysis: Component patterns, state management, UI frameworks
 Integration Analysis: External services, build processes, infrastructure
 ```
 
-### Phase 3: Master SPEC Document Generation with Ecosystem Integration
+### Phase 3: SPEC Document Generation with Multi-Document Support
 
-**SPEC Document Structure**:
+**SPEC Document Strategy**:
+Based on the SPEC Grouping Strategy question response, generate either:
+1. **Single Comprehensive SPEC**: All requirements in one master document
+2. **Multiple Coordinated SPECs**: Logically separated documents with clear dependencies
+
+**Multi-SPEC Document Structure** (when applicable):
 ```markdown
-# SPEC-YYYYMMDD-[feature-name]
+# Primary SPEC: SPEC-YYYYMMDD-[feature-name]-core.md
+# Secondary SPECs: SPEC-YYYYMMDD-[feature-name]-[component].md
+# Example: SPEC-20240115-user-auth-core.md, SPEC-20240115-user-auth-integration.md
 
 ## SPEC Document Ecosystem
-**Master Document**: This document coordinates all implementation aspects
+**Document Coordination**: This is [part X of Y] in the [feature-name] SPEC ecosystem
+**Related Documents**: [List all related SPEC files with their focus areas]
+**Dependencies**: [Which SPECs must be implemented before this one]
 
 **Status**: [Draft/Review/Approved/Implementation/Testing/Complete]
 
@@ -224,48 +234,67 @@ TEST-XXX: [Depends on: All layers completion]
 
 ## Human Approval Protocol
 
-### Specification Approval Checkpoint
+### Mandatory Human Approval Protocol
+
+**CRITICAL**: This checkpoint is MANDATORY and cannot be bypassed. The architect must stop and wait for explicit human approval before proceeding.
 
 **After SPEC Generation**:
 Before proceeding to implementation, present the specification for human review and approval:
 
 ```markdown
-🛑 SPECIFICATION APPROVAL REQUIRED
+🛑 MANDATORY APPROVAL CHECKPOINT - HUMAN VALIDATION REQUIRED
 
-## SPEC SUMMARY
+## SPECIFICATION REVIEW SUMMARY
 **Feature**: [Feature name]
-**Confidence Level**: [X]% (Target: 95%+)
+**Confidence Level**: [X]% (Target: 95%+ achieved through [N] question iterations)
+**SPEC Documents**: [Number and type of SPEC files generated]
 **Implementation Effort**: [X] developer-days across [Y] layers
-**Technical Risk**: [Assessment]
-**Dependencies**: [External requirements]
+**Technical Risk**: [Assessment with mitigation strategies]
+**Dependencies**: [External requirements and blockers]
 
-## KEY DECISIONS
-**Architecture**: [Main technical approach]
+## CRITICAL VALIDATION QUESTIONS ADDRESSED
+[List the 5 strategic questions asked in the final iteration and their answers]
+1. **[Question Category]**: [Question] → [Answer/Decision]
+2. **[Question Category]**: [Question] → [Answer/Decision]
+3. **[Question Category]**: [Question] → [Answer/Decision]
+4. **[Question Category]**: [Question] → [Answer/Decision]
+5. **SPEC Grouping Strategy**: [Question] → [Answer/Decision on single vs. multiple SPECs]
+
+## KEY ARCHITECTURAL DECISIONS
+**Architecture**: [Main technical approach with rationale]
 **Integration**: [How it fits with existing system]
 **Database**: [Schema changes required]
-**Timeline**: [Estimated completion]
+**SPEC Structure**: [Single SPEC vs. Multiple coordinated SPECs and reasoning]
+**Timeline**: [Estimated completion with critical path]
 
-## APPROVAL REQUIRED
-Please review the complete specification at `docs/SPEC-YYYYMMDD-[feature].md`
+## HUMAN APPROVAL REQUIRED
+**MANDATORY**: Please review the complete specification(s):
+- Primary SPEC: `docs/SPEC-YYYYMMDD-[feature].md`
+- Additional SPECs (if applicable): [List any additional SPEC files]
 
-**Review Checklist**:
-- [ ] Requirements understanding is accurate (95%+ confidence achieved)
-- [ ] Technical approach aligns with team standards
-- [ ] Timeline estimates are realistic for business needs
-- [ ] Integration approach makes sense for existing architecture
-- [ ] Risk assessment is acceptable for the project
+**Critical Review Checklist** (ALL must be verified):
+- [ ] Requirements understanding is accurate (95%+ confidence demonstrated)
+- [ ] The 5 strategic questions were appropriately chosen and answered
+- [ ] SPEC grouping strategy (single vs. multiple) is logical and justified
+- [ ] Technical approach aligns with team standards and existing architecture
+- [ ] Timeline estimates are realistic for business needs and team capacity
+- [ ] Integration approach makes sense for existing system
+- [ ] Risk assessment is acceptable and mitigation strategies are sound
+- [ ] Dependencies are clearly identified and manageable
 
-**WAITING FOR APPROVAL TO PROCEED WITH IMPLEMENTATION**
+**⚠️ SYSTEM HALT: WAITING FOR EXPLICIT HUMAN APPROVAL TO PROCEED**
 
-Reply with:
-- ✅ "APPROVED" - proceed with implementation
-- ❌ "REJECTED" - specification needs revision
-- ⏸️ "DEFER" - postpone implementation
-- 🔄 "CLARIFY: [specific questions]" - need more information
+**Required Response Format**:
+- ✅ **"APPROVED"** - proceed with implementation using generated SPEC(s)
+- ❌ **"REJECTED: [reason]"** - specification needs major revision
+- 🔄 **"REVISE: [specific changes needed]"** - make specified modifications
+- ⏸️ **"DEFER: [reason]"** - postpone implementation
+- ❓ **"CLARIFY: [specific questions]"** - need additional information
 
+**NO IMPLEMENTATION MAY BEGIN WITHOUT EXPLICIT "APPROVED" RESPONSE**
 ```
 
-**Only proceed to engineer handoff after receiving explicit approval.**
+**ABSOLUTE REQUIREMENT**: Only proceed to engineer handoff after receiving explicit "APPROVED" response. Any other response requires addressing the feedback before re-submitting for approval.
 
 ## Context Handoff Protocol
 

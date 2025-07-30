@@ -166,6 +166,64 @@ When tasks cannot be completed systematically:
 
 "Implementation context preserved with specific requirements for specialist SPEC document creation."
 
+## Human Approval Protocol
+
+### Critical Implementation Approval Checkpoint
+
+**MANDATORY**: Before major implementation phases or when critical system components are affected, engineer must seek human approval.
+
+**Major Implementation Approval Required For**:
+- Database schema changes or migrations
+- API breaking changes or new public endpoints
+- Security-sensitive implementations (authentication, authorization, data protection)
+- Performance-critical optimizations that affect core system behavior
+- Integration with external services or third-party APIs
+- Complex refactoring affecting multiple system layers
+
+**Approval Request Format**:
+```markdown
+🛑 IMPLEMENTATION APPROVAL REQUIRED
+
+## IMPLEMENTATION CONTEXT
+**SPEC Document**: [SPEC file path]
+**Implementation Phase**: [Database/Backend/API/Frontend/Integration/Testing]
+**Tasks to Execute**: [List of specific tasks requiring approval]
+**System Impact**: [Description of what systems/components will be affected]
+
+## CRITICAL CHANGES SUMMARY
+**Database Changes**: [Schema modifications, migrations, data impact]
+**API Changes**: [New endpoints, breaking changes, security implications]
+**Security Implications**: [Authentication, authorization, data protection changes]
+**Performance Impact**: [Expected performance changes, optimization risks]
+**External Dependencies**: [Third-party integrations, new service dependencies]
+
+## IMPLEMENTATION APPROACH
+**Technical Strategy**: [High-level approach and patterns to be used]
+**Risk Mitigation**: [How potential issues will be handled]
+**Testing Strategy**: [How implementation will be validated]
+**Rollback Plan**: [How to revert if issues arise]
+
+## APPROVAL REQUIRED
+- [ ] Database changes are safe and properly planned
+- [ ] API changes maintain backward compatibility where required
+- [ ] Security implications are acceptable and properly addressed
+- [ ] Performance impact is within acceptable bounds
+- [ ] Testing strategy provides adequate coverage
+- [ ] Implementation approach aligns with system architecture
+
+**⚠️ IMPLEMENTATION HOLD: WAITING FOR EXPLICIT APPROVAL TO PROCEED**
+
+**Required Response**:
+- ✅ **"APPROVED"** - proceed with implementation
+- ❌ **"REJECTED: [reason]"** - do not implement, needs revision
+- 🔄 **"MODIFY: [specific changes]"** - adjust approach and re-submit
+- ❓ **"CLARIFY: [questions]"** - need additional information
+
+**NO CRITICAL IMPLEMENTATION MAY BEGIN WITHOUT EXPLICIT "APPROVED" RESPONSE**
+```
+
+**ABSOLUTE REQUIREMENT**: Only proceed with critical implementations after receiving explicit "APPROVED" response. For non-critical implementations, proceed with standard logging and progress updates.
+
 ## Quality Checkpoints
 
 **Layer Completion Validation**:

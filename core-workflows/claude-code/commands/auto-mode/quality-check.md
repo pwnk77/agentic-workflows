@@ -32,7 +32,7 @@ scope_description: $ARGUMENTS (required: scope and focus areas for specialist an
 ```bash
 Task(
   description="Enhanced security analysis with SEC-SPEC generation",
-  prompt="Perform comprehensive security analysis with SPEC document generation: '${scope_description}'. 
+  prompt="Perform comprehensive security analysis with SPEC document generation: '$ARGUMENTS'. 
 
 ENHANCED SECURITY SPECIALIST REQUIREMENTS:
 - Create comprehensive SEC-SPEC document with OWASP compliance evaluation
@@ -71,7 +71,7 @@ SEC-SPEC DOCUMENT REQUIREMENTS:
 ```bash
 Task(
   description="Enhanced performance analysis with PERF-SPEC generation",
-  prompt="Perform comprehensive performance analysis with SPEC document generation: '${scope_description}'. 
+  prompt="Perform comprehensive performance analysis with SPEC document generation: '$ARGUMENTS'. 
 
 ENHANCED PERFORMANCE SPECIALIST REQUIREMENTS:
 - Create comprehensive PERF-SPEC document with scalability and optimization roadmap
@@ -110,7 +110,7 @@ PERF-SPEC DOCUMENT REQUIREMENTS:
 ```bash
 Task(
   description="Enhanced quality analysis with QUAL-SPEC generation",
-  prompt="Perform comprehensive quality analysis with SPEC document generation: '${scope_description}'. 
+  prompt="Perform comprehensive quality analysis with SPEC document generation: '$ARGUMENTS'. 
 
 ENHANCED QUALITY SPECIALIST REQUIREMENTS:
 - Create comprehensive QUAL-SPEC document with multi-domain quality assessment

@@ -53,13 +53,13 @@ if echo "$INPUT" | jq -e . >/dev/null 2>&1; then
             
             # Generate summary using claude -p with context
             if [ -n "$CONTEXT" ]; then
-                MESSAGE=$(claude -p "Summarize this development work in 15 words or less: \"$CONTEXT\"" 2>/dev/null || echo "Development work completed")
+                MESSAGE=$(claude -p "Summarize this development work in 25 words or less: \"$CONTEXT\"" 2>/dev/null || echo "Development work completed")
             else
                 MESSAGE="Claude Code session completed"
             fi
             
             # Use Samantha voice for summary
-            say -v Samantha -r 175 "${MESSAGE}" &
+            say -v Samantha -r 190 "${MESSAGE}" &
             
             # Log completion
             echo "[$TIMESTAMP] Stop event completed: $MESSAGE" >> "$LOG_FILE"
@@ -76,7 +76,7 @@ if echo "$INPUT" | jq -e . >/dev/null 2>&1; then
             afplay "/System/Library/Sounds/Ping.aiff" &
             
             # Say approval required with Samantha voice
-            say -v Samantha -r 175 "Approval required" &
+            say -v Samantha -r 190 "Approval required" &
             ;;
     esac
 else

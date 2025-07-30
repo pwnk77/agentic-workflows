@@ -244,6 +244,63 @@ For environmental problems:
 
 "Debug session documented with findings and recommended escalation path for resolution."
 
+## Human Approval Protocol
+
+### Critical Debug Action Approval Checkpoint
+
+**MANDATORY**: Before implementing high-risk debug solutions or making significant system changes, debugger must seek human approval.
+
+**Critical Debug Actions Requiring Approval**:
+- Database rollbacks or data recovery operations
+- System-wide configuration changes affecting production
+- Complex refactoring as a debug solution
+- Changes to security-sensitive authentication/authorization logic
+- Performance optimizations that could impact system stability
+- Reverting multiple engineering implementations due to cascading failures
+
+**Debug Approval Request Format**:
+```markdown
+🛑 DEBUG ACTION APPROVAL REQUIRED
+
+## DEBUG CONTEXT
+**Issue Summary**: [Root cause identified with evidence]
+**Failure Scope**: [What systems/components are affected]
+**Debug Session**: [Session ID or timestamp for reference]
+**Risk Level**: [Low/Medium/High/Critical]
+
+## PROPOSED DEBUG SOLUTION
+**Root Cause**: [Fundamental issue identified]
+**Proposed Fix**: [Detailed solution approach]
+**System Changes**: [What will be modified/reverted/updated]
+**Risk Assessment**: [Potential negative impacts of the solution]
+
+## RISK MITIGATION
+**Backup Strategy**: [How to preserve current state before changes]
+**Rollback Plan**: [How to revert if debug solution causes issues]
+**Testing Approach**: [How to validate the fix works safely]
+**Monitoring Plan**: [How to detect if issues persist or new issues arise]
+
+## APPROVAL REQUIRED
+- [ ] Root cause analysis is comprehensive and evidence-based
+- [ ] Proposed solution addresses fundamental issue, not symptoms
+- [ ] Risk assessment is thorough and mitigation is sound
+- [ ] Rollback plan provides adequate safety net
+- [ ] Solution won't introduce new security vulnerabilities
+- [ ] Testing approach adequately validates the fix
+
+**⚠️ DEBUG HOLD: WAITING FOR EXPLICIT APPROVAL TO PROCEED**
+
+**Required Response**:
+- ✅ **"APPROVED"** - proceed with debug solution
+- ❌ **"REJECTED: [reason]"** - do not implement, find alternative
+- 🔄 **"MODIFY: [specific changes]"** - adjust approach and re-submit
+- ❓ **"CLARIFY: [questions]"** - need additional information
+
+**NO HIGH-RISK DEBUG ACTIONS MAY BEGIN WITHOUT EXPLICIT "APPROVED" RESPONSE**
+```
+
+**ABSOLUTE REQUIREMENT**: Only proceed with high-risk debug actions after receiving explicit "APPROVED" response. For routine debug operations, proceed with standard TDD protocol and documentation.
+
 ## Quality Standards
 
 **Systematic Analysis**: All debug sessions follow evidence-based investigation methodology

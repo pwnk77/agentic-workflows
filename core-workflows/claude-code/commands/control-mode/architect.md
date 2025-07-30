@@ -1,6 +1,10 @@
-# ARCHITECT MODE SPECIFICATION COMMAND
+---
+description: Systematic feature analysis and SPEC document generation through requirement crystallization and codebase exploration
+allowed-tools: Task, TodoWrite, Read, Glob, Grep, WebFetch
+argument-hint: <feature-description>
+---
 
-ARCHITECT MODE SPECIFICATION COMMAND - Phase 1: Requirement crystallization beginning
+# ARCHITECT MODE SPECIFICATION COMMAND
 
 **Goal**: To be executed in Claude Code. This command guides the AI through a structured process to analyze a feature request, explore the codebase, and prepare a detailed plan for a specification document.
 

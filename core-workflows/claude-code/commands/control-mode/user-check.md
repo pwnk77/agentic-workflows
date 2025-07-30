@@ -29,7 +29,7 @@ user_task: $ARGUMENTS (required: specific user task to simulate and validate)
 ```bash
 Task(
   description="User experience testing and analysis",
-  prompt="Simulate authentic user behavior for task: '${user_task}'. Use Playwright to test realistic user journeys, document friction points, identify technical bugs, and assess overall user experience. Generate comprehensive USR-SPEC with prioritized recommendations.",
+  prompt="Simulate authentic user behavior for task: '$ARGUMENTS'. Use Playwright to test realistic user journeys, document friction points, identify technical bugs, and assess overall user experience. Generate comprehensive USR-SPEC with prioritized recommendations.",
   subagent_type="user"
 )
 ```
@@ -111,7 +111,7 @@ Task(
 ```bash
 Task(
   description="User experience improvement verification",
-  prompt="Re-test user task to verify improvements: '${user_task}'. Compare results to original USR-SPEC document, validate that fixes actually improve user success rates, and identify any remaining issues. Generate verification report with before/after comparison.",
+  prompt="Re-test user task to verify improvements: '$ARGUMENTS'. Compare results to original USR-SPEC document, validate that fixes actually improve user success rates, and identify any remaining issues. Generate verification report with before/after comparison.",
   subagent_type="user"
 )
 ```

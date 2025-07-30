@@ -33,7 +33,7 @@ bug_description: $ARGUMENTS (required: bug symptoms, scope, and impact)
 ```bash
 Task(
   description="Bug diagnosis",
-  prompt="Diagnose bug: '${bug_description}'.
+  prompt="Diagnose bug: '$ARGUMENTS'.
   
   Requirements: Root cause analysis, reproduction steps, impact assessment, TDD protocol setup.
   Documentation: Create DEBUG document with comprehensive diagnostic analysis and reproduction framework.",
