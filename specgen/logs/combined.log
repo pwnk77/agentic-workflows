@@ -129,3 +129,116 @@
 {"level":"info","message":"MCP server started successfully","timestamp":"2025-08-30T09:39:16.147Z"}
 {"level":"info","message":"Closing database connection","timestamp":"2025-08-30T09:39:16.155Z"}
 {"level":"info","message":"Database connection closed","timestamp":"2025-08-30T09:39:16.156Z"}
+{"level":"info","message":"Starting SpecGen MCP Server","timestamp":"2025-08-30T09:59:42.878Z"}
+{"level":"info","message":"Initializing database...","timestamp":"2025-08-30T09:59:42.880Z"}
+{"level":"info","message":"Connecting to SQLite database: ./specgen.sqlite","timestamp":"2025-08-30T09:59:42.887Z"}
+{"level":"info","message":"Database connection established","timestamp":"2025-08-30T09:59:42.903Z"}
+{"level":"info","message":"Database schema is up to date","timestamp":"2025-08-30T09:59:42.906Z"}
+{"level":"info","message":"Database structure verification passed","timestamp":"2025-08-30T09:59:42.906Z"}
+{"level":"info","message":"Initializing database...","timestamp":"2025-08-30T10:00:05.315Z"}
+{"level":"info","message":"Connecting to SQLite database: ./specgen.sqlite","timestamp":"2025-08-30T10:00:05.321Z"}
+{"level":"info","message":"Database connection established","timestamp":"2025-08-30T10:00:05.334Z"}
+{"level":"info","message":"Database schema is up to date","timestamp":"2025-08-30T10:00:05.337Z"}
+{"level":"info","message":"Database structure verification passed","timestamp":"2025-08-30T10:00:05.337Z"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-08-30T10:00:05.337Z"}
+{"level":"info","message":"Starting MCP server...","timestamp":"2025-08-30T10:00:05.338Z"}
+{"level":"info","message":"MCP server started successfully","timestamp":"2025-08-30T10:00:05.338Z"}
+{"level":"info","message":"Closing database connection","timestamp":"2025-08-30T10:00:05.343Z"}
+{"level":"info","message":"Database connection closed","timestamp":"2025-08-30T10:00:05.343Z"}
+{"level":"info","message":"Initializing database...","timestamp":"2025-08-30T10:00:22.823Z"}
+{"level":"info","message":"Connecting to SQLite database: ./specgen.sqlite","timestamp":"2025-08-30T10:00:22.828Z"}
+{"level":"info","message":"Database connection established","timestamp":"2025-08-30T10:00:22.838Z"}
+{"level":"info","message":"Database schema is up to date","timestamp":"2025-08-30T10:00:22.840Z"}
+{"level":"info","message":"Database structure verification passed","timestamp":"2025-08-30T10:00:22.840Z"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-08-30T10:00:22.840Z"}
+{"level":"info","message":"Starting MCP server...","timestamp":"2025-08-30T10:00:22.841Z"}
+{"level":"info","message":"MCP server started successfully","timestamp":"2025-08-30T10:00:22.841Z"}
+{"level":"info","message":"Closing database connection","timestamp":"2025-08-30T10:00:22.848Z"}
+{"level":"info","message":"Database connection closed","timestamp":"2025-08-30T10:00:22.849Z"}
+{"level":"info","message":"Initializing database...","timestamp":"2025-08-30T10:00:37.885Z"}
+{"level":"info","message":"Connecting to SQLite database: ./specgen.sqlite","timestamp":"2025-08-30T10:00:37.891Z"}
+{"level":"info","message":"Database connection established","timestamp":"2025-08-30T10:00:37.905Z"}
+{"level":"info","message":"Database schema is up to date","timestamp":"2025-08-30T10:00:37.908Z"}
+{"level":"info","message":"Database structure verification passed","timestamp":"2025-08-30T10:00:37.908Z"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-08-30T10:00:37.908Z"}
+{"level":"info","message":"Starting MCP server...","timestamp":"2025-08-30T10:00:37.908Z"}
+{"level":"info","message":"MCP server started successfully","timestamp":"2025-08-30T10:00:37.909Z"}
+{"level":"info","message":"Closing database connection","timestamp":"2025-08-30T10:00:37.918Z"}
+{"level":"info","message":"Database connection closed","timestamp":"2025-08-30T10:00:37.918Z"}
+{"level":"info","message":"Initializing database...","timestamp":"2025-08-30T10:19:27.902Z"}
+{"level":"info","message":"Connecting to SQLite database: ./specgen.sqlite","timestamp":"2025-08-30T10:19:28.072Z"}
+{"level":"info","message":"Database connection established","timestamp":"2025-08-30T10:19:28.084Z"}
+{"level":"info","message":"Database schema is up to date","timestamp":"2025-08-30T10:19:28.086Z"}
+{"level":"info","message":"Database structure verification passed","timestamp":"2025-08-30T10:19:28.087Z"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-08-30T10:19:28.087Z"}
+{"level":"info","message":"Starting MCP server...","timestamp":"2025-08-30T10:19:28.087Z"}
+{"level":"info","message":"MCP server started successfully","timestamp":"2025-08-30T10:19:28.087Z"}
+{"level":"info","message":"Closing database connection","timestamp":"2025-08-30T10:19:28.088Z"}
+{"level":"info","message":"Starting SpecGen MCP Server","timestamp":"2025-08-30T10:19:50.288Z"}
+{"level":"info","message":"Initializing database...","timestamp":"2025-08-30T10:19:50.290Z"}
+{"level":"info","message":"Connecting to SQLite database: ./specgen.sqlite","timestamp":"2025-08-30T10:19:50.295Z"}
+{"level":"info","message":"Database connection established","timestamp":"2025-08-30T10:19:50.309Z"}
+{"level":"info","message":"Database schema is up to date","timestamp":"2025-08-30T10:19:50.312Z"}
+{"level":"info","message":"Database structure verification passed","timestamp":"2025-08-30T10:19:50.313Z"}
+{"level":"info","message":"Starting SpecGen MCP Server","timestamp":"2025-08-30T10:20:07.087Z"}
+{"level":"info","message":"Initializing database...","timestamp":"2025-08-30T10:20:07.089Z"}
+{"level":"info","message":"Connecting to SQLite database: ./specgen.sqlite","timestamp":"2025-08-30T10:20:07.094Z"}
+{"level":"info","message":"Database connection established","timestamp":"2025-08-30T10:20:07.112Z"}
+{"level":"info","message":"Database schema is up to date","timestamp":"2025-08-30T10:20:07.116Z"}
+{"level":"info","message":"Database structure verification passed","timestamp":"2025-08-30T10:20:07.116Z"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-08-30T10:20:07.116Z"}
+{"level":"info","message":"Starting MCP server...","timestamp":"2025-08-30T10:20:07.116Z"}
+{"level":"info","message":"MCP server started successfully","timestamp":"2025-08-30T10:20:07.117Z"}
+{"level":"info","message":"Starting HTTP API server...","timestamp":"2025-08-30T10:20:07.117Z"}
+{"level":"info","message":"Express API server configured","timestamp":"2025-08-30T10:20:07.118Z"}
+{"level":"info","message":"MCP server started successfully","timestamp":"2025-08-30T10:20:07.119Z"}
+{"level":"info","message":"HTTP API server listening on port 3001","timestamp":"2025-08-30T10:20:07.120Z"}
+{"level":"info","message":"Starting SpecGen MCP Server","timestamp":"2025-08-30T12:32:56.811Z"}
+{"level":"info","message":"Initializing database...","timestamp":"2025-08-30T12:32:56.814Z"}
+{"level":"info","message":"Connecting to SQLite database: ./specgen.sqlite","timestamp":"2025-08-30T12:32:56.822Z"}
+{"level":"info","message":"Database connection established","timestamp":"2025-08-30T12:32:56.836Z"}
+{"level":"info","message":"Database schema is up to date","timestamp":"2025-08-30T12:32:56.839Z"}
+{"level":"info","message":"Database structure verification passed","timestamp":"2025-08-30T12:32:56.839Z"}
+{"level":"info","message":"Initializing database...","timestamp":"2025-08-30T12:33:20.660Z"}
+{"level":"info","message":"Connecting to SQLite database: ./specgen.sqlite","timestamp":"2025-08-30T12:33:20.666Z"}
+{"level":"info","message":"Database connection established","timestamp":"2025-08-30T12:33:20.679Z"}
+{"level":"info","message":"Database schema is up to date","timestamp":"2025-08-30T12:33:20.682Z"}
+{"level":"info","message":"Database structure verification passed","timestamp":"2025-08-30T12:33:20.683Z"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-08-30T12:33:20.683Z"}
+{"level":"info","message":"Starting MCP server...","timestamp":"2025-08-30T12:33:20.683Z"}
+{"level":"info","message":"MCP server started successfully","timestamp":"2025-08-30T12:33:20.683Z"}
+{"level":"info","message":"Closing database connection","timestamp":"2025-08-30T12:33:20.684Z"}
+{"level":"info","message":"Initializing database...","timestamp":"2025-08-30T12:38:29.094Z"}
+{"level":"info","message":"Connecting to SQLite database: ./specgen.sqlite","timestamp":"2025-08-30T12:38:29.133Z"}
+{"level":"info","message":"Database connection established","timestamp":"2025-08-30T12:38:29.157Z"}
+{"level":"info","message":"Database schema is up to date","timestamp":"2025-08-30T12:38:29.163Z"}
+{"level":"info","message":"Database structure verification passed","timestamp":"2025-08-30T12:38:29.164Z"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-08-30T12:38:29.164Z"}
+{"level":"info","message":"MCP HTTP server started on http://localhost:3001","timestamp":"2025-08-30T12:38:29.185Z"}
+{"level":"info","message":"Available endpoints:","timestamp":"2025-08-30T12:38:29.185Z"}
+{"level":"info","message":"  POST /mcp - Main MCP endpoint","timestamp":"2025-08-30T12:38:29.185Z"}
+{"level":"info","message":"  GET  /mcp - SSE connection","timestamp":"2025-08-30T12:38:29.185Z"}
+{"level":"info","message":"  GET  /health - Health check","timestamp":"2025-08-30T12:38:29.186Z"}
+{"level":"info","message":"Initializing database...","timestamp":"2025-08-30T12:39:44.097Z"}
+{"level":"info","message":"Connecting to SQLite database: ./specgen.sqlite","timestamp":"2025-08-30T12:39:44.105Z"}
+{"level":"info","message":"Database connection established","timestamp":"2025-08-30T12:39:44.117Z"}
+{"level":"info","message":"Database schema is up to date","timestamp":"2025-08-30T12:39:44.120Z"}
+{"level":"info","message":"Database structure verification passed","timestamp":"2025-08-30T12:39:44.120Z"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-08-30T12:39:44.120Z"}
+{"level":"info","message":"MCP HTTP server started on http://localhost:3001","timestamp":"2025-08-30T12:39:44.127Z"}
+{"level":"info","message":"Available endpoints:","timestamp":"2025-08-30T12:39:44.127Z"}
+{"level":"info","message":"  POST /mcp - Main MCP endpoint","timestamp":"2025-08-30T12:39:44.128Z"}
+{"level":"info","message":"  GET  /mcp - SSE connection","timestamp":"2025-08-30T12:39:44.128Z"}
+{"level":"info","message":"  GET  /health - Health check","timestamp":"2025-08-30T12:39:44.128Z"}
+{"level":"info","message":"Closing database connection","timestamp":"2025-08-30T12:43:03.809Z"}
+{"level":"info","message":"Initializing database...","timestamp":"2025-08-30T12:43:07.859Z"}
+{"level":"info","message":"Connecting to SQLite database: ./specgen.sqlite","timestamp":"2025-08-30T12:43:07.864Z"}
+{"level":"info","message":"Database connection established","timestamp":"2025-08-30T12:43:07.876Z"}
+{"level":"info","message":"Database schema is up to date","timestamp":"2025-08-30T12:43:07.878Z"}
+{"level":"info","message":"Database structure verification passed","timestamp":"2025-08-30T12:43:07.879Z"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-08-30T12:43:07.879Z"}
+{"level":"info","message":"MCP HTTP server started on http://localhost:3001","timestamp":"2025-08-30T12:43:07.886Z"}
+{"level":"info","message":"Available endpoints:","timestamp":"2025-08-30T12:43:07.886Z"}
+{"level":"info","message":"  POST /mcp - Main MCP endpoint","timestamp":"2025-08-30T12:43:07.886Z"}
+{"level":"info","message":"  GET  /mcp - SSE connection","timestamp":"2025-08-30T12:43:07.886Z"}
+{"level":"info","message":"  GET  /health - Health check","timestamp":"2025-08-30T12:43:07.886Z"}
