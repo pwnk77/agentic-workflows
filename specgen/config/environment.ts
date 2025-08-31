@@ -15,7 +15,15 @@ const environmentSchema = z.object({
   MAX_SPEC_SIZE: z.coerce.number().int().positive().default(1048576), // 1MB
   DATABASE_WAL_MODE: z.coerce.boolean().default(true),
   DATABASE_MEMORY_MAPPING: z.coerce.boolean().default(true),
-  SEARCH_RESULTS_LIMIT: z.coerce.number().int().positive().default(50)
+  SEARCH_RESULTS_LIMIT: z.coerce.number().int().positive().default(50),
+  // Dashboard configuration
+  DASHBOARD_PORT: z.coerce.number().int().positive().default(3001),
+  DASHBOARD_AUTO_OPEN: z.string().default('true'),
+  // WebSocket configuration
+  WEBSOCKET_ENABLED: z.string().default('true'),
+  WEBSOCKET_PING_INTERVAL: z.coerce.number().int().positive().default(30000),
+  WEBSOCKET_MAX_CONNECTIONS: z.coerce.number().int().positive().default(100),
+  WEBSOCKET_HEARTBEAT_TIMEOUT: z.coerce.number().int().positive().default(60000)
 });
 
 export type Environment = z.infer<typeof environmentSchema>;

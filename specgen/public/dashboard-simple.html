@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>specgen dashboard</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'poppins': ['Poppins', 'sans-serif'],
+                        'outfit': ['Outfit', 'sans-serif']
+                    },
+                    colors: {
+                        'deep-blue': {
+                            50: '#eff6ff',
+                            900: '#1e3a8a',
+                            950: '#1e293b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+
+<body class="bg-gradient-to-b from-deep-blue-950 via-slate-900 to-slate-800 font-poppins">
+    <div x-data="specGenDashboard()" x-init="init()" class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-gray-900/90 backdrop-blur-sm border-b border-gray-700">
+            <div class="w-full px-4 py-2 max-w-[98vw] mx-auto">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <h1 class="text-lg font-bold text-white font-outfit">specgen dashboard</h1>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span x-text="new Date().toLocaleTimeString()" class="text-gray-300 text-xs"></span>
+                        <div class="w-2 h-2 bg-green-400 rounded-full" x-show="connected" title="Connected"></div>
+                        <div class="w-2 h-2 bg-red-400 rounded-full" x-show="!connected" title="Disconnected"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content - Full-Screen Layout -->
+        <main class="w-full px-4 py-3 max-w-[98vw] mx-auto">
+            <!-- Dashboard Stats - Semantic Colors as per SPEC -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                <template x-for="(stat, index) in stats" :key="stat.label">
+                    <div class="bg-gray-800/90 backdrop-blur-sm rounded-md p-3 border border-gray-700" :class="getStatCardClass(index)">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-medium" x-text="stat.label" :class="getStatTextClass(index)"></p>
+                                <p class="text-lg font-bold" x-text="stat.value" :class="getStatTextClass(index)"></p>
+                            </div>
+                            <div class="w-6 h-6 rounded-sm flex items-center justify-center" :class="getStatIconClass(index)">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" :class="getStatIconTextClass(index)">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" x-html="stat.icon"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="bg-gray-800/90 backdrop-blur-sm rounded-md p-3 border border-gray-700 mb-4">
+                <div class="flex flex-col md:flex-row gap-2">
+                    <div class="flex-1">
+                        <input 
+                            type="text" 
+                            x-model="searchQuery"
+                            x-on:input.debounce.300ms="search()"
+                            placeholder="Search specifications..."
+                            class="w-full bg-white/5 border border-white/20 rounded-sm px-2 py-1.5 text-xs text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        >
+                    </div>
+                    <select 
+                        x-model="statusFilter"
+                        x-on:change="filterSpecs()"
+                        class="bg-white/5 border border-white/20 rounded-sm px-2 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                        <option value="">All Status</option>
+                        <option value="draft">Draft</option>
+                        <option value="todo">Todo</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="done">Done</option>
+                    </select>
+                    <button 
+                        x-on:click="openCreateModal()"
+                        class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-3 py-1.5 rounded-sm text-xs font-medium transition-all duration-200"
+                    >
+                        Create Spec
+                    </button>
+                </div>
+            </div>
+
+            <!-- Specifications Table -->
+            <div class="bg-gray-800/90 backdrop-blur-sm rounded-md border border-gray-700 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-900/50">
+                            <tr>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wide cursor-pointer" x-on:click="sortBy('title')">
+                                    Title
+                                    <span x-show="sortField === 'title'" x-text="sortOrder === 'asc' ? '↑' : '↓'"></span>
+                                </th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wide">Status</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wide cursor-pointer" x-on:click="sortBy('updated_at')">
+                                    Updated
+                                    <span x-show="sortField === 'updated_at'" x-text="sortOrder === 'asc' ? '↑' : '↓'"></span>
+                                </th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wide">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/10">
+                            <template x-for="spec in specs" :key="spec.id">
+                                <tr class="hover:bg-white/5 transition-colors duration-200 cursor-pointer" x-on:click="openPreviewModal(spec)">
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <div class="text-white font-medium text-xs" x-text="spec.title"></div>
+                                        <div class="text-gray-400 text-xs" x-text="spec.body_md.substring(0, 60) + '...'"></div>
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <span 
+                                            class="px-1.5 py-0.5 text-xs font-medium rounded-full"
+                                            :class="getStatusClass(spec.status)"
+                                            x-text="spec.status"
+                                        ></span>
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-300 text-xs" x-text="formatDate(spec.updated_at)"></td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-xs font-medium space-x-1">
+                                        <button 
+                                            x-on:click.stop="openEditModal(spec)"
+                                            class="text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button 
+                                            x-on:click.stop="deleteSpec(spec.id)"
+                                            class="text-red-400 hover:text-red-300 transition-colors duration-200"
+                                        >
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="bg-gray-900/50 px-3 py-1.5 border-t border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <div class="text-xs text-gray-300">
+                            Showing <span x-text="(currentPage - 1) * limit + 1"></span> to 
+                            <span x-text="Math.min(currentPage * limit, totalSpecs)"></span> of 
+                            <span x-text="totalSpecs"></span> results
+                        </div>
+                        <div class="flex space-x-1">
+                            <button 
+                                x-on:click="previousPage()"
+                                :disabled="currentPage === 1"
+                                class="px-2 py-0.5 text-xs bg-white/5 border border-white/20 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Previous
+                            </button>
+                            <button 
+                                x-on:click="nextPage()"
+                                :disabled="currentPage * limit >= totalSpecs"
+                                class="px-2 py-0.5 text-xs bg-white/5 border border-white/20 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Preview/Edit Modal - Compact Optimized -->
+        <div 
+            x-show="showModal" 
+            x-on:keydown.escape.window="closeModal()"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 z-50 overflow-hidden"
+            style="display: none;"
+        >
+            <!-- Background Overlay -->
+            <div class="absolute inset-0 bg-black/75 transition-opacity" x-on:click="closeModal()"></div>
+            
+            <!-- Modal Container - Compact -->
+            <div class="relative h-full flex items-center justify-center p-6">
+                <div class="bg-gray-800 rounded-lg shadow-2xl w-full h-[90vh] flex flex-col border border-gray-600 max-w-4xl">
+                    
+                    <!-- Modal Header -->
+                    <div class="flex items-center justify-between p-3 border-b border-gray-600 bg-gray-900/50 rounded-t-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="flex items-center space-x-2">
+                                <h3 class="text-sm font-semibold text-white" x-text="getModalTitle()"></h3>
+                                <!-- Status Badge in Preview Mode -->
+                                <span 
+                                    x-show="editingSpec && modalMode === 'preview'"
+                                    class="px-2 py-0.5 text-xs font-medium rounded-full"
+                                    :class="getStatusClass(currentSpec.status)"
+                                    x-text="currentSpec.status"
+                                ></span>
+                            </div>
+                            
+                            <!-- Mode Toggle Buttons -->
+                            <div class="flex bg-gray-700 rounded-md p-0.5" x-show="editingSpec">
+                                <button
+                                    x-on:click="setModalMode('preview')"
+                                    :class="modalMode === 'preview' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:text-white'"
+                                    class="px-3 py-1 text-xs rounded-sm transition-all duration-200 flex items-center space-x-1"
+                                >
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    <span>Preview</span>
+                                </button>
+                                <button
+                                    x-on:click="setModalMode('edit')"
+                                    :class="modalMode === 'edit' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:text-white'"
+                                    class="px-3 py-1 text-xs rounded-sm transition-all duration-200 flex items-center space-x-1"
+                                >
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    <span>Edit</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Header Actions -->
+                        <div class="flex items-center space-x-2">
+                            <button 
+                                x-show="modalMode === 'edit'"
+                                x-on:click="saveSpec()"
+                                :disabled="loading"
+                                class="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-md text-xs font-medium disabled:opacity-50 transition-all duration-200"
+                            >
+                                <span x-text="loading ? 'Saving...' : (editingSpec ? 'Update' : 'Create')"></span>
+                            </button>
+                            <button 
+                                x-on:click="closeModal()"
+                                class="p-1 text-gray-400 hover:text-gray-200 transition-colors duration-200"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Modal Content -->
+                    <div class="flex-1 overflow-hidden">
+                        <!-- Preview Mode -->
+                        <div x-show="modalMode === 'preview'" class="h-full flex flex-col bg-gray-900/30">
+                            <!-- Tab Navigation -->
+                            <div x-init="extractSections()" class="flex-shrink-0 border-b border-gray-600 bg-gray-800/50">
+                                <div class="flex space-x-1 p-2 overflow-x-auto">
+                                    <template x-for="(tab, index) in tabs" :key="index">
+                                        <button
+                                            x-on:click="setActiveTab(index)"
+                                            :class="activeTab === index ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'"
+                                            class="px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap transition-all duration-200"
+                                            x-text="tab.title"
+                                        ></button>
+                                    </template>
+                                </div>
+                            </div>
+                            
+                            <!-- Tab Content -->
+                            <div class="flex-1 overflow-auto p-4">
+                                <div class="prose prose-invert prose-sm max-w-none">
+                                    <div 
+                                        x-html="getActiveTabContent()" 
+                                        class="text-gray-100 leading-relaxed text-xs
+                                               [&_h3]:text-yellow-300 [&_h3]:text-xs [&_h3]:font-medium [&_h3]:mb-2 [&_h3]:mt-3
+                                               [&_h4]:text-green-300 [&_h4]:text-xs [&_h4]:font-medium [&_h4]:mb-1 [&_h4]:mt-2
+                                               [&_p]:mb-2 [&_p]:leading-relaxed [&_p]:text-xs
+                                               [&_ul]:mb-2 [&_ul]:ml-3 [&_li]:mb-0.5 [&_li]:text-xs
+                                               [&_ol]:mb-2 [&_ol]:ml-3 [&_li]:mb-0.5 [&_li]:text-xs
+                                               [&_strong]:text-white [&_strong]:font-semibold
+                                               [&_em]:text-gray-300 [&_em]:italic
+                                               [&_code]:bg-gray-800 [&_code]:text-green-300 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_code]:text-xs
+                                               [&_pre]:bg-gray-800 [&_pre]:text-green-300 [&_pre]:p-2 [&_pre]:rounded-md [&_pre]:overflow-x-auto [&_pre]:font-mono [&_pre]:text-xs [&_pre]:mb-3
+                                               [&_blockquote]:border-l-2 [&_blockquote]:border-blue-500 [&_blockquote]:pl-3 [&_blockquote]:py-1 [&_blockquote]:bg-gray-800/50 [&_blockquote]:italic [&_blockquote]:text-xs
+                                               [&_hr]:border-gray-600 [&_hr]:my-4"
+                                    ></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Edit Mode -->
+                        <div x-show="modalMode === 'edit'" class="h-full p-4">
+                            <form x-on:submit.prevent="saveSpec()" class="h-full flex flex-col space-y-4">
+                                <!-- Title and Status Row -->
+                                <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                                    <div class="lg:col-span-2">
+                                        <label class="block text-xs font-medium text-gray-300 mb-1">Title</label>
+                                        <input 
+                                            type="text" 
+                                            x-model="currentSpec.title"
+                                            required
+                                            class="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-1.5 text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                            placeholder="Specification title..."
+                                        >
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-300 mb-1">Status</label>
+                                        <select 
+                                            x-model="currentSpec.status"
+                                            class="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-1.5 text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        >
+                                            <option value="draft">Draft</option>
+                                            <option value="todo">Todo</option>
+                                            <option value="in-progress">In Progress</option>
+                                            <option value="done">Done</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Content Editor -->
+                                <div class="flex-1 flex flex-col">
+                                    <label class="block text-xs font-medium text-gray-300 mb-1">Content (Markdown)</label>
+                                    <textarea 
+                                        x-model="currentSpec.body_md"
+                                        x-on:input="updatePreview()"
+                                        class="flex-1 w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono text-xs resize-none"
+                                        placeholder="Write your specification in markdown format..."
+                                    ></textarea>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div 
+            x-show="loading" 
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+            style="display: none;"
+        >
+            <div class="bg-white/10 backdrop-blur-sm rounded-lg p-6">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+                <p class="text-white mt-4">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function specGenDashboard() {
+            return {
+                // Data
+                specs: [],
+                stats: [
+                    { label: 'Total Specs', value: 0, icon: 'd="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"' },
+                    { label: 'Draft', value: 0, icon: 'd="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"' },
+                    { label: 'In Progress', value: 0, icon: 'd="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"' },
+                    { label: 'Completed', value: 0, icon: 'd="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"' }
+                ],
+                
+                // State
+                loading: false,
+                connected: false,
+                showModal: false,
+                modalMode: 'preview', // 'preview' or 'edit'
+                editingSpec: null,
+                currentSpec: { title: '', body_md: '', status: 'draft' },
+                markdownPreview: '',
+                activeTab: 0,
+                tabs: [],
+                
+                // Filters and pagination
+                searchQuery: '',
+                statusFilter: '',
+                sortField: 'updated_at',
+                sortOrder: 'desc',
+                currentPage: 1,
+                limit: 20,
+                totalSpecs: 0,
+                
+                // WebSocket
+                ws: null,
+
+                // Initialization
+                init() {
+                    this.loadSpecs();
+                    this.loadStats();
+                    this.connectWebSocket();
+                    this.updateClock();
+                },
+
+                // API Methods
+                async loadSpecs() {
+                    this.loading = true;
+                    try {
+                        const params = new URLSearchParams({
+                            limit: this.limit,
+                            offset: (this.currentPage - 1) * this.limit,
+                            sort_by: this.sortField,
+                            sort_order: this.sortOrder
+                        });
+                        
+                        if (this.statusFilter) params.append('status', this.statusFilter);
+                        
+                        const response = await fetch(`/api/specs?${params}`);
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            this.specs = data.data.specs;
+                            this.totalSpecs = data.pagination.total;
+                        }
+                    } catch (error) {
+                        console.error('Error loading specs:', error);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async loadStats() {
+                    try {
+                        const response = await fetch('/api/specs/stats');
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            this.stats[0].value = data.data.total;
+                            this.stats[1].value = data.data.by_status.draft || 0;
+                            this.stats[2].value = data.data.by_status['in-progress'] || 0;
+                            this.stats[3].value = data.data.by_status.done || 0;
+                        }
+                    } catch (error) {
+                        console.error('Error loading stats:', error);
+                    }
+                },
+
+                async search() {
+                    if (this.searchQuery.trim()) {
+                        this.loading = true;
+                        try {
+                            const response = await fetch(`/api/search?q=${encodeURIComponent(this.searchQuery)}&limit=${this.limit}`);
+                            const data = await response.json();
+                            
+                            if (data.success) {
+                                this.specs = data.data.results;
+                                this.totalSpecs = data.data.total;
+                                this.currentPage = 1;
+                            }
+                        } catch (error) {
+                            console.error('Error searching specs:', error);
+                        } finally {
+                            this.loading = false;
+                        }
+                    } else {
+                        this.loadSpecs();
+                    }
+                },
+
+                async filterSpecs() {
+                    this.currentPage = 1;
+                    this.searchQuery = '';
+                    await this.loadSpecs();
+                },
+
+                async saveSpec() {
+                    this.loading = true;
+                    try {
+                        const method = this.editingSpec ? 'PUT' : 'POST';
+                        const url = this.editingSpec ? `/api/specs/${this.editingSpec.id}` : '/api/specs';
+                        
+                        const response = await fetch(url, {
+                            method,
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.currentSpec)
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            this.closeModal();
+                            this.loadSpecs();
+                            this.loadStats();
+                        } else {
+                            alert(data.error || 'Error saving specification');
+                        }
+                    } catch (error) {
+                        console.error('Error saving spec:', error);
+                        alert('Error saving specification');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async deleteSpec(id) {
+                    if (confirm('Are you sure you want to delete this specification?')) {
+                        this.loading = true;
+                        try {
+                            const response = await fetch(`/api/specs/${id}`, { method: 'DELETE' });
+                            const data = await response.json();
+                            
+                            if (data.success) {
+                                this.loadSpecs();
+                                this.loadStats();
+                            } else {
+                                alert(data.error || 'Error deleting specification');
+                            }
+                        } catch (error) {
+                            console.error('Error deleting spec:', error);
+                            alert('Error deleting specification');
+                        } finally {
+                            this.loading = false;
+                        }
+                    }
+                },
+
+                // Modal Methods
+                openPreviewModal(spec) {
+                    this.editingSpec = spec;
+                    this.currentSpec = { ...spec };
+                    this.modalMode = 'preview';
+                    this.activeTab = 0;
+                    this.tabs = [];
+                    this.updatePreview();
+                    this.showModal = true;
+                },
+
+                openEditModal(spec) {
+                    this.editingSpec = spec;
+                    this.currentSpec = { ...spec };
+                    this.modalMode = 'edit';
+                    this.activeTab = 0;
+                    this.tabs = [];
+                    this.updatePreview();
+                    this.showModal = true;
+                },
+
+                openCreateModal() {
+                    this.editingSpec = null;
+                    this.currentSpec = { title: '', body_md: '', status: 'draft' };
+                    this.modalMode = 'edit';
+                    this.activeTab = 0;
+                    this.tabs = [];
+                    this.markdownPreview = '';
+                    this.showModal = true;
+                },
+
+                closeModal() {
+                    this.showModal = false;
+                    this.modalMode = 'preview';
+                    this.editingSpec = null;
+                    this.currentSpec = { title: '', body_md: '', status: 'draft' };
+                    this.markdownPreview = '';
+                    this.activeTab = 0;
+                    this.tabs = [];
+                },
+
+                setModalMode(mode) {
+                    this.modalMode = mode;
+                    if (mode === 'preview') {
+                        this.updatePreview();
+                    }
+                },
+
+                getModalTitle() {
+                    if (!this.editingSpec) {
+                        return 'Create New Specification';
+                    }
+                    return this.modalMode === 'preview' ? this.currentSpec.title : 'Edit Specification';
+                },
+
+                updatePreview() {
+                    if (typeof marked !== 'undefined') {
+                        // Configure marked to preserve line breaks and spacing
+                        marked.setOptions({
+                            breaks: true,
+                            gfm: true,
+                            pedantic: false,
+                            sanitize: false
+                        });
+                        this.markdownPreview = marked.parse(this.currentSpec.body_md || '');
+                    } else {
+                        // Fallback: show raw content with preserved line breaks
+                        this.markdownPreview = (this.currentSpec.body_md || '').replace(/\n/g, '<br>');
+                    }
+                },
+
+                extractSections() {
+                    if (!this.markdownPreview) {
+                        this.updatePreview();
+                    }
+                    
+                    // Extract sections based on H2 headers
+                    const content = this.markdownPreview;
+                    const sections = [];
+                    
+                    // Split content by H2 headers
+                    const h2Regex = /<h2[^>]*>(.*?)<\/h2>/g;
+                    const parts = content.split(h2Regex);
+                    
+                    // First part is before any H2 (intro content)
+                    if (parts[0].trim()) {
+                        sections.push({
+                            title: 'Overview',
+                            content: parts[0].trim()
+                        });
+                    }
+                    
+                    // Process H2 sections
+                    for (let i = 1; i < parts.length; i += 2) {
+                        const title = parts[i];
+                        const content = parts[i + 1] || '';
+                        if (title && title.trim()) {
+                            sections.push({
+                                title: title.trim(),
+                                content: content.trim()
+                            });
+                        }
+                    }
+                    
+                    this.tabs = sections;
+                    if (this.tabs.length > 0 && this.activeTab >= this.tabs.length) {
+                        this.activeTab = 0;
+                    }
+                    
+                    return sections;
+                },
+
+                getActiveTabContent() {
+                    const sections = this.extractSections();
+                    if (sections.length === 0) return this.markdownPreview;
+                    
+                    const activeSection = sections[this.activeTab] || sections[0];
+                    return activeSection.content;
+                },
+
+                setActiveTab(index) {
+                    this.activeTab = index;
+                },
+
+                // Utility Methods
+                sortBy(field) {
+                    if (this.sortField === field) {
+                        this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        this.sortField = field;
+                        this.sortOrder = 'asc';
+                    }
+                    this.loadSpecs();
+                },
+
+                nextPage() {
+                    if (this.currentPage * this.limit < this.totalSpecs) {
+                        this.currentPage++;
+                        this.loadSpecs();
+                    }
+                },
+
+                previousPage() {
+                    if (this.currentPage > 1) {
+                        this.currentPage--;
+                        this.loadSpecs();
+                    }
+                },
+
+                getStatusClass(status) {
+                    // Semantic colors as per SPEC requirements
+                    const classes = {
+                        'draft': 'bg-gray-100 text-gray-700',        // Draft: Gray
+                        'todo': 'bg-yellow-100 text-yellow-700',     // Todo: Yellow
+                        'in-progress': 'bg-yellow-100 text-yellow-700',  // In Progress: Yellow
+                        'done': 'bg-green-100 text-green-700'        // Completed: Green
+                    };
+                    return classes[status] || 'bg-gray-100 text-gray-700';
+                },
+
+                // Dashboard stat card semantic colors as per SPEC
+                getStatCardClass(index) {
+                    const cardClasses = [
+                        'border-l-4 border-l-blue-500',      // Total: Blue
+                        'border-l-4 border-l-gray-400',      // Draft: Gray
+                        'border-l-4 border-l-yellow-500',    // In Progress: Yellow
+                        'border-l-4 border-l-green-500'      // Completed: Green
+                    ];
+                    return cardClasses[index] || '';
+                },
+
+                getStatTextClass(index) {
+                    const textClasses = [
+                        'text-blue-400',    // Total: Blue
+                        'text-gray-300',    // Draft: Gray
+                        'text-yellow-400',  // In Progress: Yellow
+                        'text-green-400'    // Completed: Green
+                    ];
+                    return textClasses[index] || 'text-white';
+                },
+
+                getStatIconClass(index) {
+                    const iconClasses = [
+                        'bg-blue-500/20',      // Total: Blue
+                        'bg-gray-500/20',      // Draft: Gray
+                        'bg-yellow-500/20',    // In Progress: Yellow
+                        'bg-green-500/20'      // Completed: Green
+                    ];
+                    return iconClasses[index] || 'bg-gradient-to-r from-blue-500 to-purple-600';
+                },
+
+                getStatIconTextClass(index) {
+                    const iconTextClasses = [
+                        'text-blue-400',    // Total: Blue
+                        'text-gray-300',    // Draft: Gray
+                        'text-yellow-400',  // In Progress: Yellow
+                        'text-green-400'    // Completed: Green
+                    ];
+                    return iconTextClasses[index] || 'text-white';
+                },
+
+                formatDate(dateString) {
+                    return new Date(dateString).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                },
+
+                updateClock() {
+                    setInterval(() => {
+                        this.$nextTick(() => {
+                            // Trigger reactivity for time display
+                        });
+                    }, 1000);
+                },
+
+                // WebSocket Methods
+                connectWebSocket() {
+                    try {
+                        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                        const wsUrl = `${protocol}//${window.location.host}/ws`;
+                        
+                        this.ws = new WebSocket(wsUrl);
+                        
+                        this.ws.onopen = () => {
+                            this.connected = true;
+                            console.log('WebSocket connected');
+                        };
+                        
+                        this.ws.onclose = () => {
+                            this.connected = false;
+                            console.log('WebSocket disconnected');
+                            // Reconnect after 3 seconds
+                            setTimeout(() => this.connectWebSocket(), 3000);
+                        };
+                        
+                        this.ws.onmessage = (event) => {
+                            const data = JSON.parse(event.data);
+                            console.log('WebSocket message received:', data);
+                            
+                            switch (data.type) {
+                                case 'spec_updated':
+                                case 'spec_created':
+                                case 'spec_deleted':
+                                case 'spec_status_changed':
+                                    this.loadSpecs();
+                                    this.loadStats();
+                                    break;
+                                case 'stats_updated':
+                                    this.loadStats();
+                                    break;
+                                case 'connection_ack':
+                                    console.log('WebSocket connection acknowledged:', data.payload);
+                                    break;
+                                case 'pong':
+                                    console.log('WebSocket pong received');
+                                    break;
+                                default:
+                                    console.log('Unhandled WebSocket message type:', data.type);
+                                    break;
+                            }
+                        };
+                    } catch (error) {
+                        console.error('WebSocket connection error:', error);
+                        this.connected = false;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

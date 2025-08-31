@@ -4,9 +4,7 @@
 
 import { Command } from 'commander';
 import { logger } from '../../services/logging.service.js';
-import { initializeDatabase } from '../../database/data-source.js';
-import { createMCPServer } from '../../mcp/server.js';
-import { createAPIServer } from '../../api/server.js';
+import { IntegratedSpecGenServer } from '../../src/integrated-server.js';
 import { getAppSettings } from '../../config/settings.js';
 
 export const startCommand = new Command('start')
@@ -16,6 +14,7 @@ export const startCommand = new Command('start')
   .option('--log-level <level>', 'Log level (error|warn|info|debug)', /^(error|warn|info|debug)$/)
   .option('--no-api', 'Disable HTTP API server')
   .option('--api-only', 'Run only HTTP API (no MCP server)')
+  .option('--dashboard', 'Launch in dashboard mode with browser auto-open')
   .action(async (options) => {
     try {
       const settings = getAppSettings();
@@ -25,62 +24,36 @@ export const startCommand = new Command('start')
       if (options.dbPath) settings.database.path = options.dbPath;
       if (options.logLevel) settings.logging.level = options.logLevel;
 
-      logger.info('Starting SpecGen MCP Server', {
+      // Determine server mode
+      let mode: 'mcp' | 'dashboard' | 'integrated' = 'integrated';
+      if (options.noApi) {
+        mode = 'mcp';
+      } else if (options.apiOnly) {
+        mode = 'dashboard';
+      } else if (options.dashboard) {
+        mode = 'dashboard';
+      }
+
+      logger.info('Starting SpecGen Server', {
+        mode,
         port: settings.server.port,
         dbPath: settings.database.path,
         logLevel: settings.logging.level,
-        apiDisabled: options.noApi,
-        apiOnly: options.apiOnly
+        autoOpenBrowser: options.dashboard
       });
 
-      // Initialize database
-      logger.info('Initializing database...');
-      await initializeDatabase(settings.database.path);
-      logger.info('Database initialized successfully');
+      // Create and start integrated server
+      const server = new IntegratedSpecGenServer();
+      await server.start({
+        mode,
+        port: options.port,
+        dbPath: options.dbPath,
+        autoOpenBrowser: options.dashboard
+      });
 
-      // Start MCP server (unless API-only mode)
-      let mcpServer: any = null;
-      if (!options.apiOnly) {
-        logger.info('Starting MCP server...');
-        mcpServer = createMCPServer();
-        logger.info('MCP server started successfully');
-      }
-
-      // Start HTTP API server (unless disabled)
-      let httpServer: any = null;
-      if (!options.noApi) {
-        logger.info('Starting HTTP API server...');
-        const apiServer = createAPIServer();
-        httpServer = apiServer.listen(settings.server.port, () => {
-          logger.info(`HTTP API server listening on port ${settings.server.port}`);
-        });
-      }
-
-      // Handle graceful shutdown
-      const shutdown = async (signal: string): Promise<void> => {
-        logger.info(`Received ${signal}, shutting down gracefully...`);
-        
-        try {
-          if (httpServer) {
-            httpServer.close();
-            logger.info('HTTP server closed');
-          }
-          
-          if (mcpServer) {
-            await mcpServer.close?.();
-            logger.info('MCP server closed');
-          }
-          
-          logger.info('Shutdown complete');
-          process.exit(0);
-        } catch (error) {
-          logger.error('Error during shutdown:', error as Error);
-          process.exit(1);
-        }
-      };
-
-      process.on('SIGINT', () => shutdown('SIGINT'));
-      process.on('SIGTERM', () => shutdown('SIGTERM'));
+      logger.info('Server started successfully', {
+        status: server.getStatus()
+      });
 
     } catch (error) {
       logger.error('Failed to start server:', error as Error);

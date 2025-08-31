@@ -1,3 +1,7 @@
 node_modules
 .claude
 docs
+spec-workflow-mcp
+ProjectHub-Mcp
+static-analysis
+logs

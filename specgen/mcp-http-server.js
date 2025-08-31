@@ -7,13 +7,7 @@
 
 import express from 'express';
 import cors from 'cors';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { 
-  CallToolRequestSchema, 
-  ListResourcesRequestSchema,
-  ListToolsRequestSchema,
-  ReadResourceRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
+// Direct MCP protocol implementation - no SDK transport needed
 import { initializeDatabase } from './dist/database/data-source.js';
 import { getAppSettings } from './dist/config/settings.js';
 import { logger } from './dist/services/logging.service.js';
@@ -24,12 +18,10 @@ class MCPHttpServer {
   constructor() {
     this.app = express();
     this.server = null;
-    this.mcpServer = null;
     this.settings = getAppSettings();
     this.sessions = new Map(); // Session storage
     
     this.setupMiddleware();
-    this.setupMCPServer();
     this.setupRoutes();
   }
 
@@ -44,111 +36,6 @@ class MCPHttpServer {
     this.app.use(express.json());
   }
 
-  setupMCPServer() {
-    this.mcpServer = new Server(
-      {
-        name: this.settings.mcp.serverName,
-        version: this.settings.mcp.serverVersion,
-      },
-      {
-        capabilities: {
-          tools: {},
-          resources: {}
-        },
-      }
-    );
-
-    this.setupMCPHandlers();
-  }
-
-  setupMCPHandlers() {
-    // List available tools
-    this.mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
-      logger.debug('MCP HTTP: Listing available tools');
-      
-      return {
-        tools: [
-          ...specTools.map(tool => ({
-            name: tool.name,
-            description: tool.description,
-            inputSchema: tool.inputSchema
-          }))
-        ]
-      };
-    });
-
-    // Handle tool execution
-    this.mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
-      const { name, arguments: args } = request.params;
-      
-      logger.debug('MCP HTTP: Executing tool', { tool: name, args });
-
-      try {
-        const tool = specTools.find(t => t.name === name);
-        if (!tool) {
-          throw new Error(`Unknown tool: ${name}`);
-        }
-
-        const result = await tool.handler(args || {});
-        
-        logger.debug('MCP HTTP: Tool execution completed', { tool: name });
-        return {
-          content: result.content,
-          isError: false
-        };
-      } catch (error) {
-        logger.error('MCP HTTP: Tool execution failed', error, { tool: name });
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error executing tool ${name}: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ],
-          isError: true
-        };
-      }
-    });
-
-    // List available resources
-    this.mcpServer.setRequestHandler(ListResourcesRequestSchema, async () => {
-      logger.debug('MCP HTTP: Listing available resources');
-      
-      try {
-        const specResourcesList = await specResources.list();
-        
-        return {
-          resources: [
-            dashboardResource,
-            ...specResourcesList
-          ]
-        };
-      } catch (error) {
-        logger.error('MCP HTTP: Failed to list resources', error);
-        return { resources: [] };
-      }
-    });
-
-    // Handle resource reading
-    this.mcpServer.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-      const { uri } = request.params;
-      
-      logger.debug('MCP HTTP: Reading resource', { uri });
-
-      try {
-        if (uri === 'dashboard.html://index') {
-          return await dashboardResource.read();
-        } else if (uri.startsWith('spec://')) {
-          return await specResources.read(uri);
-        } else {
-          throw new Error(`Unknown resource URI: ${uri}`);
-        }
-      } catch (error) {
-        logger.error('MCP HTTP: Resource reading failed', error, { uri });
-        throw error;
-      }
-    });
-  }
 
   setupRoutes() {
     // Health check endpoint
@@ -250,10 +137,92 @@ class MCPHttpServer {
       throw new Error('Invalid JSON-RPC format');
     }
 
-    // Process the request through the MCP server
-    return await this.mcpServer.request(request, {
-      sessionId: sessionId
-    });
+    // Handle MCP methods directly
+    try {
+      switch (request.method) {
+        case 'initialize':
+          return {
+            jsonrpc: '2.0',
+            id: request.id,
+            result: {
+              protocolVersion: '2024-11-05',
+              capabilities: {
+                tools: {},
+                resources: {}
+              },
+              serverInfo: {
+                name: this.settings.mcp.serverName,
+                version: this.settings.mcp.serverVersion
+              }
+            }
+          };
+
+        case 'tools/list':
+          const tools = specTools.map(tool => ({
+            name: tool.name,
+            description: tool.description,
+            inputSchema: tool.inputSchema
+          }));
+          return {
+            jsonrpc: '2.0',
+            id: request.id,
+            result: { tools }
+          };
+
+        case 'tools/call':
+          const { name, arguments: args } = request.params;
+          const tool = specTools.find(t => t.name === name);
+          if (!tool) {
+            throw new Error(`Unknown tool: ${name}`);
+          }
+          const result = await tool.handler(args || {});
+          return {
+            jsonrpc: '2.0',
+            id: request.id,
+            result: {
+              content: result.content,
+              isError: false
+            }
+          };
+
+        case 'resources/list':
+          const specResourcesList = await specResources.list();
+          const resources = [dashboardResource, ...specResourcesList];
+          return {
+            jsonrpc: '2.0',
+            id: request.id,
+            result: { resources }
+          };
+
+        case 'resources/read':
+          const { uri } = request.params;
+          let resourceResult;
+          if (uri === 'dashboard.html://index') {
+            resourceResult = await dashboardResource.read();
+          } else if (uri.startsWith('spec://')) {
+            resourceResult = await specResources.read(uri);
+          } else {
+            throw new Error(`Unknown resource URI: ${uri}`);
+          }
+          return {
+            jsonrpc: '2.0',
+            id: request.id,
+            result: resourceResult
+          };
+
+        default:
+          throw new Error(`Unknown method: ${request.method}`);
+      }
+    } catch (error) {
+      return {
+        jsonrpc: '2.0',
+        id: request.id,
+        error: {
+          code: -32603,
+          message: error.message
+        }
+      };
+    }
   }
 
   needsStreaming(response) {

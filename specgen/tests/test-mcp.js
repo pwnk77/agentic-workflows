@@ -4,9 +4,9 @@
  * Simple MCP server test script
  */
 
-import { createMCPServer } from './dist/mcp/server.js';
-import { initializeDatabase } from './dist/database/data-source.js';
-import { logger } from './dist/services/logging.service.js';
+import { createMCPServer } from '../dist/mcp/server.js';
+import { initializeDatabase } from '../dist/database/data-source.js';
+import { logger } from '../dist/services/logging.service.js';
 
 async function main() {
   try {

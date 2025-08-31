@@ -6,6 +6,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { SpecService } from '../../services/spec.service.js';
 import { logger } from '../../services/logging.service.js';
+import { websocketHandler } from '../../src/dashboard/websocket-handler.js';
 
 // Request/Response schemas
 const createSpecSchema = z.object({
@@ -113,6 +114,17 @@ export class SpecController {
       status: data.status
     });
 
+    // Broadcast spec creation to WebSocket clients
+    websocketHandler.broadcastSpecCreated({
+      id: spec.id,
+      title: spec.title,
+      bodyMd: spec.bodyMd,
+      status: spec.status,
+      version: spec.version,
+      createdAt: spec.createdAt.toISOString(),
+      updatedAt: spec.updatedAt.toISOString()
+    });
+
     res.status(201).json({
       success: true,
       data: {
@@ -134,12 +146,32 @@ export class SpecController {
     
     logger.debug('Updating spec via API', { id, ...data });
 
+    // Get the current spec to check for status changes
+    const currentSpec = await this.specService.getSpec(id);
+    const oldStatus = currentSpec.status;
+
     const updateFields: any = {};
     if (data.title) updateFields.title = data.title;
     if (data.body_md) updateFields.bodyMd = data.body_md;
     if (data.status) updateFields.status = data.status;
 
     const spec = await this.specService.updateSpec(id, updateFields);
+
+    // Broadcast spec update to WebSocket clients
+    websocketHandler.broadcastSpecUpdate(spec.id, {
+      id: spec.id,
+      title: spec.title,
+      bodyMd: spec.bodyMd,
+      status: spec.status,
+      version: spec.version,
+      createdAt: spec.createdAt.toISOString(),
+      updatedAt: spec.updatedAt.toISOString()
+    });
+
+    // If status changed, also broadcast status change
+    if (data.status && oldStatus !== spec.status) {
+      websocketHandler.broadcastSpecStatusChanged(spec.id, oldStatus, spec.status);
+    }
 
     res.json({
       success: true,
@@ -163,6 +195,9 @@ export class SpecController {
 
     await this.specService.deleteSpec(id);
 
+    // Broadcast spec deletion to WebSocket clients
+    websocketHandler.broadcastSpecDeleted(id);
+
     res.json({
       success: true,
       message: `Specification ${id} deleted successfully`,
@@ -174,6 +209,12 @@ export class SpecController {
     logger.debug('Getting spec stats via API');
 
     const stats = await this.specService.getSpecStats();
+
+    // Broadcast stats update to WebSocket clients
+    websocketHandler.broadcastStatsUpdate({
+      total: stats.total,
+      by_status: stats.byStatus
+    });
 
     res.json({
       success: true,

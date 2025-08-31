@@ -1,0 +1,1 @@
+{"version":3,"file":"001_initial_schema.d.ts","sourceRoot":"","sources":["../../../database/migrations/001_initial_schema.ts"],"names":[],"mappings":"AAAA;;GAEG;AAEH,OAAO,EAAE,kBAAkB,EAAE,WAAW,EAAE,MAAM,SAAS,CAAC;AAE1D,qBAAa,0BAA2B,YAAW,kBAAkB;IACnE,IAAI,SAAgC;IAEvB,EAAE,CAAC,WAAW,EAAE,WAAW,GAAG,OAAO,CAAC,IAAI,CAAC;IAkE3C,IAAI,CAAC,WAAW,EAAE,WAAW,GAAG,OAAO,CAAC,IAAI,CAAC;CAe3D"}

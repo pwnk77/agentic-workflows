@@ -90,7 +90,7 @@ export async function closeDatabase(): Promise<void> {
   }
 }
 
-// Graceful shutdown handling
-process.on('SIGINT', closeDatabase);
-process.on('SIGTERM', closeDatabase);
-process.on('exit', closeDatabase);
+// Graceful shutdown handling - DISABLED to prevent SQLite crashes in MCP server
+// process.on('SIGINT', closeDatabase);
+// process.on('SIGTERM', closeDatabase);  
+// process.on('exit', closeDatabase);

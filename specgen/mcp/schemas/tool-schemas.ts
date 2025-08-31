@@ -61,6 +61,12 @@ export const getSpecStatsToolSchema = z.object({
   include_details: z.coerce.boolean().optional().default(false)
 });
 
+// Launch dashboard tool schema
+export const launchDashboardToolSchema = z.object({
+  port: z.coerce.number().int().min(1024).max(65535).optional().default(3001),
+  open_browser: z.coerce.boolean().optional().default(true)
+});
+
 export type CreateSpecToolInput = z.infer<typeof createSpecToolSchema>;
 export type UpdateSpecToolInput = z.infer<typeof updateSpecToolSchema>;
 export type ListSpecsToolInput = z.infer<typeof listSpecsToolSchema>;
@@ -68,3 +74,4 @@ export type GetSpecToolInput = z.infer<typeof getSpecToolSchema>;
 export type DeleteSpecToolInput = z.infer<typeof deleteSpecToolSchema>;
 export type SearchSpecsToolInput = z.infer<typeof searchSpecsToolSchema>;
 export type GetSpecStatsToolInput = z.infer<typeof getSpecStatsToolSchema>;
+export type LaunchDashboardToolInput = z.infer<typeof launchDashboardToolSchema>;

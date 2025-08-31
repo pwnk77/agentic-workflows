@@ -10,17 +10,20 @@ import {
   deleteSpecToolSchema,
   searchSpecsToolSchema,
   getSpecStatsToolSchema,
+  launchDashboardToolSchema,
   CreateSpecToolInput,
   UpdateSpecToolInput,
   ListSpecsToolInput,
   GetSpecToolInput,
   DeleteSpecToolInput,
   SearchSpecsToolInput,
-  GetSpecStatsToolInput
+  GetSpecStatsToolInput,
+  LaunchDashboardToolInput
 } from '../schemas/tool-schemas.js';
 import { SpecService, SearchService } from '../../services/index.js';
 import { MCPToolResult } from '../types.js';
 import { logger } from '../../services/logging.service.js';
+import { IntegratedSpecGenServer } from '../../src/integrated-server.js';
 
 // Initialize services
 const specService = new SpecService();
@@ -383,6 +386,47 @@ export const specTools = [
         return createToolResult(result);
       } catch (error) {
         return handleToolError(error, 'get_spec_stats');
+      }
+    }
+  },
+
+  {
+    name: 'launch_dashboard',
+    description: 'Launch the interactive web dashboard for SpecGen',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        port: { type: 'number', minimum: 1024, maximum: 65535, default: 4567 },
+        open_browser: { type: 'boolean', default: true }
+      },
+      required: [],
+      additionalProperties: false
+    },
+    handler: async (args: LaunchDashboardToolInput): Promise<MCPToolResult> => {
+      try {
+        const validation = launchDashboardToolSchema.safeParse(args);
+        if (!validation.success) {
+          throw new Error(`Validation failed: ${validation.error.errors.map(e => e.message).join(', ')}`);
+        }
+
+        // Initialize integrated server in dashboard mode
+        const integratedServer = new IntegratedSpecGenServer();
+        
+        await integratedServer.start({
+          mode: 'dashboard',
+          port: validation.data.port,
+          autoOpenBrowser: validation.data.open_browser
+        });
+
+        return createToolResult({
+          success: true,
+          message: `Dashboard launched successfully at http://localhost:${validation.data.port}/dashboard`,
+          port: validation.data.port,
+          url: `http://localhost:${validation.data.port}/dashboard`,
+          browser_opened: validation.data.open_browser
+        });
+      } catch (error) {
+        return handleToolError(error, 'launch_dashboard');
       }
     }
   }

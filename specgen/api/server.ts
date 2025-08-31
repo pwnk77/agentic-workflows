@@ -5,6 +5,8 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { getAppSettings } from '../config/settings.js';
 import { logger } from '../services/logging.service.js';
 
@@ -30,8 +32,8 @@ export function createAPIServer(): express.Application {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.tailwindcss.com"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://cdn.tailwindcss.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:"],
         connectSrc: ["'self'"],
@@ -101,6 +103,26 @@ export function createAPIServer(): express.Application {
       timestamp: new Date().toISOString()
     });
   });
+
+  // Static file serving for simplified dashboard
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const publicPath = path.join(__dirname, '..', 'public');
+  
+  // Serve static assets from public directory
+  app.use('/static', express.static(publicPath, {
+    maxAge: '1d', // Cache static assets for 1 day
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, path) => {
+      // Set cache control headers for different file types
+      if (path.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      } else if (path.match(/\.(js|css|ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$/)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year for assets
+      }
+    }
+  }));
 
   // Error handling middleware (must be last)
   app.use(notFoundHandler);

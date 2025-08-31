@@ -7,7 +7,7 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "allowJs": true,
-    "outDir": "./dist",
+    "outDir": "./build",
     "rootDir": "./",
     "strict": true,
     "noImplicitAny": true,
@@ -35,6 +35,7 @@
   "exclude": [
     "node_modules",
     "dist",
+    "build",
     "tests"
   ],
   "ts-node": {

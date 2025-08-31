@@ -40,12 +40,27 @@ export interface LoggingConfig {
   maxFiles: number;
 }
 
+export interface DashboardConfig {
+  defaultPort: number;
+  autoOpenBrowser: boolean;
+  staticPath: string;
+}
+
+export interface WebSocketConfig {
+  enabled: boolean;
+  pingInterval: number;
+  maxConnections: number;
+  heartbeatTimeout: number;
+}
+
 export interface AppSettings {
   database: DatabaseConfig;
   server: ServerConfig;
   mcp: MCPConfig;
   search: SearchConfig;
   logging: LoggingConfig;
+  dashboard: DashboardConfig;
+  websocket: WebSocketConfig;
   maxSpecSize: number;
 }
 
@@ -83,6 +98,17 @@ export function getAppSettings(): AppSettings {
       enableFile: !env.NODE_ENV || env.NODE_ENV === 'development',
       maxFileSize: 5242880, // 5MB
       maxFiles: 5
+    },
+    dashboard: {
+      defaultPort: env.DASHBOARD_PORT || 3001,
+      autoOpenBrowser: env.DASHBOARD_AUTO_OPEN !== 'false',
+      staticPath: '../dashboard/build'
+    },
+    websocket: {
+      enabled: env.WEBSOCKET_ENABLED !== 'false',
+      pingInterval: env.WEBSOCKET_PING_INTERVAL || 30000,
+      maxConnections: env.WEBSOCKET_MAX_CONNECTIONS || 100,
+      heartbeatTimeout: env.WEBSOCKET_HEARTBEAT_TIMEOUT || 60000
     },
     maxSpecSize: env.MAX_SPEC_SIZE
   };
