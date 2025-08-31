@@ -1,7 +1,8 @@
-#!/usr/bin/env node
-/**
- * SpecGen MCP Server - Main entry point
- * TypeScript-based MCP server for SPEC file management with SQLite backend
- */
-export {};
+export { SpecService, type Spec, type CreateSpecData, type UpdateSpecData } from './services/spec.service';
+export { ProjectService } from './services/project.service';
+export type { ProjectInfo } from './database/project-manager';
+export { ImportService, type ImportResult } from './services/import.service';
+export { SpecParser, type ParsedSpec } from './parsers/spec-parser';
+export { ProjectManager } from './database/project-manager';
+export { DatabaseConnection } from './database/connection';
 //# sourceMappingURL=index.d.ts.map

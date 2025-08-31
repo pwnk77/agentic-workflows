@@ -1,22 +1,80 @@
-/**
- * Spec service with business logic and validation
- */
-import { Spec, SpecStatus } from '../entities/Spec.js';
-import { CreateSpecRequest, UpdateSpecRequest, ListSpecsQuery, SpecListResponse } from '../types/spec.types.js';
+import { SpecStatus } from '../parsers/spec-parser';
 export declare class SpecService {
-    private repository;
-    private settings;
-    constructor();
-    createSpec(data: CreateSpecRequest): Promise<Spec>;
-    updateSpec(id: number, data: UpdateSpecRequest): Promise<Spec>;
-    getSpec(id: number, includeRelations?: boolean): Promise<Spec>;
-    listSpecs(query?: ListSpecsQuery): Promise<SpecListResponse>;
-    deleteSpec(id: number): Promise<void>;
-    getSpecsByStatus(status: SpecStatus): Promise<Spec[]>;
-    getSpecStats(): Promise<{
+    static createSpec(data: CreateSpecData): Spec;
+    static updateSpec(spec_id: number, updates: UpdateSpecData): Spec | null;
+    static getSpecById(spec_id: number): Spec | null;
+    static deleteSpec(spec_id: number): boolean;
+    static listSpecs(options?: ListSpecsOptions): SpecListResult;
+    static searchSpecs(query: string, options?: SearchOptions): SpecSearchResult;
+    static getStats(include_details?: boolean): SpecStats;
+    private static autoDetectGroup;
+}
+export interface Spec {
+    id: number;
+    title: string;
+    body_md: string;
+    status: SpecStatus;
+    feature_group: string;
+    created_at: string;
+    updated_at: string;
+}
+export interface CreateSpecData {
+    title: string;
+    body_md: string;
+    status?: SpecStatus;
+    feature_group?: string;
+}
+export interface UpdateSpecData {
+    title?: string;
+    body_md?: string;
+    status?: SpecStatus;
+    feature_group?: string;
+}
+export interface ListSpecsOptions {
+    status?: SpecStatus;
+    feature_group?: string;
+    sort_by?: 'id' | 'title' | 'created_at' | 'updated_at';
+    sort_order?: 'asc' | 'desc';
+    limit?: number;
+    offset?: number;
+}
+export interface SearchOptions {
+    limit?: number;
+    offset?: number;
+    min_score?: number;
+}
+export interface SpecListResult {
+    specs: Spec[];
+    pagination: {
+        offset: number;
+        limit: number;
         total: number;
-        byStatus: Record<SpecStatus, number>;
+        has_more: boolean;
+    };
+}
+export interface SpecSearchResult {
+    query: string;
+    results: Array<Spec & {
+        score: number;
     }>;
-    searchSpecsByTitle(pattern: string): Promise<Spec[]>;
+    pagination: {
+        offset: number;
+        limit: number;
+        total: number;
+        has_more: boolean;
+    };
+}
+export interface SpecStats {
+    total_specs: number;
+    by_status: Record<string, number>;
+    by_group: Record<string, number>;
+    recent_activity?: number;
+    latest_specs?: Array<{
+        id: number;
+        title: string;
+        status: string;
+        feature_group: string;
+        created_at: string;
+    }>;
 }
 //# sourceMappingURL=spec.service.d.ts.map

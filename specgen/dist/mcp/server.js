@@ -1,168 +1,125 @@
-/**
- * MCP server using @modelcontextprotocol/sdk
- */
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { CallToolRequestSchema, ListResourcesRequestSchema, ListToolsRequestSchema, ReadResourceRequestSchema, } from '@modelcontextprotocol/sdk/types.js';
-import { getAppSettings } from '../config/settings.js';
-import { logger } from '../services/logging.service.js';
-// Import MCP tools and resources
-import { specTools } from './tools/spec-tools.js';
-import { specResources, dashboardResource } from './resources/index.js';
-export class MCPServerManager {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.startMCPServer = startMCPServer;
+const index_js_1 = require("@modelcontextprotocol/sdk/server/index.js");
+const stdio_js_1 = require("@modelcontextprotocol/sdk/server/stdio.js");
+const types_js_1 = require("@modelcontextprotocol/sdk/types.js");
+const spec_tools_1 = require("./tools/spec-tools");
+const project_service_1 = require("../services/project.service");
+const spec_resource_1 = require("./resources/spec-resource");
+class SpecGenMCPServer {
     server;
-    config;
-    initialized = false;
     constructor() {
-        const settings = getAppSettings();
-        this.config = {
-            name: settings.mcp.serverName,
-            version: settings.mcp.serverVersion,
-            maxTools: settings.mcp.maxTools,
-            maxResources: settings.mcp.maxResources
-        };
-        this.server = new Server({
-            name: this.config.name,
-            version: this.config.version,
+        this.server = new index_js_1.Server({
+            name: 'specgen-mcp',
+            version: '1.0.0',
         }, {
             capabilities: {
                 tools: {},
                 resources: {}
-            },
+            }
         });
-        this.setupHandlers();
+        this.setupToolHandlers();
+        this.setupResourceHandlers();
+        this.setupErrorHandling();
     }
-    setupHandlers() {
-        // List available tools
-        this.server.setRequestHandler(ListToolsRequestSchema, async () => {
-            logger.debug('MCP: Listing available tools');
+    setupToolHandlers() {
+        this.server.setRequestHandler(types_js_1.ListToolsRequestSchema, async () => {
             return {
-                tools: [
-                    ...specTools.map(tool => ({
-                        name: tool.name,
-                        description: tool.description,
-                        inputSchema: tool.inputSchema
-                    }))
-                ]
+                tools: spec_tools_1.specTools.map(tool => ({
+                    name: tool.name,
+                    description: tool.description,
+                    inputSchema: tool.inputSchema
+                }))
             };
         });
-        // Handle tool execution
-        this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+        this.server.setRequestHandler(types_js_1.CallToolRequestSchema, async (request) => {
             const { name, arguments: args } = request.params;
-            logger.debug('MCP: Executing tool', { tool: name, args });
+            if (!project_service_1.ProjectService.isInInitializedProject()) {
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InvalidRequest, 'Project not initialized. Run "specgen init" first.');
+            }
+            const tool = spec_tools_1.specTools.find(t => t.name === name);
+            if (!tool) {
+                throw new types_js_1.McpError(types_js_1.ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+            }
             try {
-                // Find and execute the requested tool
-                const tool = specTools.find(t => t.name === name);
-                if (!tool) {
-                    throw new Error(`Unknown tool: ${name}`);
-                }
                 const result = await tool.handler(args || {});
-                logger.debug('MCP: Tool execution completed', { tool: name });
                 return {
-                    content: result.content,
-                    isError: false
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify(result, null, 2)
+                        }]
                 };
             }
             catch (error) {
-                logger.error('MCP: Tool execution failed', error, { tool: name });
-                return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Error executing tool ${name}: ${error instanceof Error ? error.message : String(error)}`
-                        }
-                    ],
-                    isError: true
-                };
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`);
             }
         });
-        // List available resources
-        this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
-            logger.debug('MCP: Listing available resources');
+    }
+    setupResourceHandlers() {
+        this.server.setRequestHandler(types_js_1.ListResourcesRequestSchema, async () => {
             try {
-                const specResourcesList = await specResources.list();
-                return {
-                    resources: [
-                        dashboardResource,
-                        ...specResourcesList
-                    ]
-                };
+                if (!project_service_1.ProjectService.isInInitializedProject()) {
+                    return { resources: [] };
+                }
+                const resources = await spec_resource_1.SpecGenResourceHandler.listAllResources();
+                return { resources };
             }
             catch (error) {
-                logger.error('MCP: Failed to list resources', error);
                 return { resources: [] };
             }
         });
-        // Handle resource reading
-        this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+        this.server.setRequestHandler(types_js_1.ReadResourceRequestSchema, async (request) => {
             const { uri } = request.params;
-            logger.debug('MCP: Reading resource', { uri });
+            if (!project_service_1.ProjectService.isInInitializedProject()) {
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InvalidRequest, 'Project not initialized');
+            }
             try {
-                // Handle different resource types
-                if (uri === 'dashboard.html://index') {
-                    return await dashboardResource.read();
-                }
-                else if (uri.startsWith('spec://')) {
-                    return await specResources.read(uri);
-                }
-                else {
-                    throw new Error(`Unknown resource URI: ${uri}`);
-                }
+                const resource = await spec_resource_1.SpecGenResourceHandler.readResource(uri);
+                return {
+                    contents: [resource]
+                };
             }
             catch (error) {
-                logger.error('MCP: Resource reading failed', error, { uri });
-                throw error;
+                if (error instanceof types_js_1.McpError) {
+                    throw error;
+                }
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to read resource: ${error instanceof Error ? error.message : String(error)}`);
             }
         });
     }
-    async start() {
-        if (this.initialized) {
-            logger.warn('MCP server already initialized');
-            return;
-        }
-        try {
-            const transport = new StdioServerTransport();
-            await this.server.connect(transport);
-            this.initialized = true;
-            logger.info('MCP server started successfully', {
-                name: this.config.name,
-                version: this.config.version
-            });
-        }
-        catch (error) {
-            logger.error('Failed to start MCP server', error);
-            throw error;
-        }
+    setupErrorHandling() {
+        this.server.onerror = (error) => {
+            console.error('[SpecGen MCP Server Error]', error);
+        };
+        process.on('SIGINT', async () => {
+            await this.server.close();
+            process.exit(0);
+        });
+    }
+    async connect(transport) {
+        await this.server.connect(transport);
     }
     async close() {
-        if (!this.initialized) {
-            return;
-        }
-        try {
-            await this.server.close();
-            this.initialized = false;
-            logger.info('MCP server closed successfully');
-        }
-        catch (error) {
-            logger.error('Error closing MCP server', error);
-            throw error;
-        }
-    }
-    isRunning() {
-        return this.initialized;
-    }
-    getConfig() {
-        return { ...this.config };
+        await this.server.close();
     }
 }
-// Factory function to create and start MCP server
-export function createMCPServer() {
-    const mcpServer = new MCPServerManager();
-    // Start the server immediately in stdio mode
-    mcpServer.start().catch((error) => {
-        logger.error('Failed to start MCP server', error);
+async function startMCPServer() {
+    const server = new SpecGenMCPServer();
+    const transport = new stdio_js_1.StdioServerTransport();
+    try {
+        await server.connect(transport);
+        console.error('SpecGen MCP Server started successfully');
+    }
+    catch (error) {
+        console.error('Failed to start SpecGen MCP Server:', error);
+        process.exit(1);
+    }
+}
+if (require.main === module) {
+    startMCPServer().catch(error => {
+        console.error('Fatal error:', error);
         process.exit(1);
     });
-    return mcpServer;
 }
 //# sourceMappingURL=server.js.map

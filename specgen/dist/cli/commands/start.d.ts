@@ -1,6 +1,3 @@
-/**
- * Start command for the MCP server
- */
 import { Command } from 'commander';
-export declare const startCommand: Command;
+export declare function createStartCommand(): Command;
 //# sourceMappingURL=start.d.ts.map

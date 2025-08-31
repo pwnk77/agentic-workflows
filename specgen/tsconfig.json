@@ -1,44 +1,36 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022"],
-    "module": "ESNext",
+    "module": "CommonJS",
     "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
+    "lib": ["ES2022"],
     "allowJs": true,
-    "outDir": "./build",
-    "rootDir": "./",
+    "outDir": "./dist",
+    "rootDir": "./src",
     "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "exactOptionalPropertyTypes": false,
-    "noPropertyAccessFromIndexSignature": false,
-    "noUncheckedIndexedAccess": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "removeComments": false,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
+    "removeComments": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true
   },
   "include": [
-    "**/*.ts"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "build",
-    "tests"
-  ],
-  "ts-node": {
-    "esm": true
-  }
+    "tests",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }

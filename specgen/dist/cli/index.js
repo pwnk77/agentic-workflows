@@ -1,28 +1,29 @@
 #!/usr/bin/env node
-/**
- * CLI entry point for SpecGen MCP Server
- */
-import { program } from 'commander';
-import { startCommand } from './commands/start.js';
-import { dbCommand } from './commands/db.js';
-import { specCommand } from './commands/spec.js';
-export function createCLI() {
-    program
-        .name('specgen-mcp-server')
-        .description('TypeScript MCP server for SPEC file management with SQLite backend')
-        .version('1.0.0');
-    // Register commands
-    program.addCommand(startCommand);
-    program.addCommand(dbCommand);
-    program.addCommand(specCommand);
-    return program;
-}
-// Run CLI if this file is executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-    const cli = createCLI();
-    cli.parseAsync(process.argv).catch((error) => {
-        console.error('CLI Error:', error.message);
-        process.exit(1);
-    });
-}
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const commander_1 = require("commander");
+const init_1 = require("./commands/init");
+const import_1 = require("./commands/import");
+const start_1 = require("./commands/start");
+const status_1 = require("./commands/status");
+commander_1.program
+    .name('specgen')
+    .description('SpecGen - Project-scoped specification management for Claude Code')
+    .version('1.0.0');
+commander_1.program.addCommand((0, init_1.createInitCommand)());
+commander_1.program.addCommand((0, import_1.createImportCommand)());
+commander_1.program.addCommand((0, start_1.createStartCommand)());
+commander_1.program.addCommand((0, status_1.createStatusCommand)());
+process.on('uncaughtException', (error) => {
+    console.error('❌ Uncaught exception:', error.message);
+    if (process.env.DEBUG) {
+        console.error(error.stack);
+    }
+    process.exit(1);
+});
+process.on('unhandledRejection', (reason) => {
+    console.error('❌ Unhandled promise rejection:', reason);
+    process.exit(1);
+});
+commander_1.program.parse();
 //# sourceMappingURL=index.js.map

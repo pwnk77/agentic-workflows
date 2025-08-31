@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "specgen-mcp": {
-      "command": "node",
-      "args": ["dist/index.js", "start", "--no-api", "--db-path", "./specgen.sqlite"]
-    }
-  }
-}
