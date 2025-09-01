@@ -8,6 +8,7 @@ export declare class SpecService {
     static searchSpecs(query: string, options?: SearchOptions): SpecSearchResult;
     static getStats(include_details?: boolean): SpecStats;
     private static autoDetectGroup;
+    private static autoDetectTheme;
 }
 export interface Spec {
     id: number;
@@ -15,6 +16,12 @@ export interface Spec {
     body_md: string;
     status: SpecStatus;
     feature_group: string;
+    theme_category?: string;
+    priority?: string;
+    related_specs?: string;
+    parent_spec_id?: number;
+    created_via?: string;
+    last_command?: string;
     created_at: string;
     updated_at: string;
 }
@@ -23,17 +30,30 @@ export interface CreateSpecData {
     body_md: string;
     status?: SpecStatus;
     feature_group?: string;
+    theme_category?: string;
+    priority?: string;
+    related_specs?: number[];
+    parent_spec_id?: number;
+    created_via?: string;
 }
 export interface UpdateSpecData {
     title?: string;
     body_md?: string;
     status?: SpecStatus;
     feature_group?: string;
+    theme_category?: string;
+    priority?: string;
+    related_specs?: string;
+    parent_spec_id?: number;
+    last_command?: string;
 }
 export interface ListSpecsOptions {
     status?: SpecStatus;
     feature_group?: string;
-    sort_by?: 'id' | 'title' | 'created_at' | 'updated_at';
+    theme_category?: string;
+    priority?: string;
+    created_via?: string;
+    sort_by?: 'id' | 'title' | 'created_at' | 'updated_at' | 'priority';
     sort_order?: 'asc' | 'desc';
     limit?: number;
     offset?: number;

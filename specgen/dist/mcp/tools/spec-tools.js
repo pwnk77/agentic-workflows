@@ -1,8 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.specTools = exports.getSpecStatsTool = exports.deleteSpecTool = exports.importSpecsTool = exports.searchSpecsTool = exports.listSpecsTool = exports.getSpecTool = exports.updateSpecTool = exports.createSpecTool = void 0;
+exports.specTools = exports.updateSpecRelationshipsTool = exports.searchRelatedSpecsTool = exports.createSpecWithGroupingTool = exports.getSpecStatsTool = exports.deleteSpecTool = exports.importSpecsTool = exports.searchSpecsTool = exports.listSpecsTool = exports.getSpecTool = exports.updateSpecTool = exports.createSpecTool = void 0;
 const spec_service_1 = require("../../services/spec.service");
 const import_service_1 = require("../../services/import.service");
+const grouping_service_1 = require("../../services/grouping.service");
+const relationship_service_1 = require("../../services/relationship.service");
 function validateCreateSpec(args) {
     if (!args.title || typeof args.title !== 'string') {
         throw new Error('title is required and must be a string');
@@ -24,6 +26,21 @@ function validateGetSpec(args) {
     }
     return args;
 }
+function validateSearchRelatedSpecs(args) {
+    if (!args.query || typeof args.query !== 'string') {
+        throw new Error('query is required and must be a string');
+    }
+    return args;
+}
+function validateUpdateSpecRelationships(args) {
+    if (!args.spec_id || typeof args.spec_id !== 'number') {
+        throw new Error('spec_id is required and must be a number');
+    }
+    if (!Array.isArray(args.related_specs)) {
+        throw new Error('related_specs is required and must be an array');
+    }
+    return args;
+}
 exports.createSpecTool = {
     name: 'create_spec',
     description: 'Create a new specification in the current project',
@@ -33,7 +50,12 @@ exports.createSpecTool = {
             title: { type: 'string' },
             body_md: { type: 'string' },
             status: { type: 'string', enum: ['draft', 'todo', 'in-progress', 'done'] },
-            feature_group: { type: 'string' }
+            feature_group: { type: 'string' },
+            theme_category: { type: 'string' },
+            priority: { type: 'string', enum: ['low', 'medium', 'high'] },
+            related_specs: { type: 'array', items: { type: 'number' } },
+            parent_spec_id: { type: 'number' },
+            created_via: { type: 'string' }
         },
         required: ['title', 'body_md']
     },
@@ -65,7 +87,12 @@ exports.updateSpecTool = {
             title: { type: 'string' },
             body_md: { type: 'string' },
             status: { type: 'string', enum: ['draft', 'todo', 'in-progress', 'done'] },
-            feature_group: { type: 'string' }
+            feature_group: { type: 'string' },
+            theme_category: { type: 'string' },
+            priority: { type: 'string', enum: ['low', 'medium', 'high'] },
+            related_specs: { type: 'array', items: { type: 'number' } },
+            parent_spec_id: { type: 'number' },
+            last_command: { type: 'string' }
         },
         required: ['spec_id']
     },
@@ -95,16 +122,17 @@ exports.updateSpecTool = {
 };
 exports.getSpecTool = {
     name: 'get_spec',
-    description: 'Get a specification by ID',
+    description: 'Get a specification by ID with optional relationship information',
     inputSchema: {
         type: 'object',
         properties: {
-            spec_id: { type: 'number' }
+            spec_id: { type: 'number' },
+            include_relations: { type: 'boolean', default: false }
         },
         required: ['spec_id']
     },
     handler: async (args) => {
-        const { spec_id } = validateGetSpec(args);
+        const { spec_id, include_relations } = validateGetSpec(args);
         try {
             const spec = spec_service_1.SpecService.getSpecById(spec_id);
             if (!spec) {
@@ -113,10 +141,17 @@ exports.getSpecTool = {
                     error: `Specification with ID ${spec_id} not found`
                 };
             }
-            return {
-                success: true,
-                spec
-            };
+            let result = { success: true, spec };
+            if (include_relations && spec.related_specs) {
+                try {
+                    const relatedSpecIds = JSON.parse(spec.related_specs);
+                    const relatedSpecs = relatedSpecIds.map((id) => spec_service_1.SpecService.getSpecById(id)).filter(Boolean);
+                    result.related_specs = relatedSpecs;
+                }
+                catch (e) {
+                }
+            }
+            return result;
         }
         catch (error) {
             return {
@@ -134,9 +169,12 @@ exports.listSpecsTool = {
         properties: {
             status: { type: 'string', enum: ['draft', 'todo', 'in-progress', 'done'] },
             feature_group: { type: 'string' },
+            theme_category: { type: 'string' },
+            priority: { type: 'string', enum: ['low', 'medium', 'high'] },
+            created_via: { type: 'string' },
             limit: { type: 'number', minimum: 1, maximum: 1000 },
             offset: { type: 'number', minimum: 0 },
-            sort_by: { type: 'string', enum: ['id', 'title', 'created_at', 'updated_at'] },
+            sort_by: { type: 'string', enum: ['id', 'title', 'created_at', 'updated_at', 'priority'] },
             sort_order: { type: 'string', enum: ['asc', 'desc'] }
         }
     },
@@ -273,6 +311,175 @@ exports.getSpecStatsTool = {
         }
     }
 };
+exports.createSpecWithGroupingTool = {
+    name: 'create_spec_with_grouping',
+    description: 'Create a new specification with automatic feature detection and relationship mapping',
+    inputSchema: {
+        type: 'object',
+        properties: {
+            title: { type: 'string' },
+            body_md: { type: 'string' },
+            status: { type: 'string', enum: ['draft', 'todo', 'in-progress', 'done'] },
+            feature_group: { type: 'string' },
+            theme_category: { type: 'string' },
+            priority: { type: 'string', enum: ['low', 'medium', 'high'] },
+            related_specs: { type: 'array', items: { type: 'number' } },
+            parent_spec_id: { type: 'number' },
+            created_via: { type: 'string' }
+        },
+        required: ['title', 'body_md']
+    },
+    handler: async (args) => {
+        const data = validateCreateSpec(args);
+        try {
+            const detectedFeatureGroup = data.feature_group || grouping_service_1.SpecGroupingService.detectFeatureGroup(data.title, data.body_md);
+            const detectedThemeCategory = data.theme_category || grouping_service_1.SpecGroupingService.detectThemeCategory(detectedFeatureGroup, data.body_md);
+            const detectedPriority = data.priority || grouping_service_1.SpecGroupingService.detectPriority(data.title, data.body_md);
+            const spec = spec_service_1.SpecService.createSpec({
+                ...data,
+                feature_group: detectedFeatureGroup,
+                theme_category: detectedThemeCategory,
+                priority: detectedPriority
+            });
+            const relationshipSuggestions = relationship_service_1.RelationshipService.autoDetectRelationships(spec);
+            return {
+                success: true,
+                spec,
+                spec_id: spec.id,
+                spec_url: `spec://${spec.id}`,
+                detected_grouping: {
+                    feature_group: detectedFeatureGroup,
+                    theme_category: detectedThemeCategory,
+                    priority: detectedPriority
+                },
+                suggested_relationships: relationshipSuggestions,
+                message: `Created specification "${spec.title}" with auto-detected group: ${detectedFeatureGroup} (${detectedThemeCategory})`
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : String(error)
+            };
+        }
+    }
+};
+exports.searchRelatedSpecsTool = {
+    name: 'search_related_specs',
+    description: 'Search for specifications related to a query with context-aware ranking',
+    inputSchema: {
+        type: 'object',
+        properties: {
+            query: { type: 'string' },
+            current_spec_id: { type: 'number' },
+            feature_group: { type: 'string' },
+            limit: { type: 'number', minimum: 1, maximum: 100, default: 10 },
+            offset: { type: 'number', minimum: 0, default: 0 }
+        },
+        required: ['query']
+    },
+    handler: async (args) => {
+        const { query, current_spec_id, feature_group, limit, offset } = validateSearchRelatedSpecs(args);
+        try {
+            if (current_spec_id) {
+                const currentSpec = spec_service_1.SpecService.getSpecById(current_spec_id);
+                if (!currentSpec) {
+                    return {
+                        success: false,
+                        error: `Specification with ID ${current_spec_id} not found`
+                    };
+                }
+                const relatedSpecs = relationship_service_1.RelationshipService.findRelatedSpecs(currentSpec, {
+                    limit: limit || 10,
+                    minScore: 0.2,
+                    sameGroupOnly: feature_group === currentSpec.feature_group
+                });
+                return {
+                    success: true,
+                    specs: relatedSpecs.map(rel => {
+                        const spec = spec_service_1.SpecService.getSpecById(rel.spec_id);
+                        return { ...spec, relationship_score: rel.score, relationship_reason: rel.reason };
+                    }),
+                    query,
+                    relationship_suggestions: relatedSpecs,
+                    pagination: {
+                        offset: 0,
+                        limit: limit || 10,
+                        total: relatedSpecs.length,
+                        has_more: false
+                    }
+                };
+            }
+            else {
+                let searchOptions = { limit: limit || 10, offset: offset || 0 };
+                let result = spec_service_1.SpecService.searchSpecs(query, searchOptions);
+                if (feature_group) {
+                    const grouped = result.results.filter(spec => spec.feature_group === feature_group);
+                    const others = result.results.filter(spec => spec.feature_group !== feature_group);
+                    result.results = [...grouped, ...others];
+                }
+                return {
+                    success: true,
+                    specs: result.results,
+                    query: result.query,
+                    pagination: result.pagination,
+                    relationship_scores: result.results.map(spec => spec.score)
+                };
+            }
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : String(error)
+            };
+        }
+    }
+};
+exports.updateSpecRelationshipsTool = {
+    name: 'update_spec_relationships',
+    description: 'Update the relationships and hierarchy of a specification',
+    inputSchema: {
+        type: 'object',
+        properties: {
+            spec_id: { type: 'number' },
+            related_specs: { type: 'array', items: { type: 'number' } },
+            parent_spec_id: { type: 'number' }
+        },
+        required: ['spec_id', 'related_specs']
+    },
+    handler: async (args) => {
+        const { spec_id, related_specs, parent_spec_id } = validateUpdateSpecRelationships(args);
+        try {
+            const success = relationship_service_1.RelationshipService.updateSpecRelationships(spec_id, related_specs, parent_spec_id);
+            if (!success) {
+                return {
+                    success: false,
+                    error: `Failed to update relationships for specification with ID ${spec_id}`
+                };
+            }
+            const spec = spec_service_1.SpecService.getSpecById(spec_id);
+            if (!spec) {
+                return {
+                    success: false,
+                    error: `Specification with ID ${spec_id} not found`
+                };
+            }
+            const hierarchy = relationship_service_1.RelationshipService.getSpecHierarchy(spec_id);
+            return {
+                success: true,
+                spec,
+                hierarchy,
+                message: `Updated relationships for specification "${spec.title}"`
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : String(error)
+            };
+        }
+    }
+};
 exports.specTools = [
     exports.createSpecTool,
     exports.updateSpecTool,
@@ -281,6 +488,9 @@ exports.specTools = [
     exports.searchSpecsTool,
     exports.importSpecsTool,
     exports.deleteSpecTool,
-    exports.getSpecStatsTool
+    exports.getSpecStatsTool,
+    exports.createSpecWithGroupingTool,
+    exports.searchRelatedSpecsTool,
+    exports.updateSpecRelationshipsTool
 ];
 //# sourceMappingURL=spec-tools.js.map

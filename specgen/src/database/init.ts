@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { MigrationRunner } from './migration-runner';
 
 /**
  * Initialize a new SQLite database with the simplified SpecGen schema
@@ -15,7 +16,7 @@ export class DatabaseInitializer {
   /**
    * Initialize database with schema and indexes
    */
-  initialize(): void {
+  async initialize(): Promise<void> {
     try {
       // Read and execute schema SQL
       const schemaPath = join(__dirname, 'schema.sql');
@@ -30,6 +31,10 @@ export class DatabaseInitializer {
       // Optimize for read performance
       this.db.exec('PRAGMA synchronous = NORMAL;');
       this.db.exec('PRAGMA cache_size = -64000;'); // 64MB cache
+
+      // Run any pending migrations
+      const migrationRunner = new MigrationRunner(this.db);
+      await migrationRunner.runMigrations();
       
       console.log('Database initialized successfully');
     } catch (error) {
