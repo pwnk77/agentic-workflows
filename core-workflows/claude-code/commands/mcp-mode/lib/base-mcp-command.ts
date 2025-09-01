@@ -74,10 +74,8 @@ export abstract class MCPCommand {
     return {
       create_spec_with_grouping: async (args: any) => {
         try {
-          // Import services dynamically to avoid circular dependencies
-          const { SpecService, CreateSpecData } = await import('../../../specgen/src/services/spec.service');
-          const { SpecGroupingService } = await import('../../../specgen/src/services/grouping.service');
-          const { RelationshipService } = await import('../../../specgen/src/services/relationship.service');
+          // Use MCP tools instead of direct service imports
+          // This removes dependency on specgen services
 
           const detectedFeatureGroup = args.feature_group || SpecGroupingService.detectFeatureGroup(args.title, args.body_md);
           const detectedThemeCategory = args.theme_category || SpecGroupingService.detectThemeCategory(detectedFeatureGroup, args.body_md);
