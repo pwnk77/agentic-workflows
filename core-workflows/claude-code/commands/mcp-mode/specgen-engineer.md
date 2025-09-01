@@ -13,8 +13,13 @@ argument-hint: [mode: implement|debug] [spec-id|spec-title] <task-description>
 2. **Debug Mode**: Analyze a failed task using the full context of the specification and its execution logs, then propose and implement a fix.
 
 **MCP Integration**: This command uses MCP tools for enhanced implementation:
-- **specgen MCP** (`mcp__specgen-mcp__*`) for specification retrieval and updates
+- **specgen MCP** (`mcp__specgen-mcp__*`) for specification retrieval, updates, and category-based organization
 - **Static Analysis MCP** (`mcp__static-analysis__*`) for TypeScript analysis (optional)
+
+**Category-Aware Implementation**: SpecGen now provides category context for better implementation:
+- **Feature Group Context**: Understand which category the specification belongs to
+- **Related Specs Discovery**: Find related specifications in the same category for context
+- **Category-Based Task Organization**: Organize implementation tasks by feature groups
 
 **Usage Pattern**: `/specgen-engineer [mode: implement|debug] [spec-id|spec-title] <task-description>`
 
@@ -56,6 +61,9 @@ This is the default mode for executing a specification using MCP tools.
    </mcp-search-specs>
    ```
    Then select the most relevant specification and retrieve it with `mcp__specgen-mcp__get_spec`.
+   
+   **Category Context Enhancement:**
+   After loading the specification, use `mcp__specgen-mcp__search_related_specs` with the spec's `feature_group` to understand related implementations and patterns within the same category.
 
 2. **Task Ingestion & Todo List Creation**:
    - Parse the `## Implementation Plan` section from the retrieved specification
@@ -70,7 +78,7 @@ This is the default mode for executing a specification using MCP tools.
 4. **Acknowledge**: 
    specgen-engineer mode implementation command - Specification loaded from specgen MCP, implementation ready to begin
    
-   "specgen-engineer, I have loaded specification `[Spec Title]` (ID: [spec_id]) from specgen MCP and created a todo list of [X] tasks. I am ready to begin implementation, starting with the `[First Layer Name]`."
+   "specgen-engineer, I have loaded specification `[Spec Title]` (ID: [spec_id], Category: [feature_group]) from specgen MCP and created a todo list of [X] tasks. Found [Y] related specifications in the same category for context. I am ready to begin implementation, starting with the `[First Layer Name]`."
 
 ### PHASE 2: LAYER-BY-LAYER EXECUTION
 

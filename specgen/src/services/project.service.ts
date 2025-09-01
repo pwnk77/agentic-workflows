@@ -1,5 +1,5 @@
-import { ProjectManager, ProjectInfo } from '../database/project-manager';
-import { DatabaseConnection } from '../database/connection';
+import { ProjectManager, ProjectInfo } from '../database/project-manager.js';
+import { DatabaseConnection } from '../database/connection.js';
 
 /**
  * Service for managing project operations and state

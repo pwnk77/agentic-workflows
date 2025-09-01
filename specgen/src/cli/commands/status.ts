@@ -1,6 +1,6 @@
 import { Command } from 'commander';
-import { ProjectService } from '../../services/project.service';
-import { SpecService } from '../../services/spec.service';
+import { ProjectService } from '../../services/project.service.js';
+import { SpecService } from '../../services/spec.service.js';
 
 export function createStatusCommand(): Command {
   const cmd = new Command('status');

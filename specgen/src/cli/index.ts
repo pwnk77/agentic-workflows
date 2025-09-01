@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 import { program } from 'commander';
-import { createInitCommand } from './commands/init';
-import { createImportCommand } from './commands/import';
-import { createStartCommand } from './commands/start';
-import { createStatusCommand } from './commands/status';
+import { createInitCommand } from './commands/init.js';
+import { createImportCommand } from './commands/import.js';
+import { createStartCommand } from './commands/start.js';
+import { createStatusCommand } from './commands/status.js';
 
 // Main CLI program
 program

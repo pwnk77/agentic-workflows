@@ -6,7 +6,7 @@ A dramatically simplified, project-scoped specification management system for Cl
 
 ## Features
 
-- 🚀 **One-Command Setup**: Install globally with `npm install -g specgen-mcp`
+- 🚀 **One-Command Setup**: Install via `claude mcp add` or `npx specgen-mcp`
 - 📁 **Project-Scoped**: Each project gets its own isolated SQLite database
 - 🔍 **Smart Import**: Automatically parse and categorize existing SPEC files
 - 🤖 **Claude Code Integration**: Full MCP server for seamless Claude Code workflow
@@ -15,34 +15,43 @@ A dramatically simplified, project-scoped specification management system for Cl
 
 ## Quick Start
 
-### 1. Install Dependencies
+### 1. Install for Claude Code
 
 ```bash
-npm install
+# One-command installation via Claude Code CLI
+claude mcp add specgen -s user -- npx -y specgen-mcp@latest
 ```
 
-### 2. Build the Project
+### 2. Initialize Your Project
 
 ```bash
-npm run build
+# Initialize SpecGen in your project directory
+npx specgen-mcp init
 ```
 
-### 3. Initialize Your Project
+### 3. Import Existing SPEC Files
 
 ```bash
-node dist/cli/index.js init
+# Import existing specification files
+npx specgen-mcp import docs/
 ```
 
-### 4. Import Existing SPEC Files
+### 4. Start MCP Server (Optional)
 
 ```bash
-node dist/cli/index.js import docs/
+# Start standalone MCP server if needed
+npx specgen-mcp start
 ```
 
-### 5. Start MCP Server for Claude Code
+### Alternative: Global Installation
 
 ```bash
-node dist/cli/index.js start
+# Install globally for direct CLI access
+npm install -g specgen-mcp
+
+# Then use directly
+specgen init
+specgen import docs/
 ```
 
 ## CLI Commands

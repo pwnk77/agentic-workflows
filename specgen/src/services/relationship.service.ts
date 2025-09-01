@@ -1,5 +1,5 @@
-import { DatabaseConnection } from '../database/connection';
-import { SpecGroupingService } from './grouping.service';
+import { DatabaseConnection } from '../database/connection.js';
+import { SpecGroupingService } from './grouping.service.js';
 
 export interface Spec {
   id: number;

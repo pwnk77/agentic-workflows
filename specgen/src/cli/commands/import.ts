@@ -1,6 +1,6 @@
 import { Command } from 'commander';
-import { ImportService } from '../../services/import.service';
-import { ProjectService } from '../../services/project.service';
+import { ImportService } from '../../services/import.service.js';
+import { ProjectService } from '../../services/project.service.js';
 
 export function createImportCommand(): Command {
   const cmd = new Command('import');

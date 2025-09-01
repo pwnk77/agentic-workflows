@@ -1,15 +1,12 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.SpecGenResourceHandler = exports.ProjectResourceHandler = exports.SpecResourceHandler = void 0;
-const spec_service_1 = require("../../services/spec.service");
-const project_service_1 = require("../../services/project.service");
-class SpecResourceHandler {
+import { SpecService } from '../../services/spec.service.js';
+import { ProjectService } from '../../services/project.service.js';
+export class SpecResourceHandler {
     static getSpecUri(specId) {
         return `spec://specs/${specId}`;
     }
     static async listSpecResources() {
         try {
-            const result = spec_service_1.SpecService.listSpecs({ limit: 100 });
+            const result = SpecService.listSpecs({ limit: 100 });
             return result.specs.map(spec => ({
                 uri: this.getSpecUri(spec.id),
                 name: spec.title,
@@ -27,7 +24,7 @@ class SpecResourceHandler {
             throw new Error('Invalid spec resource URI');
         }
         const specId = parseInt(match[1], 10);
-        const spec = spec_service_1.SpecService.getSpecById(specId);
+        const spec = SpecService.getSpecById(specId);
         if (!spec) {
             throw new Error(`Specification with ID ${specId} not found`);
         }
@@ -48,12 +45,11 @@ spec_id: ${spec.id}
         };
     }
 }
-exports.SpecResourceHandler = SpecResourceHandler;
-class ProjectResourceHandler {
+export class ProjectResourceHandler {
     static async listProjectResources() {
         try {
-            const project = project_service_1.ProjectService.getCurrentProject();
-            const stats = await project_service_1.ProjectService.getProjectStats();
+            const project = ProjectService.getCurrentProject();
+            const stats = await ProjectService.getProjectStats();
             return [
                 {
                     uri: 'spec://project/info',
@@ -82,14 +78,14 @@ class ProjectResourceHandler {
     static async readProjectResource(uri) {
         switch (uri) {
             case 'spec://project/info':
-                const project = project_service_1.ProjectService.getCurrentProject();
+                const project = ProjectService.getCurrentProject();
                 return {
                     uri,
                     mimeType: 'application/json',
                     text: JSON.stringify(project, null, 2)
                 };
             case 'spec://project/stats':
-                const stats = await project_service_1.ProjectService.getProjectStats();
+                const stats = await ProjectService.getProjectStats();
                 return {
                     uri,
                     mimeType: 'application/json',
@@ -107,8 +103,8 @@ class ProjectResourceHandler {
         }
     }
     static async generateProjectSummary() {
-        const project = project_service_1.ProjectService.getCurrentProject();
-        const stats = await project_service_1.ProjectService.getProjectStats();
+        const project = ProjectService.getCurrentProject();
+        const stats = await ProjectService.getProjectStats();
         let summary = `# ${project.name} - SpecGen Project Summary\n\n`;
         summary += `**Version:** ${project.version}\n`;
         summary += `**Location:** ${project.root}\n`;
@@ -135,8 +131,7 @@ class ProjectResourceHandler {
         return summary;
     }
 }
-exports.ProjectResourceHandler = ProjectResourceHandler;
-class SpecGenResourceHandler {
+export class SpecGenResourceHandler {
     static async listAllResources() {
         const [projectResources, specResources] = await Promise.all([
             ProjectResourceHandler.listProjectResources(),
@@ -156,7 +151,6 @@ class SpecGenResourceHandler {
         }
     }
 }
-exports.SpecGenResourceHandler = SpecGenResourceHandler;
 function getStatusIcon(status) {
     switch (status) {
         case 'done': return '✅';

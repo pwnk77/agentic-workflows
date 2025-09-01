@@ -16,7 +16,7 @@ export class SpecParser {
       title: this.extractTitle(content, filename),
       body_md: content,
       status: this.detectStatus(content),
-      feature_group: this.detectGroup(content, filename),
+      feature_group: this.detectGroup(content, filename, filePath),
       source_file: filePath
     };
   }
@@ -73,13 +73,19 @@ export class SpecParser {
   }
 
   /**
-   * Detect feature group from content and filename
+   * Detect feature group from content, filename, and file path
    */
-  private static detectGroup(content: string, filename: string): string {
+  private static detectGroup(content: string, filename: string, filePath: string): string {
+    // First priority: Extract category from subfolder path
+    const pathCategory = this.extractCategoryFromPath(filePath);
+    if (pathCategory) {
+      return pathCategory;
+    }
+
     const lowerContent = content.toLowerCase();
     const lowerFilename = filename.toLowerCase();
 
-    // Check filename patterns
+    // Second priority: Check filename patterns
     if (lowerFilename.includes('specgen') || lowerFilename.includes('spec-gen')) {
       return 'specgen';
     }
@@ -92,7 +98,7 @@ export class SpecParser {
       return 'repository';
     }
 
-    // Check content patterns
+    // Third priority: Check content patterns
     if (lowerContent.includes('specgen') || lowerContent.includes('spec management')) {
       return 'specgen';
     }
@@ -107,7 +113,7 @@ export class SpecParser {
       return 'repository';
     }
 
-    // Extract date-based grouping from filename
+    // Fourth priority: Extract date-based grouping from filename
     const dateMatch = filename.match(/SPEC-(\d{4})-(\d{2})-(\d{2})/);
     if (dateMatch) {
       const [, year, month] = dateMatch;
@@ -115,6 +121,88 @@ export class SpecParser {
     }
 
     return 'general';
+  }
+
+  /**
+   * Extract category from file path based on subfolder structure
+   * Examples: 
+   * - docs/articles/SPEC-*.md → 'articles'
+   * - docs/authentication/SPEC-*.md → 'authentication'
+   * - specs/database/SPEC-*.md → 'database'
+   */
+  private static extractCategoryFromPath(filePath: string): string | null {
+    const pathParts = filePath.split(/[/\\]/).filter(part => part.length > 0);
+    
+    // Look for common documentation folders and their subfolders
+    const docFolderIndex = pathParts.findIndex(part => 
+      ['docs', 'specifications', 'specs', 'documentation'].includes(part.toLowerCase())
+    );
+    
+    if (docFolderIndex >= 0 && docFolderIndex < pathParts.length - 1) {
+      // Get the subfolder after the docs folder
+      const category = pathParts[docFolderIndex + 1].toLowerCase();
+      
+      // Map common folder names to standardized categories
+      const categoryMap: Record<string, string> = {
+        'articles': 'articles',
+        'auth': 'authentication',
+        'authentication': 'authentication', 
+        'database': 'database',
+        'db': 'database',
+        'debugging': 'debugging',
+        'documentation': 'documentation',
+        'docs': 'documentation',
+        'platform': 'platform-overview',
+        'platform-overview': 'platform-overview',
+        'reports': 'reports',
+        'scheduler': 'scheduler',
+        'search': 'search-enhancement',
+        'search-enhancement': 'search-enhancement',
+        'system': 'system-infrastructure',
+        'system-infrastructure': 'system-infrastructure',
+        'infrastructure': 'system-infrastructure',
+        'ui': 'ui-enhancements',
+        'ui-enhancements': 'ui-enhancements',
+        'frontend': 'ui-enhancements',
+        'specgen': 'specgen',
+        'learning': 'learning',
+        'repository': 'repository',
+        'repo': 'repository'
+      };
+      
+      return categoryMap[category] || category;
+    }
+    
+    // Fallback: Look for category-like folders anywhere in the path
+    for (let i = pathParts.length - 2; i >= 0; i--) {
+      const folder = pathParts[i].toLowerCase();
+      if (folder !== 'spec' && folder !== 'specs' && folder !== 'specgen' && 
+          folder.length > 2 && !folder.match(/^\d{4}-\d{2}$/)) {
+        // This looks like a category folder
+        const categoryMap: Record<string, string> = {
+          'articles': 'articles',
+          'auth': 'authentication',
+          'authentication': 'authentication',
+          'database': 'database',
+          'db': 'database',
+          'debugging': 'debugging',
+          'documentation': 'documentation',
+          'docs': 'documentation',
+          'platform': 'platform-overview',
+          'reports': 'reports',
+          'scheduler': 'scheduler',
+          'search': 'search-enhancement',
+          'system': 'system-infrastructure',
+          'infrastructure': 'system-infrastructure',
+          'ui': 'ui-enhancements',
+          'frontend': 'ui-enhancements'
+        };
+        
+        return categoryMap[folder] || folder;
+      }
+    }
+    
+    return null;
   }
 
   /**

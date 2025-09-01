@@ -1,10 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.specTools = exports.updateSpecRelationshipsTool = exports.searchRelatedSpecsTool = exports.createSpecWithGroupingTool = exports.getSpecStatsTool = exports.deleteSpecTool = exports.importSpecsTool = exports.searchSpecsTool = exports.listSpecsTool = exports.getSpecTool = exports.updateSpecTool = exports.createSpecTool = void 0;
-const spec_service_1 = require("../../services/spec.service");
-const import_service_1 = require("../../services/import.service");
-const grouping_service_1 = require("../../services/grouping.service");
-const relationship_service_1 = require("../../services/relationship.service");
+import { SpecService } from '../../services/spec.service.js';
+import { ImportService } from '../../services/import.service.js';
+import { SpecGroupingService } from '../../services/grouping.service.js';
+import { RelationshipService } from '../../services/relationship.service.js';
 function validateCreateSpec(args) {
     if (!args.title || typeof args.title !== 'string') {
         throw new Error('title is required and must be a string');
@@ -41,7 +38,7 @@ function validateUpdateSpecRelationships(args) {
     }
     return args;
 }
-exports.createSpecTool = {
+export const createSpecTool = {
     name: 'create_spec',
     description: 'Create a new specification in the current project',
     inputSchema: {
@@ -62,11 +59,15 @@ exports.createSpecTool = {
     handler: async (args) => {
         const data = validateCreateSpec(args);
         try {
-            const spec = spec_service_1.SpecService.createSpec(data);
+            if (!data.feature_group) {
+                const { SpecGroupingService } = await import('../../services/grouping.service.js');
+                data.feature_group = SpecGroupingService.detectFeatureGroup(data.title, data.body_md);
+            }
+            const spec = SpecService.createSpec(data);
             return {
                 success: true,
                 spec,
-                message: `Created specification "${spec.title}" with ID ${spec.id}`
+                message: `Created specification "${spec.title}" with ID ${spec.id} in category "${spec.feature_group}"`
             };
         }
         catch (error) {
@@ -77,7 +78,7 @@ exports.createSpecTool = {
         }
     }
 };
-exports.updateSpecTool = {
+export const updateSpecTool = {
     name: 'update_spec',
     description: 'Update an existing specification',
     inputSchema: {
@@ -99,7 +100,7 @@ exports.updateSpecTool = {
     handler: async (args) => {
         const { spec_id, ...updates } = validateUpdateSpec(args);
         try {
-            const spec = spec_service_1.SpecService.updateSpec(spec_id, updates);
+            const spec = SpecService.updateSpec(spec_id, updates);
             if (!spec) {
                 return {
                     success: false,
@@ -120,7 +121,7 @@ exports.updateSpecTool = {
         }
     }
 };
-exports.getSpecTool = {
+export const getSpecTool = {
     name: 'get_spec',
     description: 'Get a specification by ID with optional relationship information',
     inputSchema: {
@@ -134,7 +135,7 @@ exports.getSpecTool = {
     handler: async (args) => {
         const { spec_id, include_relations } = validateGetSpec(args);
         try {
-            const spec = spec_service_1.SpecService.getSpecById(spec_id);
+            const spec = SpecService.getSpecById(spec_id);
             if (!spec) {
                 return {
                     success: false,
@@ -145,7 +146,7 @@ exports.getSpecTool = {
             if (include_relations && spec.related_specs) {
                 try {
                     const relatedSpecIds = JSON.parse(spec.related_specs);
-                    const relatedSpecs = relatedSpecIds.map((id) => spec_service_1.SpecService.getSpecById(id)).filter(Boolean);
+                    const relatedSpecs = relatedSpecIds.map((id) => SpecService.getSpecById(id)).filter(Boolean);
                     result.related_specs = relatedSpecs;
                 }
                 catch (e) {
@@ -161,9 +162,9 @@ exports.getSpecTool = {
         }
     }
 };
-exports.listSpecsTool = {
+export const listSpecsTool = {
     name: 'list_specs',
-    description: 'List specifications with optional filtering and pagination',
+    description: 'List specifications with optional filtering, pagination, and grouping',
     inputSchema: {
         type: 'object',
         properties: {
@@ -174,13 +175,38 @@ exports.listSpecsTool = {
             created_via: { type: 'string' },
             limit: { type: 'number', minimum: 1, maximum: 1000 },
             offset: { type: 'number', minimum: 0 },
-            sort_by: { type: 'string', enum: ['id', 'title', 'created_at', 'updated_at', 'priority'] },
-            sort_order: { type: 'string', enum: ['asc', 'desc'] }
+            sort_by: { type: 'string', enum: ['id', 'title', 'created_at', 'updated_at', 'priority', 'feature_group'] },
+            sort_order: { type: 'string', enum: ['asc', 'desc'] },
+            group_by: { type: 'string', enum: ['feature_group', 'status', 'priority'] },
+            include_counts: { type: 'boolean', description: 'Include count statistics by group' }
         }
     },
     handler: async (args) => {
         try {
-            const result = spec_service_1.SpecService.listSpecs(args || {});
+            const result = SpecService.listSpecs(args || {});
+            if (args?.group_by) {
+                const groupedResult = groupSpecsByField(result.specs, args.group_by);
+                return {
+                    success: true,
+                    specs: result.specs,
+                    pagination: result.pagination,
+                    grouped_specs: groupedResult.groups,
+                    group_counts: groupedResult.counts,
+                    group_by: args.group_by
+                };
+            }
+            if (args?.include_counts) {
+                const categoryCounts = result.specs.reduce((acc, spec) => {
+                    const category = spec.feature_group || 'uncategorized';
+                    acc[category] = (acc[category] || 0) + 1;
+                    return acc;
+                }, {});
+                return {
+                    success: true,
+                    ...result,
+                    category_counts: categoryCounts
+                };
+            }
             return {
                 success: true,
                 ...result
@@ -194,26 +220,50 @@ exports.listSpecsTool = {
         }
     }
 };
-exports.searchSpecsTool = {
+export const searchSpecsTool = {
     name: 'search_specs',
-    description: 'Search specifications using full-text search',
+    description: 'Search specifications using full-text search with category boosting',
     inputSchema: {
         type: 'object',
         properties: {
             query: { type: 'string' },
             limit: { type: 'number', minimum: 1, maximum: 100 },
             offset: { type: 'number', minimum: 0 },
-            min_score: { type: 'number', minimum: 0, maximum: 1 }
+            min_score: { type: 'number', minimum: 0, maximum: 1 },
+            boost_category: { type: 'string', description: 'Boost results from this feature_group category' },
+            category_boost_factor: { type: 'number', minimum: 1, maximum: 5, default: 1.5, description: 'Multiplier for boosting category results' }
         },
         required: ['query']
     },
     handler: async (args) => {
         try {
-            const result = spec_service_1.SpecService.searchSpecs(args.query, {
+            const result = SpecService.searchSpecs(args.query, {
                 limit: args.limit,
                 offset: args.offset,
                 min_score: args.min_score
             });
+            if (args.boost_category) {
+                const boostFactor = args.category_boost_factor || 1.5;
+                result.results = result.results.map(spec => {
+                    if (spec.feature_group === args.boost_category) {
+                        return {
+                            ...spec,
+                            score: spec.score * boostFactor,
+                            boosted: true
+                        };
+                    }
+                    return spec;
+                });
+                result.results.sort((a, b) => b.score - a.score);
+                const groupedResults = groupSearchResultsByCategory(result.results);
+                return {
+                    success: true,
+                    ...result,
+                    boost_category: args.boost_category,
+                    boost_factor: boostFactor,
+                    grouped_results: groupedResults
+                };
+            }
             return {
                 success: true,
                 ...result
@@ -227,7 +277,7 @@ exports.searchSpecsTool = {
         }
     }
 };
-exports.importSpecsTool = {
+export const importSpecsTool = {
     name: 'import_specs',
     description: 'Import SPEC files from a directory into the current project',
     inputSchema: {
@@ -241,7 +291,7 @@ exports.importSpecsTool = {
     },
     handler: async (args) => {
         try {
-            const result = await import_service_1.ImportService.importFromDirectory(args.directory_path, args.pattern, {
+            const result = await ImportService.importFromDirectory(args.directory_path, args.pattern, {
                 overwrite: args.overwrite || false
             });
             return result;
@@ -254,7 +304,7 @@ exports.importSpecsTool = {
         }
     }
 };
-exports.deleteSpecTool = {
+export const deleteSpecTool = {
     name: 'delete_spec',
     description: 'Delete a specification by ID',
     inputSchema: {
@@ -266,7 +316,7 @@ exports.deleteSpecTool = {
     },
     handler: async (args) => {
         try {
-            const success = spec_service_1.SpecService.deleteSpec(args.spec_id);
+            const success = SpecService.deleteSpec(args.spec_id);
             if (!success) {
                 return {
                     success: false,
@@ -286,7 +336,7 @@ exports.deleteSpecTool = {
         }
     }
 };
-exports.getSpecStatsTool = {
+export const getSpecStatsTool = {
     name: 'get_spec_stats',
     description: 'Get specification statistics for the current project',
     inputSchema: {
@@ -297,7 +347,7 @@ exports.getSpecStatsTool = {
     },
     handler: async (args) => {
         try {
-            const stats = spec_service_1.SpecService.getStats(args?.include_details || false);
+            const stats = SpecService.getStats(args?.include_details || false);
             return {
                 success: true,
                 stats
@@ -311,7 +361,7 @@ exports.getSpecStatsTool = {
         }
     }
 };
-exports.createSpecWithGroupingTool = {
+export const createSpecWithGroupingTool = {
     name: 'create_spec_with_grouping',
     description: 'Create a new specification with automatic feature detection and relationship mapping',
     inputSchema: {
@@ -332,16 +382,16 @@ exports.createSpecWithGroupingTool = {
     handler: async (args) => {
         const data = validateCreateSpec(args);
         try {
-            const detectedFeatureGroup = data.feature_group || grouping_service_1.SpecGroupingService.detectFeatureGroup(data.title, data.body_md);
-            const detectedThemeCategory = data.theme_category || grouping_service_1.SpecGroupingService.detectThemeCategory(detectedFeatureGroup, data.body_md);
-            const detectedPriority = data.priority || grouping_service_1.SpecGroupingService.detectPriority(data.title, data.body_md);
-            const spec = spec_service_1.SpecService.createSpec({
+            const detectedFeatureGroup = data.feature_group || SpecGroupingService.detectFeatureGroup(data.title, data.body_md);
+            const detectedThemeCategory = data.theme_category || SpecGroupingService.detectThemeCategory(detectedFeatureGroup, data.body_md);
+            const detectedPriority = data.priority || SpecGroupingService.detectPriority(data.title, data.body_md);
+            const spec = SpecService.createSpec({
                 ...data,
                 feature_group: detectedFeatureGroup,
                 theme_category: detectedThemeCategory,
                 priority: detectedPriority
             });
-            const relationshipSuggestions = relationship_service_1.RelationshipService.autoDetectRelationships(spec);
+            const relationshipSuggestions = RelationshipService.autoDetectRelationships(spec);
             return {
                 success: true,
                 spec,
@@ -364,7 +414,7 @@ exports.createSpecWithGroupingTool = {
         }
     }
 };
-exports.searchRelatedSpecsTool = {
+export const searchRelatedSpecsTool = {
     name: 'search_related_specs',
     description: 'Search for specifications related to a query with context-aware ranking',
     inputSchema: {
@@ -382,14 +432,14 @@ exports.searchRelatedSpecsTool = {
         const { query, current_spec_id, feature_group, limit, offset } = validateSearchRelatedSpecs(args);
         try {
             if (current_spec_id) {
-                const currentSpec = spec_service_1.SpecService.getSpecById(current_spec_id);
+                const currentSpec = SpecService.getSpecById(current_spec_id);
                 if (!currentSpec) {
                     return {
                         success: false,
                         error: `Specification with ID ${current_spec_id} not found`
                     };
                 }
-                const relatedSpecs = relationship_service_1.RelationshipService.findRelatedSpecs(currentSpec, {
+                const relatedSpecs = RelationshipService.findRelatedSpecs(currentSpec, {
                     limit: limit || 10,
                     minScore: 0.2,
                     sameGroupOnly: feature_group === currentSpec.feature_group
@@ -397,7 +447,7 @@ exports.searchRelatedSpecsTool = {
                 return {
                     success: true,
                     specs: relatedSpecs.map(rel => {
-                        const spec = spec_service_1.SpecService.getSpecById(rel.spec_id);
+                        const spec = SpecService.getSpecById(rel.spec_id);
                         return { ...spec, relationship_score: rel.score, relationship_reason: rel.reason };
                     }),
                     query,
@@ -412,7 +462,7 @@ exports.searchRelatedSpecsTool = {
             }
             else {
                 let searchOptions = { limit: limit || 10, offset: offset || 0 };
-                let result = spec_service_1.SpecService.searchSpecs(query, searchOptions);
+                let result = SpecService.searchSpecs(query, searchOptions);
                 if (feature_group) {
                     const grouped = result.results.filter(spec => spec.feature_group === feature_group);
                     const others = result.results.filter(spec => spec.feature_group !== feature_group);
@@ -435,7 +485,7 @@ exports.searchRelatedSpecsTool = {
         }
     }
 };
-exports.updateSpecRelationshipsTool = {
+export const updateSpecRelationshipsTool = {
     name: 'update_spec_relationships',
     description: 'Update the relationships and hierarchy of a specification',
     inputSchema: {
@@ -450,21 +500,21 @@ exports.updateSpecRelationshipsTool = {
     handler: async (args) => {
         const { spec_id, related_specs, parent_spec_id } = validateUpdateSpecRelationships(args);
         try {
-            const success = relationship_service_1.RelationshipService.updateSpecRelationships(spec_id, related_specs, parent_spec_id);
+            const success = RelationshipService.updateSpecRelationships(spec_id, related_specs, parent_spec_id);
             if (!success) {
                 return {
                     success: false,
                     error: `Failed to update relationships for specification with ID ${spec_id}`
                 };
             }
-            const spec = spec_service_1.SpecService.getSpecById(spec_id);
+            const spec = SpecService.getSpecById(spec_id);
             if (!spec) {
                 return {
                     success: false,
                     error: `Specification with ID ${spec_id} not found`
                 };
             }
-            const hierarchy = relationship_service_1.RelationshipService.getSpecHierarchy(spec_id);
+            const hierarchy = RelationshipService.getSpecHierarchy(spec_id);
             return {
                 success: true,
                 spec,
@@ -480,17 +530,58 @@ exports.updateSpecRelationshipsTool = {
         }
     }
 };
-exports.specTools = [
-    exports.createSpecTool,
-    exports.updateSpecTool,
-    exports.getSpecTool,
-    exports.listSpecsTool,
-    exports.searchSpecsTool,
-    exports.importSpecsTool,
-    exports.deleteSpecTool,
-    exports.getSpecStatsTool,
-    exports.createSpecWithGroupingTool,
-    exports.searchRelatedSpecsTool,
-    exports.updateSpecRelationshipsTool
+function groupSearchResultsByCategory(results) {
+    const grouped = {};
+    results.forEach(result => {
+        const category = result.feature_group || 'uncategorized';
+        if (!grouped[category]) {
+            grouped[category] = [];
+        }
+        grouped[category].push(result);
+    });
+    return grouped;
+}
+function groupSpecsByField(specs, field) {
+    const groups = {};
+    const counts = {};
+    specs.forEach(spec => {
+        let groupKey;
+        switch (field) {
+            case 'feature_group':
+                groupKey = spec.feature_group || 'uncategorized';
+                break;
+            case 'status':
+                groupKey = spec.status || 'unknown';
+                break;
+            case 'priority':
+                groupKey = spec.priority || 'medium';
+                break;
+            default:
+                groupKey = 'unknown';
+        }
+        if (!groups[groupKey]) {
+            groups[groupKey] = [];
+            counts[groupKey] = 0;
+        }
+        groups[groupKey].push(spec);
+        counts[groupKey]++;
+    });
+    Object.keys(groups).forEach(key => {
+        groups[key].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+    });
+    return { groups, counts };
+}
+export const specTools = [
+    createSpecTool,
+    updateSpecTool,
+    getSpecTool,
+    listSpecsTool,
+    searchSpecsTool,
+    importSpecsTool,
+    deleteSpecTool,
+    getSpecStatsTool,
+    createSpecWithGroupingTool,
+    searchRelatedSpecsTool,
+    updateSpecRelationshipsTool
 ];
 //# sourceMappingURL=spec-tools.js.map

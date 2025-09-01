@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { ProjectService } from '../../services/project.service';
+import { ProjectService } from '../../services/project.service.js';
 
 export function createStartCommand(): Command {
   const cmd = new Command('start');
@@ -66,7 +66,7 @@ export function createStartCommand(): Command {
         console.log('');
 
         // Import and start the MCP server
-        const { startMCPServer } = await import('../../mcp/server');
+        const { startMCPServer } = await import('../../mcp/server.js');
         
         // Set debug mode if requested
         if (opts.debug) {

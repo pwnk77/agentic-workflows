@@ -1,25 +1,60 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.SpecService = void 0;
-const connection_1 = require("../database/connection");
-class SpecService {
+import { DatabaseConnection } from '../database/connection.js';
+export class SpecService {
     static createSpec(data) {
-        const db = connection_1.DatabaseConnection.getCurrentProjectConnection();
+        const db = DatabaseConnection.getCurrentProjectConnection();
+        const columns = this.getTableColumns(db, 'specs');
+        const hasExtendedColumns = columns.includes('theme_category');
         const feature_group = data.feature_group || this.autoDetectGroup(data.title, data.body_md);
-        const theme_category = data.theme_category || this.autoDetectTheme(feature_group);
-        const stmt = db.prepare(`
-      INSERT INTO specs (
-        title, body_md, status, feature_group, theme_category, 
-        priority, related_specs, parent_spec_id, created_via
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-        const related_specs_json = data.related_specs ? JSON.stringify(data.related_specs) : null;
-        const result = stmt.run(data.title, data.body_md, data.status || 'draft', feature_group, theme_category, data.priority || 'medium', related_specs_json, data.parent_spec_id || null, data.created_via || null);
+        let stmt;
+        let values;
+        if (hasExtendedColumns) {
+            const theme_category = data.theme_category || this.autoDetectTheme(feature_group);
+            const related_specs_json = data.related_specs ? JSON.stringify(data.related_specs) : null;
+            stmt = db.prepare(`
+        INSERT INTO specs (
+          title, body_md, status, feature_group, theme_category, 
+          priority, related_specs, parent_spec_id, created_via
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+            values = [
+                data.title,
+                data.body_md,
+                data.status || 'draft',
+                feature_group,
+                theme_category,
+                data.priority || 'medium',
+                related_specs_json,
+                data.parent_spec_id || null,
+                data.created_via || null
+            ];
+        }
+        else {
+            stmt = db.prepare(`
+        INSERT INTO specs (title, body_md, status, feature_group)
+        VALUES (?, ?, ?, ?)
+      `);
+            values = [
+                data.title,
+                data.body_md,
+                data.status || 'draft',
+                feature_group
+            ];
+        }
+        const result = stmt.run(...values);
         return this.getSpecById(result.lastInsertRowid);
     }
+    static getTableColumns(db, tableName) {
+        try {
+            const result = db.prepare(`PRAGMA table_info(${tableName})`).all();
+            return result.map((row) => row.name);
+        }
+        catch {
+            return ['id', 'title', 'body_md', 'status', 'feature_group', 'created_at', 'updated_at'];
+        }
+    }
     static updateSpec(spec_id, updates) {
-        const db = connection_1.DatabaseConnection.getCurrentProjectConnection();
+        const db = DatabaseConnection.getCurrentProjectConnection();
         const updateFields = [];
         const updateValues = [];
         if (updates.title !== undefined) {
@@ -75,18 +110,18 @@ class SpecService {
         return this.getSpecById(spec_id);
     }
     static getSpecById(spec_id) {
-        const db = connection_1.DatabaseConnection.getCurrentProjectConnection();
+        const db = DatabaseConnection.getCurrentProjectConnection();
         const stmt = db.prepare('SELECT * FROM specs WHERE id = ?');
         return stmt.get(spec_id);
     }
     static deleteSpec(spec_id) {
-        const db = connection_1.DatabaseConnection.getCurrentProjectConnection();
+        const db = DatabaseConnection.getCurrentProjectConnection();
         const stmt = db.prepare('DELETE FROM specs WHERE id = ?');
         const result = stmt.run(spec_id);
         return result.changes > 0;
     }
     static listSpecs(options = {}) {
-        const db = connection_1.DatabaseConnection.getCurrentProjectConnection();
+        const db = DatabaseConnection.getCurrentProjectConnection();
         const whereConditions = [];
         const whereValues = [];
         if (options.status) {
@@ -139,7 +174,7 @@ class SpecService {
         };
     }
     static searchSpecs(query, options = {}) {
-        const db = connection_1.DatabaseConnection.getCurrentProjectConnection();
+        const db = DatabaseConnection.getCurrentProjectConnection();
         const limit = Math.min(options.limit || 20, 100);
         const offset = options.offset || 0;
         const minScore = options.min_score !== undefined ? options.min_score : -10.0;
@@ -175,7 +210,7 @@ class SpecService {
         };
     }
     static getStats(include_details = false) {
-        const db = connection_1.DatabaseConnection.getCurrentProjectConnection();
+        const db = DatabaseConnection.getCurrentProjectConnection();
         const totalResult = db.prepare('SELECT COUNT(*) as count FROM specs').get();
         const total = totalResult.count;
         const statusStats = db.prepare(`
@@ -271,5 +306,4 @@ class SpecService {
         return themeMap[feature_group] || 'general';
     }
 }
-exports.SpecService = SpecService;
 //# sourceMappingURL=spec.service.js.map

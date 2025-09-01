@@ -11,8 +11,13 @@ argument-hint: <feature-description>
 **Process Overview**: You will act as a senior architect. You will perform requirement crystallization, codebase exploration, and specification generation using MCP tools. The analysis leverages SpecGen MCP for specification management and optionally Static Analysis MCP for TypeScript codebases.
 
 **MCP Integration**: This command uses MCP tools for enhanced specification management:
-- **specgen MCP** (`mcp__specgen-mcp__*`) for specification management
+- **specgen MCP** (`mcp__specgen-mcp__*`) for specification management with auto-categorization
 - **Static Analysis MCP** (`mcp__static-analysis__*`) for TypeScript analysis (optional)
+
+**Auto-Categorization**: SpecGen now automatically categorizes specifications based on:
+- **Folder Structure**: `docs/articles/SPEC-*.md` → `articles` category
+- **Content Analysis**: Keywords and patterns automatically detect feature groups
+- **Category Organization**: Dashboard groups specs by categories for better organization
 
 ## PHASE 1: REQUIREMENT CRYSTALLIZATION
 
@@ -77,8 +82,9 @@ Use mcp__static-analysis__get_compilation_errors for identifying issues
 
 **Existing Specifications Discovery:**
 ```
-Use mcp__specgen-mcp__list_specs to understand existing specifications
-Use mcp__specgen-mcp__search_specs to find related features
+Use mcp__specgen-mcp__list_specs with group_by='feature_group' to understand existing specifications by category
+Use mcp__specgen-mcp__search_specs with boost_category to find related features in same category
+Use mcp__specgen-mcp__get_spec_stats to see category breakdown and project overview
 ```
 
 **Sub-Agent Task Distribution:**
@@ -188,10 +194,12 @@ Generate specifications using specgen MCP tools for seamless integration.
 For each specification identified in Phase 3:
 
 1. **Prepare Specification Content**: Structure the specification following the template below
-2. **Create via MCP**: Use `mcp__specgen-mcp__create_spec` with:
+2. **Create via MCP**: Use `mcp__specgen-mcp__create_spec_with_grouping` for enhanced categorization or `mcp__specgen-mcp__create_spec` with:
    - `title`: Descriptive specification title
    - `body_md`: Full specification content in markdown
    - `status`: "draft" (initial status)
+   - `feature_group`: Specify category (optional - will be auto-detected from content/title)
+   - `created_via`: "specgen-architect" for tracking
 
 **Specification Template:**
 ```markdown

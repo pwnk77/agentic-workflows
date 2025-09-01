@@ -1,8 +1,9 @@
 {
   "name": "specgen-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Project-scoped specification management for Claude Code with MCP integration",
   "main": "dist/index.js",
+  "type": "module",
   "bin": {
     "specgen": "dist/cli/index.js"
   },
@@ -15,7 +16,9 @@
     "lint": "eslint src/**/*.ts",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build",
-    "postinstall": "echo 'SpecGen MCP installed successfully! Run \"specgen --help\" to get started.'"
+    "postinstall": "echo 'SpecGen MCP installed successfully! Run \"specgen --help\" to get started.'",
+    "publish:npm": "npm run prepublishOnly && npm publish --access public",
+    "install-claude-code": "claude mcp add specgen -s user -- npx -y specgen-mcp@latest"
   },
   "keywords": [
     "specification",
@@ -33,14 +36,15 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.5.0",
+    "@modelcontextprotocol/sdk": "^1.2.0",
     "better-sqlite3": "^9.2.2",
     "body-parser": "^2.2.0",
     "commander": "^11.1.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "glob": "^10.3.10",
-    "qs": "^6.14.0"
+    "qs": "^6.14.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.8",
@@ -57,10 +61,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/specgen/specgen-mcp.git"
+    "url": "https://github.com/pawanraviee/agentic-workflows.git",
+    "directory": "specgen"
   },
   "bugs": {
-    "url": "https://github.com/specgen/specgen-mcp/issues"
+    "url": "https://github.com/pawanraviee/agentic-workflows/issues"
   },
-  "homepage": "https://github.com/specgen/specgen-mcp#readme"
+  "homepage": "https://github.com/pawanraviee/agentic-workflows/tree/main/specgen#readme"
 }

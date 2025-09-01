@@ -1,5 +1,5 @@
-import { SpecService } from '../../services/spec.service';
-import { ProjectService } from '../../services/project.service';
+import { SpecService } from '../../services/spec.service.js';
+import { ProjectService } from '../../services/project.service.js';
 
 /**
  * Resource handler for individual specifications

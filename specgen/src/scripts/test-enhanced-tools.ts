@@ -1,8 +1,8 @@
 #!/usr/bin/env ts-node
 
-import { SpecService, CreateSpecData } from '../services/spec.service';
-import { SpecGroupingService } from '../services/grouping.service';
-import { RelationshipService } from '../services/relationship.service';
+import { SpecService, CreateSpecData } from '../services/spec.service.js';
+import { SpecGroupingService } from '../services/grouping.service.js';
+import { RelationshipService } from '../services/relationship.service.js';
 
 async function testEnhancedTools() {
   try {

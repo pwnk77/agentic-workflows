@@ -1,5 +1,5 @@
-import { DatabaseConnection } from '../database/connection';
-import { SpecStatus } from '../parsers/spec-parser';
+import { DatabaseConnection } from '../database/connection.js';
+import { SpecStatus } from '../parsers/spec-parser.js';
 
 /**
  * Core service for managing specifications in the database
@@ -11,33 +11,69 @@ export class SpecService {
   static createSpec(data: CreateSpecData): Spec {
     const db = DatabaseConnection.getCurrentProjectConnection();
     
+    // Check what columns exist in the specs table
+    const columns = this.getTableColumns(db, 'specs');
+    const hasExtendedColumns = columns.includes('theme_category');
+    
     // Auto-detect feature group and theme if not provided
     const feature_group = data.feature_group || this.autoDetectGroup(data.title, data.body_md);
-    const theme_category = data.theme_category || this.autoDetectTheme(feature_group);
     
-    const stmt = db.prepare(`
-      INSERT INTO specs (
-        title, body_md, status, feature_group, theme_category, 
-        priority, related_specs, parent_spec_id, created_via
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+    let stmt;
+    let values;
+    
+    if (hasExtendedColumns) {
+      // Use extended schema with all columns
+      const theme_category = data.theme_category || this.autoDetectTheme(feature_group);
+      const related_specs_json = data.related_specs ? JSON.stringify(data.related_specs) : null;
+      
+      stmt = db.prepare(`
+        INSERT INTO specs (
+          title, body_md, status, feature_group, theme_category, 
+          priority, related_specs, parent_spec_id, created_via
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      
+      values = [
+        data.title,
+        data.body_md,
+        data.status || 'draft',
+        feature_group,
+        theme_category,
+        data.priority || 'medium',
+        related_specs_json,
+        data.parent_spec_id || null,
+        data.created_via || null
+      ];
+    } else {
+      // Use basic schema with only core columns
+      stmt = db.prepare(`
+        INSERT INTO specs (title, body_md, status, feature_group)
+        VALUES (?, ?, ?, ?)
+      `);
+      
+      values = [
+        data.title,
+        data.body_md,
+        data.status || 'draft',
+        feature_group
+      ];
+    }
 
-    const related_specs_json = data.related_specs ? JSON.stringify(data.related_specs) : null;
-
-    const result = stmt.run(
-      data.title,
-      data.body_md,
-      data.status || 'draft',
-      feature_group,
-      theme_category,
-      data.priority || 'medium',
-      related_specs_json,
-      data.parent_spec_id || null,
-      data.created_via || null
-    );
-
+    const result = stmt.run(...values);
     return this.getSpecById(result.lastInsertRowid as number)!;
+  }
+
+  /**
+   * Get column names for a table
+   */
+  private static getTableColumns(db: any, tableName: string): string[] {
+    try {
+      const result = db.prepare(`PRAGMA table_info(${tableName})`).all();
+      return result.map((row: any) => row.name);
+    } catch {
+      return ['id', 'title', 'body_md', 'status', 'feature_group', 'created_at', 'updated_at'];
+    }
   }
 
   /**

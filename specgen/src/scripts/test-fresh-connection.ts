@@ -1,7 +1,7 @@
 #!/usr/bin/env ts-node
 
-import { DatabaseConnection } from '../database/connection';
-import { SpecService } from '../services/spec.service';
+import { DatabaseConnection } from '../database/connection.js';
+import { SpecService } from '../services/spec.service.js';
 
 async function testFreshConnection() {
   try {

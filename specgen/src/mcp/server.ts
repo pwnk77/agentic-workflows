@@ -1,181 +1,231 @@
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { 
-  CallToolRequestSchema, 
-  ErrorCode, 
-  ListResourcesRequestSchema, 
-  ListToolsRequestSchema, 
-  McpError, 
-  ReadResourceRequestSchema 
-} from '@modelcontextprotocol/sdk/types.js';
-import { specTools } from './tools/spec-tools';
-import { ProjectService } from '../services/project.service';
-import { SpecGenResourceHandler } from './resources/spec-resource';
+import { z } from 'zod';
+import { ProjectService } from '../services/project.service.js';
+import { SpecService } from '../services/spec.service.js';
 
-/**
- * SpecGen MCP Server
- * Provides Claude Code integration for project-scoped specification management
- */
-class SpecGenMCPServer {
-  private server: Server;
+// Define Zod schemas for our tools
+const listSpecsSchema = z.object({
+  status: z.enum(['draft', 'todo', 'in-progress', 'done']).optional(),
+  feature_group: z.string().optional(),
+  theme_category: z.string().optional(),
+  priority: z.enum(['low', 'medium', 'high']).optional(),
+  created_via: z.string().optional(),
+  limit: z.number().min(1).max(1000).optional(),
+  offset: z.number().min(0).optional(),
+  sort_by: z.enum(['id', 'title', 'created_at', 'updated_at', 'priority']).optional(),
+  sort_order: z.enum(['asc', 'desc']).optional(),
+  group_by: z.enum(['feature_group', 'status', 'priority']).optional(),
+  include_counts: z.boolean().optional(),
+});
 
-  constructor() {
-    this.server = new Server(
-      {
-        name: 'specgen-mcp',
-        version: '1.0.0',
-      },
-      {
-        capabilities: {
-          tools: {},
-          resources: {}
-        }
-      }
-    );
+const createSpecSchema = z.object({
+  title: z.string(),
+  body_md: z.string(),
+  status: z.enum(['draft', 'todo', 'in-progress', 'done']).optional(),
+  feature_group: z.string().optional(),
+  theme_category: z.string().optional(),
+  priority: z.enum(['low', 'medium', 'high']).optional(),
+  related_specs: z.array(z.number()).optional(),
+  parent_spec_id: z.number().optional(),
+  created_via: z.string().optional(),
+});
 
-    this.setupToolHandlers();
-    this.setupResourceHandlers();
-    this.setupErrorHandling();
-  }
+const getSpecSchema = z.object({
+  spec_id: z.number(),
+  include_relations: z.boolean().optional(),
+});
 
-  /**
-   * Setup tool request handlers
-   */
-  private setupToolHandlers(): void {
-    this.server.setRequestHandler(ListToolsRequestSchema, async () => {
-      return {
-        tools: specTools.map(tool => ({
-          name: tool.name,
-          description: tool.description,
-          inputSchema: tool.inputSchema
-        }))
-      };
-    });
+const searchSpecsSchema = z.object({
+  query: z.string(),
+  limit: z.number().min(1).max(100).optional(),
+  offset: z.number().min(0).optional(),
+  min_score: z.number().min(0).max(1).optional(),
+});
 
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
-      const { name, arguments: args } = request.params;
-      
-      // Verify project is initialized before processing tool calls
+// Create the MCP server
+const server = new McpServer({
+  name: 'specgen-mcp',
+  version: '1.0.0',
+  description: 'Project-scoped specification management for Claude Code with MCP integration',
+});
+
+// Register list_specs tool
+server.tool(
+  'list_specs',
+  'List specifications with optional filtering, pagination, and grouping',
+  listSpecsSchema._def.shape(),
+  async (params) => {
+    try {
       if (!ProjectService.isInInitializedProject()) {
-        throw new McpError(
-          ErrorCode.InvalidRequest, 
-          'Project not initialized. Run "specgen init" first.'
-        );
+        throw new Error('Project not initialized. Run "specgen init" first.');
       }
-
-      // Find and execute the requested tool
-      const tool = specTools.find(t => t.name === name);
       
-      if (!tool) {
-        throw new McpError(
-          ErrorCode.MethodNotFound,
-          `Unknown tool: ${name}`
-        );
-      }
+      const validated = listSpecsSchema.parse(params);
+      const result = SpecService.listSpecs(validated);
+      
+      // Add grouping functionality if requested
+      if (validated.group_by) {
+        const groupBy = validated.group_by;
+        const grouped = result.specs.reduce((acc: any, spec: any) => {
+          const key = spec[groupBy] || 'uncategorized';
+          if (!acc[key]) {
+            acc[key] = [];
+          }
+          acc[key].push(spec);
+          return acc;
+        }, {});
 
-      try {
-        const result = await (tool.handler as any)(args || {});
-        
+        const groupCounts = Object.keys(grouped).reduce((acc: any, key) => {
+          acc[key] = grouped[key].length;
+          return acc;
+        }, {});
+
         return {
           content: [{
             type: 'text',
-            text: JSON.stringify(result, null, 2)
+            text: JSON.stringify({
+              success: true,
+              specs: result.specs,
+              pagination: result.pagination,
+              grouped_specs: grouped,
+              group_counts: groupCounts,
+              group_by: groupBy
+            }, null, 2)
           }]
         };
-      } catch (error) {
-        throw new McpError(
-          ErrorCode.InternalError,
-          `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
-        );
       }
-    });
+
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(result, null, 2)
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        }],
+        isError: true
+      };
+    }
   }
+);
 
-  /**
-   * Setup resource request handlers
-   */
-  private setupResourceHandlers(): void {
-    this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
-      try {
-        // Check if project is initialized
-        if (!ProjectService.isInInitializedProject()) {
-          return { resources: [] };
-        }
-
-        const resources = await SpecGenResourceHandler.listAllResources();
-        return { resources };
-      } catch (error) {
-        // Return empty resources on error to avoid breaking the connection
-        return { resources: [] };
-      }
-    });
-
-    this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-      const { uri } = request.params;
-
+// Register create_spec tool
+server.tool(
+  'create_spec',
+  'Create a new specification with auto-category detection',
+  createSpecSchema._def.shape(),
+  async (params) => {
+    try {
       if (!ProjectService.isInInitializedProject()) {
-        throw new McpError(
-          ErrorCode.InvalidRequest,
-          'Project not initialized'
-        );
+        throw new Error('Project not initialized. Run "specgen init" first.');
       }
+      
+      const validated = createSpecSchema.parse(params);
+      const result = await SpecService.createSpec(validated);
+      
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(result, null, 2)
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        }],
+        isError: true
+      };
+    }
+  }
+);
 
-      try {
-        const resource = await SpecGenResourceHandler.readResource(uri);
-        
-        return {
-          contents: [resource]
-        };
-      } catch (error) {
-        if (error instanceof McpError) {
-          throw error;
-        }
-        
-        throw new McpError(
-          ErrorCode.InternalError,
-          `Failed to read resource: ${error instanceof Error ? error.message : String(error)}`
-        );
+// Register get_spec tool
+server.tool(
+  'get_spec',
+  'Get a specific specification by ID with optional relations',
+  getSpecSchema._def.shape(),
+  async (params) => {
+    try {
+      if (!ProjectService.isInInitializedProject()) {
+        throw new Error('Project not initialized. Run "specgen init" first.');
       }
-    });
+      
+      const validated = getSpecSchema.parse(params);
+      const result = SpecService.getSpecById(validated.spec_id);
+      
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(result, null, 2)
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        }],
+        isError: true
+      };
+    }
   }
+);
 
-  /**
-   * Setup error handling
-   */
-  private setupErrorHandling(): void {
-    this.server.onerror = (error) => {
-      console.error('[SpecGen MCP Server Error]', error);
-    };
-
-    process.on('SIGINT', async () => {
-      await this.server.close();
-      process.exit(0);
-    });
+// Register search_specs tool
+server.tool(
+  'search_specs',
+  'Search specifications with category boosting support',
+  searchSpecsSchema._def.shape(),
+  async (params) => {
+    try {
+      if (!ProjectService.isInInitializedProject()) {
+        throw new Error('Project not initialized. Run "specgen init" first.');
+      }
+      
+      const validated = searchSpecsSchema.parse(params);
+      const result = SpecService.searchSpecs(validated.query, {
+        limit: validated.limit,
+        offset: validated.offset,
+        min_score: validated.min_score
+      });
+      
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(result, null, 2)
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        }],
+        isError: true
+      };
+    }
   }
+);
 
-  /**
-   * Connect to transport and start server
-   */
-  async connect(transport: any): Promise<void> {
-    await this.server.connect(transport);
-  }
-
-  /**
-   * Close server connection
-   */
-  async close(): Promise<void> {
-    await this.server.close();
-  }
-}
+// Setup error handling
+process.on('SIGINT', async () => {
+  console.error('Shutting down SpecGen MCP Server...');
+  process.exit(0);
+});
 
 /**
  * Start the MCP server with stdio transport
  */
 export async function startMCPServer(): Promise<void> {
-  const server = new SpecGenMCPServer();
-  const transport = new StdioServerTransport();
-  
   try {
+    const transport = new StdioServerTransport();
     await server.connect(transport);
     console.error('SpecGen MCP Server started successfully'); // Use stderr for logging
   } catch (error) {
@@ -184,10 +234,19 @@ export async function startMCPServer(): Promise<void> {
   }
 }
 
-// If run directly, start the server
-if (require.main === module) {
-  startMCPServer().catch(error => {
-    console.error('Fatal error:', error);
+// Start the server
+async function main() {
+  try {
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    console.error('SpecGen MCP Server running...');
+  } catch (error) {
+    console.error('Error starting server:', error);
     process.exit(1);
-  });
+  }
+}
+
+// If run directly, start the server
+if (process.argv[1] === new URL(import.meta.url).pathname) {
+  main().catch(console.error);
 }

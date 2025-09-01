@@ -1,8 +1,8 @@
 import { glob } from 'glob';
 import { join } from 'path';
 import { existsSync, statSync } from 'fs';
-import { SpecParser, ParsedSpec } from '../parsers/spec-parser';
-import { DatabaseConnection } from '../database/connection';
+import { SpecParser, ParsedSpec } from '../parsers/spec-parser.js';
+import { DatabaseConnection } from '../database/connection.js';
 
 /**
  * Service for importing SPEC files into the database

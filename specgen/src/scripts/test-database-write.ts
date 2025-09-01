@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 
-import { DatabaseConnection } from '../database/connection';
+import { DatabaseConnection } from '../database/connection.js';
 
 async function testDatabaseWrite() {
   try {

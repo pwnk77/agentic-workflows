@@ -1,14 +1,13 @@
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
-export declare const createSpecTool: Tool;
-export declare const updateSpecTool: Tool;
-export declare const getSpecTool: Tool;
-export declare const listSpecsTool: Tool;
-export declare const searchSpecsTool: Tool;
-export declare const importSpecsTool: Tool;
-export declare const deleteSpecTool: Tool;
-export declare const getSpecStatsTool: Tool;
-export declare const createSpecWithGroupingTool: Tool;
-export declare const searchRelatedSpecsTool: Tool;
-export declare const updateSpecRelationshipsTool: Tool;
-export declare const specTools: Tool[];
+export declare const createSpecTool: any;
+export declare const updateSpecTool: any;
+export declare const getSpecTool: any;
+export declare const listSpecsTool: any;
+export declare const searchSpecsTool: any;
+export declare const importSpecsTool: any;
+export declare const deleteSpecTool: any;
+export declare const getSpecStatsTool: any;
+export declare const createSpecWithGroupingTool: any;
+export declare const searchRelatedSpecsTool: any;
+export declare const updateSpecRelationshipsTool: any;
+export declare const specTools: any[];
 //# sourceMappingURL=spec-tools.d.ts.map

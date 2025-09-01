@@ -1,8 +1,8 @@
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { SpecService, CreateSpecData, UpdateSpecData } from '../../services/spec.service';
-import { ImportService } from '../../services/import.service';
-import { SpecGroupingService } from '../../services/grouping.service';
-import { RelationshipService } from '../../services/relationship.service';
+// Using any type for compatibility
+import { SpecService, CreateSpecData, UpdateSpecData } from '../../services/spec.service.js';
+import { ImportService } from '../../services/import.service.js';
+import { SpecGroupingService } from '../../services/grouping.service.js';
+import { RelationshipService } from '../../services/relationship.service.js';
 
 // Simple validation functions
 function validateCreateSpec(args: any): { 
@@ -80,7 +80,7 @@ function validateUpdateSpecRelationships(args: any): {
 /**
  * MCP tool for creating a new specification
  */
-export const createSpecTool: Tool = {
+export const createSpecTool: any = {
   name: 'create_spec',
   description: 'Create a new specification in the current project',
   inputSchema: {
@@ -102,11 +102,18 @@ export const createSpecTool: Tool = {
     const data = validateCreateSpec(args);
     
     try {
+      // Ensure feature_group is always set by using auto-detection if not provided
+      if (!data.feature_group) {
+        // Import the grouping service for better detection
+        const { SpecGroupingService } = await import('../../services/grouping.service.js');
+        data.feature_group = SpecGroupingService.detectFeatureGroup(data.title, data.body_md);
+      }
+      
       const spec = SpecService.createSpec(data as CreateSpecData);
       return {
         success: true,
         spec,
-        message: `Created specification "${spec.title}" with ID ${spec.id}`
+        message: `Created specification "${spec.title}" with ID ${spec.id} in category "${spec.feature_group}"`
       };
     } catch (error) {
       return {
@@ -120,7 +127,7 @@ export const createSpecTool: Tool = {
 /**
  * MCP tool for updating an existing specification
  */
-export const updateSpecTool: Tool = {
+export const updateSpecTool: any = {
   name: 'update_spec',
   description: 'Update an existing specification',
   inputSchema: {
@@ -169,7 +176,7 @@ export const updateSpecTool: Tool = {
 /**
  * MCP tool for getting a specification by ID with optional relationships
  */
-export const getSpecTool: Tool = {
+export const getSpecTool: any = {
   name: 'get_spec',
   description: 'Get a specification by ID with optional relationship information',
   inputSchema: {
@@ -218,9 +225,9 @@ export const getSpecTool: Tool = {
 /**
  * MCP tool for listing specifications with filtering and pagination
  */
-export const listSpecsTool: Tool = {
+export const listSpecsTool: any = {
   name: 'list_specs',
-  description: 'List specifications with optional filtering and pagination',
+  description: 'List specifications with optional filtering, pagination, and grouping',
   inputSchema: {
     type: 'object',
     properties: {
@@ -231,13 +238,44 @@ export const listSpecsTool: Tool = {
       created_via: { type: 'string' },
       limit: { type: 'number', minimum: 1, maximum: 1000 },
       offset: { type: 'number', minimum: 0 },
-      sort_by: { type: 'string', enum: ['id', 'title', 'created_at', 'updated_at', 'priority'] },
-      sort_order: { type: 'string', enum: ['asc', 'desc'] }
+      sort_by: { type: 'string', enum: ['id', 'title', 'created_at', 'updated_at', 'priority', 'feature_group'] },
+      sort_order: { type: 'string', enum: ['asc', 'desc'] },
+      group_by: { type: 'string', enum: ['feature_group', 'status', 'priority'] },
+      include_counts: { type: 'boolean', description: 'Include count statistics by group' }
     }
   },
   handler: async (args: any) => {
     try {
       const result = SpecService.listSpecs(args || {});
+      
+      // Add grouping functionality if requested
+      if (args?.group_by) {
+        const groupedResult = groupSpecsByField(result.specs, args.group_by);
+        
+        return {
+          success: true,
+          specs: result.specs,
+          pagination: result.pagination,
+          grouped_specs: groupedResult.groups,
+          group_counts: groupedResult.counts,
+          group_by: args.group_by
+        };
+      }
+
+      // Add category counts if requested
+      if (args?.include_counts) {
+        const categoryCounts = result.specs.reduce((acc, spec) => {
+          const category = spec.feature_group || 'uncategorized';
+          acc[category] = (acc[category] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+
+        return {
+          success: true,
+          ...result,
+          category_counts: categoryCounts
+        };
+      }
       
       return {
         success: true,
@@ -255,16 +293,18 @@ export const listSpecsTool: Tool = {
 /**
  * MCP tool for searching specifications using full-text search
  */
-export const searchSpecsTool: Tool = {
+export const searchSpecsTool: any = {
   name: 'search_specs',
-  description: 'Search specifications using full-text search',
+  description: 'Search specifications using full-text search with category boosting',
   inputSchema: {
     type: 'object',
     properties: {
       query: { type: 'string' },
       limit: { type: 'number', minimum: 1, maximum: 100 },
       offset: { type: 'number', minimum: 0 },
-      min_score: { type: 'number', minimum: 0, maximum: 1 }
+      min_score: { type: 'number', minimum: 0, maximum: 1 },
+      boost_category: { type: 'string', description: 'Boost results from this feature_group category' },
+      category_boost_factor: { type: 'number', minimum: 1, maximum: 5, default: 1.5, description: 'Multiplier for boosting category results' }
     },
     required: ['query']
   },
@@ -275,6 +315,37 @@ export const searchSpecsTool: Tool = {
         offset: args.offset,
         min_score: args.min_score
       });
+      
+      // Apply category boosting if specified
+      if (args.boost_category) {
+        const boostFactor = args.category_boost_factor || 1.5;
+        
+        // Boost scores for specs in the specified category
+        result.results = result.results.map(spec => {
+          if (spec.feature_group === args.boost_category) {
+            return {
+              ...spec,
+              score: spec.score * boostFactor,
+              boosted: true
+            };
+          }
+          return spec;
+        });
+        
+        // Re-sort by the new scores
+        result.results.sort((a, b) => b.score - a.score);
+        
+        // Group by category for better organization
+        const groupedResults = groupSearchResultsByCategory(result.results);
+        
+        return {
+          success: true,
+          ...result,
+          boost_category: args.boost_category,
+          boost_factor: boostFactor,
+          grouped_results: groupedResults
+        };
+      }
       
       return {
         success: true,
@@ -292,7 +363,7 @@ export const searchSpecsTool: Tool = {
 /**
  * MCP tool for importing SPEC files from a directory
  */
-export const importSpecsTool: Tool = {
+export const importSpecsTool: any = {
   name: 'import_specs',
   description: 'Import SPEC files from a directory into the current project',
   inputSchema: {
@@ -323,7 +394,7 @@ export const importSpecsTool: Tool = {
 /**
  * MCP tool for deleting a specification
  */
-export const deleteSpecTool: Tool = {
+export const deleteSpecTool: any = {
   name: 'delete_spec',
   description: 'Delete a specification by ID',
   inputSchema: {
@@ -360,7 +431,7 @@ export const deleteSpecTool: Tool = {
 /**
  * MCP tool for getting project statistics
  */
-export const getSpecStatsTool: Tool = {
+export const getSpecStatsTool: any = {
   name: 'get_spec_stats',
   description: 'Get specification statistics for the current project',
   inputSchema: {
@@ -389,7 +460,7 @@ export const getSpecStatsTool: Tool = {
 /**
  * MCP tool for creating a specification with intelligent grouping
  */
-export const createSpecWithGroupingTool: Tool = {
+export const createSpecWithGroupingTool: any = {
   name: 'create_spec_with_grouping',
   description: 'Create a new specification with automatic feature detection and relationship mapping',
   inputSchema: {
@@ -451,7 +522,7 @@ export const createSpecWithGroupingTool: Tool = {
 /**
  * MCP tool for searching related specifications
  */
-export const searchRelatedSpecsTool: Tool = {
+export const searchRelatedSpecsTool: any = {
   name: 'search_related_specs',
   description: 'Search for specifications related to a query with context-aware ranking',
   inputSchema: {
@@ -534,7 +605,7 @@ export const searchRelatedSpecsTool: Tool = {
 /**
  * MCP tool for updating specification relationships
  */
-export const updateSpecRelationshipsTool: Tool = {
+export const updateSpecRelationshipsTool: any = {
   name: 'update_spec_relationships',
   description: 'Update the relationships and hierarchy of a specification',
   inputSchema: {
@@ -586,8 +657,66 @@ export const updateSpecRelationshipsTool: Tool = {
   }
 };
 
+/**
+ * Helper function to group search results by category
+ */
+function groupSearchResultsByCategory(results: any[]): Record<string, any[]> {
+  const grouped: Record<string, any[]> = {};
+  
+  results.forEach(result => {
+    const category = result.feature_group || 'uncategorized';
+    if (!grouped[category]) {
+      grouped[category] = [];
+    }
+    grouped[category].push(result);
+  });
+  
+  return grouped;
+}
+
+/**
+ * Helper function to group specifications by a field
+ */
+function groupSpecsByField(specs: any[], field: string): { groups: any; counts: Record<string, number> } {
+  const groups: Record<string, any[]> = {};
+  const counts: Record<string, number> = {};
+  
+  specs.forEach(spec => {
+    let groupKey: string;
+    
+    switch (field) {
+      case 'feature_group':
+        groupKey = spec.feature_group || 'uncategorized';
+        break;
+      case 'status':
+        groupKey = spec.status || 'unknown';
+        break;
+      case 'priority':
+        groupKey = spec.priority || 'medium';
+        break;
+      default:
+        groupKey = 'unknown';
+    }
+    
+    if (!groups[groupKey]) {
+      groups[groupKey] = [];
+      counts[groupKey] = 0;
+    }
+    
+    groups[groupKey].push(spec);
+    counts[groupKey]++;
+  });
+  
+  // Sort specs within each group by updated_at descending
+  Object.keys(groups).forEach(key => {
+    groups[key].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+  });
+  
+  return { groups, counts };
+}
+
 // Export all tools as an array
-export const specTools: Tool[] = [
+export const specTools: any[] = [
   createSpecTool,
   updateSpecTool,
   getSpecTool,

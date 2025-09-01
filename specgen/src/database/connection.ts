@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
-import { ProjectManager } from './project-manager';
-import { DatabaseInitializer } from './init';
+import { ProjectManager } from './project-manager.js';
+import { DatabaseInitializer } from './init.js';
 
 /**
  * Manages SQLite database connections per project

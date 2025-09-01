@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 
-import { SpecService } from '../services/spec.service';
+import { SpecService } from '../services/spec.service.js';
 
 async function testSearch() {
   try {

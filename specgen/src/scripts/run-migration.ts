@@ -1,7 +1,7 @@
 #!/usr/bin/env ts-node
 
-import { DatabaseConnection } from '../database/connection';
-import { MigrationRunner } from '../database/migration-runner';
+import { DatabaseConnection } from '../database/connection.js';
+import { MigrationRunner } from '../database/migration-runner.js';
 
 async function runMigration() {
   try {

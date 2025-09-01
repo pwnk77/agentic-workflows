@@ -105,6 +105,23 @@
                         <option value="in-progress">In Progress</option>
                         <option value="done">Done</option>
                     </select>
+                    <select 
+                        x-model="categoryFilter"
+                        x-on:change="filterSpecs()"
+                        class="bg-white/5 border border-white/20 rounded-sm px-2 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                        <option value="">All Categories</option>
+                        <template x-for="category in availableCategories" :key="category">
+                            <option :value="category" x-text="formatCategoryName(category)"></option>
+                        </template>
+                    </select>
+                    <button 
+                        x-on:click="toggleGroupingMode()"
+                        class="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-sm text-xs font-medium transition-all duration-200 border border-white/20"
+                        :class="groupingMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-white/10 hover:bg-white/20'"
+                    >
+                        <span x-text="groupingMode ? 'List View' : 'Group View'"></span>
+                    </button>
                     <button 
                         x-on:click="openCreateModal()"
                         class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-3 py-1.5 rounded-sm text-xs font-medium transition-all duration-200"
@@ -114,8 +131,74 @@
                 </div>
             </div>
 
-            <!-- Specifications Table -->
-            <div class="bg-gray-800/90 backdrop-blur-sm rounded-md border border-gray-700 overflow-hidden">
+            <!-- Specifications Display -->
+            <!-- Grouped View -->
+            <div x-show="groupingMode" class="space-y-4">
+                <template x-for="group in groupedSpecs" :key="group.category">
+                    <div class="bg-gray-800/90 backdrop-blur-sm rounded-md border border-gray-700 overflow-hidden">
+                        <!-- Category Header -->
+                        <div class="bg-gray-900/50 px-3 py-2 border-b border-gray-600 flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-3 h-3 rounded-sm" :class="getCategoryColorClass(group.category)"></div>
+                                <h3 class="text-sm font-medium text-white" x-text="formatCategoryName(group.category)"></h3>
+                                <span class="px-2 py-0.5 bg-white/10 rounded-full text-xs text-gray-300" x-text="group.specs.length"></span>
+                            </div>
+                            <button 
+                                x-on:click="toggleCategoryCollapse(group.category)"
+                                class="text-gray-400 hover:text-white transition-colors duration-200"
+                            >
+                                <svg class="w-4 h-4 transform transition-transform duration-200" :class="collapsedCategories.includes(group.category) ? 'rotate-0' : 'rotate-90'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Category Specs -->
+                        <div x-show="!collapsedCategories.includes(group.category)" class="divide-y divide-white/10">
+                            <template x-for="spec in group.specs" :key="spec.id">
+                                <div class="p-3 hover:bg-white/5 transition-colors duration-200 cursor-pointer" x-on:click="openPreviewModal(spec)">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex-1">
+                                            <div class="text-white font-medium text-xs mb-1" x-text="spec.title"></div>
+                                            <div class="text-gray-400 text-xs mb-2" x-text="spec.body_md.substring(0, 80) + '...'"></div>
+                                            <div class="flex items-center space-x-3">
+                                                <span 
+                                                    class="px-1.5 py-0.5 text-xs font-medium rounded-full"
+                                                    :class="getStatusClass(spec.status)"
+                                                    x-text="spec.status"
+                                                ></span>
+                                                <span class="text-gray-400 text-xs" x-text="formatDate(spec.updated_at)"></span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-1 text-xs font-medium">
+                                            <button 
+                                                x-on:click.stop="openEditModal(spec)"
+                                                class="text-blue-400 hover:text-blue-300 transition-colors duration-200 px-2 py-1"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button 
+                                                x-on:click.stop="deleteSpec(spec.id)"
+                                                class="text-red-400 hover:text-red-300 transition-colors duration-200 px-2 py-1"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+                
+                <!-- No groups message -->
+                <div x-show="groupedSpecs.length === 0" class="bg-gray-800/90 backdrop-blur-sm rounded-md border border-gray-700 p-6 text-center">
+                    <div class="text-gray-400 text-sm">No specifications found</div>
+                </div>
+            </div>
+
+            <!-- List View -->
+            <div x-show="!groupingMode" class="bg-gray-800/90 backdrop-blur-sm rounded-md border border-gray-700 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-gray-900/50">
@@ -124,6 +207,7 @@
                                     Title
                                     <span x-show="sortField === 'title'" x-text="sortOrder === 'asc' ? '↑' : '↓'"></span>
                                 </th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wide">Category</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wide">Status</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wide cursor-pointer" x-on:click="sortBy('updated_at')">
                                     Updated
@@ -138,6 +222,12 @@
                                     <td class="px-3 py-2 whitespace-nowrap">
                                         <div class="text-white font-medium text-xs" x-text="spec.title"></div>
                                         <div class="text-gray-400 text-xs" x-text="spec.body_md.substring(0, 60) + '...'"></div>
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <div class="flex items-center space-x-1">
+                                            <div class="w-2 h-2 rounded-sm" :class="getCategoryColorClass(spec.feature_group)"></div>
+                                            <span class="text-gray-300 text-xs" x-text="formatCategoryName(spec.feature_group)"></span>
+                                        </div>
                                     </td>
                                     <td class="px-3 py-2 whitespace-nowrap">
                                         <span 
@@ -402,11 +492,18 @@
                 // Filters and pagination
                 searchQuery: '',
                 statusFilter: '',
+                categoryFilter: '',
                 sortField: 'updated_at',
                 sortOrder: 'desc',
                 currentPage: 1,
                 limit: 20,
                 totalSpecs: 0,
+                
+                // Grouping and categorization
+                groupingMode: true, // Start in grouped mode by default
+                availableCategories: [],
+                groupedSpecs: [],
+                collapsedCategories: [],
                 
                 // WebSocket
                 ws: null,
@@ -431,6 +528,7 @@
                         });
                         
                         if (this.statusFilter) params.append('status', this.statusFilter);
+                        if (this.categoryFilter) params.append('feature_group', this.categoryFilter);
                         
                         const response = await fetch(`/api/specs?${params}`);
                         const data = await response.json();
@@ -438,6 +536,8 @@
                         if (data.success) {
                             this.specs = data.data.specs;
                             this.totalSpecs = data.pagination.total;
+                            this.updateCategories();
+                            this.updateGroupedSpecs();
                         }
                     } catch (error) {
                         console.error('Error loading specs:', error);
@@ -473,6 +573,8 @@
                                 this.specs = data.data.results;
                                 this.totalSpecs = data.data.total;
                                 this.currentPage = 1;
+                                this.updateCategories();
+                                this.updateGroupedSpecs();
                             }
                         } catch (error) {
                             console.error('Error searching specs:', error);
@@ -488,6 +590,83 @@
                     this.currentPage = 1;
                     this.searchQuery = '';
                     await this.loadSpecs();
+                },
+
+                // Category and Grouping Methods
+                updateCategories() {
+                    const categories = new Set();
+                    this.specs.forEach(spec => {
+                        if (spec.feature_group) {
+                            categories.add(spec.feature_group);
+                        }
+                    });
+                    this.availableCategories = [...categories].sort();
+                },
+
+                updateGroupedSpecs() {
+                    if (!this.specs || this.specs.length === 0) {
+                        this.groupedSpecs = [];
+                        return;
+                    }
+
+                    const groups = {};
+                    this.specs.forEach(spec => {
+                        const category = spec.feature_group || 'uncategorized';
+                        if (!groups[category]) {
+                            groups[category] = [];
+                        }
+                        groups[category].push(spec);
+                    });
+
+                    this.groupedSpecs = Object.entries(groups)
+                        .map(([category, specs]) => ({
+                            category,
+                            specs: specs.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+                        }))
+                        .sort((a, b) => a.category.localeCompare(b.category));
+                },
+
+                toggleGroupingMode() {
+                    this.groupingMode = !this.groupingMode;
+                },
+
+                toggleCategoryCollapse(category) {
+                    const index = this.collapsedCategories.indexOf(category);
+                    if (index > -1) {
+                        this.collapsedCategories.splice(index, 1);
+                    } else {
+                        this.collapsedCategories.push(category);
+                    }
+                },
+
+                formatCategoryName(category) {
+                    if (!category || category === 'general') return 'General';
+                    return category
+                        .split('-')
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(' ');
+                },
+
+                getCategoryColorClass(category) {
+                    const colorMap = {
+                        'articles': 'bg-blue-500',
+                        'authentication': 'bg-green-500',
+                        'database': 'bg-purple-500',
+                        'debugging': 'bg-orange-500',
+                        'documentation': 'bg-gray-500',
+                        'platform-overview': 'bg-cyan-500',
+                        'reports': 'bg-pink-500',
+                        'scheduler': 'bg-indigo-500',
+                        'search-enhancement': 'bg-yellow-500',
+                        'system-infrastructure': 'bg-red-500',
+                        'ui-enhancements': 'bg-teal-500',
+                        'specgen': 'bg-violet-500',
+                        'learning': 'bg-emerald-500',
+                        'repository': 'bg-slate-500',
+                        'general': 'bg-gray-400',
+                        'uncategorized': 'bg-gray-400'
+                    };
+                    return colorMap[category] || 'bg-gray-400';
                 },
 
                 async saveSpec() {
