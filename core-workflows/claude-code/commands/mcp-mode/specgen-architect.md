@@ -4,14 +4,14 @@ allowed-tools: Task, TodoWrite, Read, Glob, Grep, WebFetch, mcp__specgen-mcp__*,
 argument-hint: <feature-description>
 ---
 
-# SPECGEN-ARCHITECT MODE SPECIFICATION COMMAND
+# specgen-architect MODE SPECIFICATION COMMAND
 
-**Goal**: To be executed in Claude Code. This command guides the AI through a structured process to analyze a feature request, explore the codebase, and create detailed specifications using MCP (Model Context Protocol) integration.
+**Goal**: This command guides the AI through a structured process to analyze a feature request, explore the codebase, and create detailed specifications using MCP (Model Context Protocol) integration.
 
 **Process Overview**: You will act as a senior architect. You will perform requirement crystallization, codebase exploration, and specification generation using MCP tools. The analysis leverages SpecGen MCP for specification management and optionally Static Analysis MCP for TypeScript codebases.
 
-**MCP Integration**: This command replaces traditional SPEC file operations with MCP tools:
-- **SpecGen MCP** (`mcp__specgen-mcp__*`) for specification management
+**MCP Integration**: This command uses MCP tools for enhanced specification management:
+- **specgen MCP** (`mcp__specgen-mcp__*`) for specification management
 - **Static Analysis MCP** (`mcp__static-analysis__*`) for TypeScript analysis (optional)
 
 ## PHASE 1: REQUIREMENT CRYSTALLIZATION
@@ -39,6 +39,7 @@ Before asking any questions, perform a deep analysis and ULTRA THINK the ask fro
    - What is the biggest risk that could cause this project to fail? (e.g., technical uncertainty, unclear requirements, dependency on another team).
    - How can I de-risk the project early? Can I build a small proof-of-concept?
    - What are the explicit non-goals for this version? What are we consciously choosing *not* to build?
+   - Ensure the solution is appropriately scoped and avoid over-engineering the implementation.
 </thinking>
 
 **Initial Understanding Protocol:**
@@ -47,11 +48,12 @@ Based on the deep analysis, formulate an initial understanding of the core requi
 **Iterative Clarification Cycle:**
 The goal is to move from uncertainty to a >95% confidence level by asking targeted questions.
 
-1. **Generate Clarification Questions (Max 5 per iteration):**
-   Generate clarification questions (Max 5 per iteration) to eliminate ambiguity
-   - Based on the risks and ambiguities identified in the deep analysis, formulate up to 5 specific questions.
-   - Each question must be designed to eliminate ambiguity and should present concrete options or examples where possible.
+1. **Generate Clarification Questions (Max 10 per iteration):**
+   Generate clarification questions (Max 10 per iteration) to eliminate ambiguity
+   - Based on the risks and ambiguities identified in the deep analysis, formulate up to 10 specific questions.
+   - Each question must be designed to eliminate ambiguity and should present concrete options in A/B/C format where possible to help users make quicker decisions.
    - Focus on a logical progression: start with high-level conceptual questions and move towards detailed behavior, edge cases, and integration points.
+   - Example format: "For user authentication, would you prefer: A) OAuth integration, B) Custom JWT implementation, or C) Third-party service like Auth0?"
 2. **Synthesize Answers & Update Understanding:**
    - After receiving answers, update the internal understanding of the requirements.
    - Re-evaluate the confidence level.
@@ -140,7 +142,7 @@ DELIVERABLE: Integration points and infrastructure patterns
 
 ```
 AGENT 5: Specification Research (MCP-Enhanced)
-TASK: Research existing specifications and related features using SpecGen MCP
+TASK: Research existing specifications and related features using specgen MCP
 
 REQUIREMENTS:
 1. Use mcp__specgen-mcp__search_specs for related features
@@ -174,12 +176,12 @@ Specifications ready for MCP generation:
 
 Total effort: [X days]
 Dependencies mapped: [feature relationships]
-MCP Tools: SpecGen integration configured
+MCP Tools: specgen integration configured
 ```
 
-## PHASE 4: MCP SPECIFICATION GENERATION
+## PHASE 4: SPECIFICATION GENERATION
 
-Generate specifications using SpecGen MCP tools instead of file operations.
+Generate specifications using specgen MCP tools for seamless integration.
 
 **MCP Specification Creation Protocol:**
 
@@ -201,6 +203,15 @@ For each specification identified in Phase 3:
 **Effort**: [High-level estimation in developer-days or sprints.]
 **Risk**: [Assess potential technical, product, and schedule risks with a brief rationale (e.g., "High - requires integration with a poorly documented legacy system").]
 **Dependencies**: [List any other specifications or external projects this feature depends on.]
+
+### Metadata
+- **Created**: [YYYY-MM-DD]
+- **Status**: [Draft/In Progress/Ready/Complete]
+- **Priority**: [High/Medium/Low]
+- **Team**: [Assigned team or owner]
+- **Technology Stack**: [Primary technologies involved]
+- **Complexity**: [Low/Medium/High]
+- **Business Impact**: [Revenue/UX/Performance/Security]
 
 ## Product Specifications
 
@@ -325,12 +336,6 @@ Status: draft
 ```
 
 **Notification & Exit Instructions:**
-🔔 SPECGEN_ARCHITECT_COMPLETE: Specifications created using SpecGen MCP - Architecture analysis complete, all layers documented
+🔔 specgen_ARCHITECT_COMPLETE: Specifications created using specgen MCP - Architecture analysis complete, all layers documented
 
-"Analysis and planning are complete with [X]% confidence. I have created [N] specification(s) using SpecGen MCP tools. The specifications are now stored in the project's MCP database and ready for implementation using the specgen-engineer command."
-
-**MCP Integration Summary:**
-- ✅ **SpecGen MCP**: Specifications created and stored
-- ✅ **Static Analysis MCP**: Code analysis performed (if available)
-- ✅ **Structured Outputs**: XML-tagged responses for clarity
-- ✅ **Chain of Thought**: Systematic requirement analysis
+"Analysis and planning are complete with [X]% confidence. I have created [N] specification(s) using specgen MCP tools. The specifications are now stored in the project's MCP database and ready for implementation using the specgen-engineer command."

@@ -4,7 +4,7 @@ allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, TodoWrite, Task, 
 argument-hint: [mode: implement|debug] [spec-id|spec-title] <task-description>
 ---
 
-# SPECGEN-ENGINEER MODE IMPLEMENTATION COMMAND
+# specgen-engineer MODE IMPLEMENTATION COMMAND
 
 **Goal**: Execute specifications or perform debugging with systematic implementation using MCP (Model Context Protocol) integration for specification management and optional TypeScript analysis.
 
@@ -12,8 +12,8 @@ argument-hint: [mode: implement|debug] [spec-id|spec-title] <task-description>
 1. **Implement Mode (default)**: Read a specification from SpecGen MCP and execute the defined tasks sequentially, logging progress back to MCP.
 2. **Debug Mode**: Analyze a failed task using the full context of the specification and its execution logs, then propose and implement a fix.
 
-**MCP Integration**: This command replaces traditional SPEC file operations with MCP tools:
-- **SpecGen MCP** (`mcp__specgen-mcp__*`) for specification retrieval and updates
+**MCP Integration**: This command uses MCP tools for enhanced implementation:
+- **specgen MCP** (`mcp__specgen-mcp__*`) for specification retrieval and updates
 - **Static Analysis MCP** (`mcp__static-analysis__*`) for TypeScript analysis (optional)
 
 **Usage Pattern**: `/specgen-engineer [mode: implement|debug] [spec-id|spec-title] <task-description>`
@@ -68,9 +68,9 @@ This is the default mode for executing a specification using MCP tools.
    - Analyze existing patterns and conventions
 
 4. **Acknowledge**: 
-   SPECGEN-ENGINEER mode implementation command - Specification loaded from SpecGen MCP, implementation ready to begin
+   specgen-engineer mode implementation command - Specification loaded from specgen MCP, implementation ready to begin
    
-   "SPECGEN-ENGINEER, I have loaded specification `[Spec Title]` (ID: [spec_id]) from SpecGen MCP and created a todo list of [X] tasks. I am ready to begin implementation, starting with the `[First Layer Name]`."
+   "specgen-engineer, I have loaded specification `[Spec Title]` (ID: [spec_id]) from specgen MCP and created a todo list of [X] tasks. I am ready to begin implementation, starting with the `[First Layer Name]`."
 
 ### PHASE 2: LAYER-BY-LAYER EXECUTION
 
@@ -103,7 +103,7 @@ Execute all tasks for one layer (e.g., Database) before moving to the next, foll
 **Trigger**: This phase is executed after all tasks in a logical layer are completed successfully.
 
 **MCP Logging Protocol**:
-Update the specification in SpecGen MCP with execution progress by appending to the specification content.
+Update the specification in specgen MCP with execution progress by appending to the specification content with proper H2 headers for dashboard parsing.
 
 **Log Entry Creation**:
 Retrieve current specification, append new log entry, then update:
@@ -118,7 +118,7 @@ Status: in-progress
 
 **Log Entry Format**:
 ```markdown
-## Execution Log
+## Execution Logs
 
 ### Layer Completed: [Layer Name - e.g., Database Layer]
 - **Status**: Completed
@@ -132,6 +132,8 @@ Status: in-progress
 
 **If a failure occurred, the log entry should be:**
 ```markdown
+## Debug Logs
+
 ### Task Failed: [TASK-ID] - [Task Description]
 - **Status**: Failed
 - **Timestamp**: [YYYY-MM-DD HH:MM:SS]
@@ -153,9 +155,9 @@ Status: in-progress
    ```
 
 2. **Final Summary**: 
-   🔔 SPECGEN_ENGINEER_COMPLETE: Implementation finished successfully - All layers executed using SpecGen MCP, feature implementation complete
+   🔔 specgen_ENGINEER_COMPLETE: Implementation finished successfully - All layers executed using specgen MCP, feature implementation complete
    
-   "SPECGEN-ENGINEER, the implementation for `[Feature Name]` is complete. All layers from specification ID [spec_id] have been executed and logged successfully in SpecGen MCP."
+   "specgen-engineer, the implementation for `[Feature Name]` is complete. All layers from specification ID [spec_id] have been executed and logged successfully in specgen MCP."
 
 ---
 
@@ -182,9 +184,9 @@ This mode is triggered when the user invokes the command with `mode: 'debug'`.
    - Find references to understand impact
 
 4. **Acknowledge**: 
-   SPECGEN-ENGINEER debug mode activated - Analyzing failure context using SpecGen MCP and preparing resolution strategy
+   specgen-engineer debug mode activated - Analyzing failure context using specgen MCP and preparing resolution strategy
    
-   "SPECGEN-ENGINEER, I have loaded the full context for specification ID [spec_id] from SpecGen MCP. I am now analyzing the failure in task `[TASK-ID]` based on your description: `[issue_description]`."
+   "specgen-engineer, I have loaded the full context for specification ID [spec_id] from specgen MCP. I am now analyzing the failure in task `[TASK-ID]` based on your description: `[issue_description]`."
 
 ### PHASE 2: ROOT CAUSE ANALYSIS
 
@@ -207,7 +209,7 @@ This mode is triggered when the user invokes the command with `mode: 'debug'`.
    > **Proposed Fix**: [A detailed description of the changes needed.]
    > **MCP Analysis**: [Any insights from static-analysis tools that informed the solution.]
    > 🔔 APPROVAL_REQUEST: User approval required before proceeding with implementation changes
-   > "SPECGEN-ENGINEER, I have analyzed the issue using MCP tools. Here is my proposal. Awaiting your confirmation to proceed."
+   > "specgen-engineer, I have analyzed the issue using MCP tools. Here is my proposal. Awaiting your confirmation to proceed."
 
 2. **Implement Fix**: Upon user approval, apply the changes using both traditional tools and MCP enhancements.
 
@@ -224,7 +226,7 @@ This mode is triggered when the user invokes the command with `mode: 'debug'`.
    
    **Debug Log Format**:
    ```markdown
-   ## Debug Log
+   ## Debug Logs
    
    ### Debug Session: [YYYY-MM-DD HH:MM:SS]
    - **Issue**: Task `[TASK-ID]` failed with error: `[Error Message]`.
@@ -235,9 +237,9 @@ This mode is triggered when the user invokes the command with `mode: 'debug'`.
    ```
 
 2. **Notify**: 
-   🔔 SPECGEN_DEBUG_COMPLETE: Issue analysis and resolution complete using SpecGen MCP - Debug session finished successfully
+   🔔 specgen_DEBUG_COMPLETE: Issue analysis and resolution complete using specgen MCP - Debug session finished successfully
    
-   "SPECGEN-ENGINEER, the debug session is complete. The results have been logged to SpecGen MCP specification ID [spec_id]."
+   "specgen-engineer, the debug session is complete. The results have been logged to specgen MCP specification ID [spec_id]."
 
 ---
 
@@ -276,7 +278,7 @@ This mode is triggered when the user invokes the command with `mode: 'debug'`.
 
 ## MCP INTEGRATION SUMMARY
 
-**SpecGen MCP Tools Used:**
+**specgen MCP Tools Used:**
 - `mcp__specgen-mcp__get_spec`: Retrieve specifications by ID
 - `mcp__specgen-mcp__search_specs`: Find specifications by search terms
 - `mcp__specgen-mcp__update_spec`: Log progress and debug information
