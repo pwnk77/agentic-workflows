@@ -77,6 +77,149 @@ export class SpecService {
   }
 
   /**
+   * Ensure FTS index exists and is populated
+   */
+  private static ensureFTSIndex(db: any): void {
+    try {
+      // Check if specs_fts table exists
+      const tables = db.prepare(`
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name='specs_fts'
+      `).all();
+
+      if (tables.length === 0) {
+        // Create FTS table if it doesn't exist
+        this.createFTSTable(db);
+      } else {
+        // Check if FTS table is populated
+        const ftsCount = db.prepare('SELECT COUNT(*) as count FROM specs_fts').get();
+        const specsCount = db.prepare('SELECT COUNT(*) as count FROM specs').get();
+        
+        if (ftsCount.count !== specsCount.count) {
+          // Rebuild FTS index if counts don't match
+          this.rebuildFTSIndex(db);
+        }
+      }
+    } catch (error) {
+      console.error('Error ensuring FTS index:', error);
+      // Try to rebuild as a fallback
+      try {
+        this.rebuildFTSIndex(db);
+      } catch (rebuildError) {
+        console.error('Error rebuilding FTS index:', rebuildError);
+      }
+    }
+  }
+
+  /**
+   * Create FTS table with appropriate schema
+   */
+  private static createFTSTable(db: any): void {
+    const columns = this.getTableColumns(db, 'specs');
+    const hasExtendedColumns = columns.includes('theme_category');
+
+    if (hasExtendedColumns) {
+      // Extended FTS table with theme_category and feature_group
+      db.exec(`
+        CREATE VIRTUAL TABLE specs_fts USING fts5(
+          title, 
+          body_md,
+          theme_category,
+          feature_group,
+          content='specs', 
+          content_rowid='id'
+        );
+      `);
+
+      // Create triggers for extended schema
+      db.exec(`
+        CREATE TRIGGER specs_fts_insert AFTER INSERT ON specs BEGIN
+          INSERT INTO specs_fts(rowid, title, body_md, theme_category, feature_group) 
+          VALUES (new.id, new.title, new.body_md, new.theme_category, new.feature_group);
+        END;
+
+        CREATE TRIGGER specs_fts_update AFTER UPDATE ON specs BEGIN
+          UPDATE specs_fts 
+          SET title = new.title, 
+              body_md = new.body_md,
+              theme_category = new.theme_category,
+              feature_group = new.feature_group
+          WHERE rowid = new.id;
+        END;
+
+        CREATE TRIGGER specs_fts_delete AFTER DELETE ON specs BEGIN
+          DELETE FROM specs_fts WHERE rowid = old.id;
+        END;
+      `);
+    } else {
+      // Basic FTS table with only core fields
+      db.exec(`
+        CREATE VIRTUAL TABLE specs_fts USING fts5(
+          title, 
+          body_md,
+          content='specs', 
+          content_rowid='id'
+        );
+      `);
+
+      // Create triggers for basic schema
+      db.exec(`
+        CREATE TRIGGER specs_fts_insert AFTER INSERT ON specs BEGIN
+          INSERT INTO specs_fts(rowid, title, body_md) 
+          VALUES (new.id, new.title, new.body_md);
+        END;
+
+        CREATE TRIGGER specs_fts_update AFTER UPDATE ON specs BEGIN
+          UPDATE specs_fts 
+          SET title = new.title, body_md = new.body_md
+          WHERE rowid = new.id;
+        END;
+
+        CREATE TRIGGER specs_fts_delete AFTER DELETE ON specs BEGIN
+          DELETE FROM specs_fts WHERE rowid = old.id;
+        END;
+      `);
+    }
+
+    // Populate FTS table with existing data
+    this.populateFTSTable(db, hasExtendedColumns);
+  }
+
+  /**
+   * Rebuild FTS index
+   */
+  private static rebuildFTSIndex(db: any): void {
+    try {
+      // Clear existing FTS data
+      db.exec('DELETE FROM specs_fts;');
+      
+      // Repopulate
+      const columns = this.getTableColumns(db, 'specs');
+      const hasExtendedColumns = columns.includes('theme_category');
+      this.populateFTSTable(db, hasExtendedColumns);
+    } catch (error) {
+      console.error('Error rebuilding FTS index:', error);
+    }
+  }
+
+  /**
+   * Populate FTS table with existing spec data
+   */
+  private static populateFTSTable(db: any, hasExtendedColumns: boolean): void {
+    if (hasExtendedColumns) {
+      db.exec(`
+        INSERT INTO specs_fts(rowid, title, body_md, theme_category, feature_group)
+        SELECT id, title, body_md, theme_category, feature_group FROM specs;
+      `);
+    } else {
+      db.exec(`
+        INSERT INTO specs_fts(rowid, title, body_md)
+        SELECT id, title, body_md FROM specs;
+      `);
+    }
+  }
+
+  /**
    * Update an existing specification
    */
   static updateSpec(spec_id: number, updates: UpdateSpecData): Spec | null {
@@ -253,6 +396,9 @@ export class SpecService {
    */
   static searchSpecs(query: string, options: SearchOptions = {}): SpecSearchResult {
     const db = DatabaseConnection.getCurrentProjectConnection();
+    
+    // Ensure FTS table exists and is populated
+    this.ensureFTSIndex(db);
     
     const limit = Math.min(options.limit || 20, 100);
     const offset = options.offset || 0;

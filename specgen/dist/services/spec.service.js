@@ -53,6 +53,120 @@ export class SpecService {
             return ['id', 'title', 'body_md', 'status', 'feature_group', 'created_at', 'updated_at'];
         }
     }
+    static ensureFTSIndex(db) {
+        try {
+            const tables = db.prepare(`
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name='specs_fts'
+      `).all();
+            if (tables.length === 0) {
+                this.createFTSTable(db);
+            }
+            else {
+                const ftsCount = db.prepare('SELECT COUNT(*) as count FROM specs_fts').get();
+                const specsCount = db.prepare('SELECT COUNT(*) as count FROM specs').get();
+                if (ftsCount.count !== specsCount.count) {
+                    this.rebuildFTSIndex(db);
+                }
+            }
+        }
+        catch (error) {
+            console.error('Error ensuring FTS index:', error);
+            try {
+                this.rebuildFTSIndex(db);
+            }
+            catch (rebuildError) {
+                console.error('Error rebuilding FTS index:', rebuildError);
+            }
+        }
+    }
+    static createFTSTable(db) {
+        const columns = this.getTableColumns(db, 'specs');
+        const hasExtendedColumns = columns.includes('theme_category');
+        if (hasExtendedColumns) {
+            db.exec(`
+        CREATE VIRTUAL TABLE specs_fts USING fts5(
+          title, 
+          body_md,
+          theme_category,
+          feature_group,
+          content='specs', 
+          content_rowid='id'
+        );
+      `);
+            db.exec(`
+        CREATE TRIGGER specs_fts_insert AFTER INSERT ON specs BEGIN
+          INSERT INTO specs_fts(rowid, title, body_md, theme_category, feature_group) 
+          VALUES (new.id, new.title, new.body_md, new.theme_category, new.feature_group);
+        END;
+
+        CREATE TRIGGER specs_fts_update AFTER UPDATE ON specs BEGIN
+          UPDATE specs_fts 
+          SET title = new.title, 
+              body_md = new.body_md,
+              theme_category = new.theme_category,
+              feature_group = new.feature_group
+          WHERE rowid = new.id;
+        END;
+
+        CREATE TRIGGER specs_fts_delete AFTER DELETE ON specs BEGIN
+          DELETE FROM specs_fts WHERE rowid = old.id;
+        END;
+      `);
+        }
+        else {
+            db.exec(`
+        CREATE VIRTUAL TABLE specs_fts USING fts5(
+          title, 
+          body_md,
+          content='specs', 
+          content_rowid='id'
+        );
+      `);
+            db.exec(`
+        CREATE TRIGGER specs_fts_insert AFTER INSERT ON specs BEGIN
+          INSERT INTO specs_fts(rowid, title, body_md) 
+          VALUES (new.id, new.title, new.body_md);
+        END;
+
+        CREATE TRIGGER specs_fts_update AFTER UPDATE ON specs BEGIN
+          UPDATE specs_fts 
+          SET title = new.title, body_md = new.body_md
+          WHERE rowid = new.id;
+        END;
+
+        CREATE TRIGGER specs_fts_delete AFTER DELETE ON specs BEGIN
+          DELETE FROM specs_fts WHERE rowid = old.id;
+        END;
+      `);
+        }
+        this.populateFTSTable(db, hasExtendedColumns);
+    }
+    static rebuildFTSIndex(db) {
+        try {
+            db.exec('DELETE FROM specs_fts;');
+            const columns = this.getTableColumns(db, 'specs');
+            const hasExtendedColumns = columns.includes('theme_category');
+            this.populateFTSTable(db, hasExtendedColumns);
+        }
+        catch (error) {
+            console.error('Error rebuilding FTS index:', error);
+        }
+    }
+    static populateFTSTable(db, hasExtendedColumns) {
+        if (hasExtendedColumns) {
+            db.exec(`
+        INSERT INTO specs_fts(rowid, title, body_md, theme_category, feature_group)
+        SELECT id, title, body_md, theme_category, feature_group FROM specs;
+      `);
+        }
+        else {
+            db.exec(`
+        INSERT INTO specs_fts(rowid, title, body_md)
+        SELECT id, title, body_md FROM specs;
+      `);
+        }
+    }
     static updateSpec(spec_id, updates) {
         const db = DatabaseConnection.getCurrentProjectConnection();
         const updateFields = [];
@@ -175,6 +289,7 @@ export class SpecService {
     }
     static searchSpecs(query, options = {}) {
         const db = DatabaseConnection.getCurrentProjectConnection();
+        this.ensureFTSIndex(db);
         const limit = Math.min(options.limit || 20, 100);
         const offset = options.offset || 0;
         const minScore = options.min_score !== undefined ? options.min_score : -10.0;

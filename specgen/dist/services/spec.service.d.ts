@@ -2,6 +2,10 @@ import { SpecStatus } from '../parsers/spec-parser.js';
 export declare class SpecService {
     static createSpec(data: CreateSpecData): Spec;
     private static getTableColumns;
+    private static ensureFTSIndex;
+    private static createFTSTable;
+    private static rebuildFTSIndex;
+    private static populateFTSTable;
     static updateSpec(spec_id: number, updates: UpdateSpecData): Spec | null;
     static getSpecById(spec_id: number): Spec | null;
     static deleteSpec(spec_id: number): boolean;
