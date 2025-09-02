@@ -63,6 +63,8 @@ core-workflows/
 
 ## 🚀 Quick Setup
 
+> **👀 New to this? Start with our [Complete Installation Guide](quickstart.md) for one-command setup!**
+
 ### Option 1: Complete Configuration
 ```bash
 # Copy all configurations
@@ -81,6 +83,15 @@ cp core-workflows/claude-code/agents/* .claude/agents/
 # Add intelligent hooks
 cp core-workflows/claude-code/hooks/notification.sh .claude/hooks/
 cp core-workflows/claude-code/settings.local.json .claude/
+```
+
+### MCP Tools Quick Install
+```bash
+# SpecGen MCP - Project specification management
+claude mcp add specgen -s user -- npx -y specgen-mcp@latest
+
+# Static Analysis MCP - TypeScript code analysis  
+claude mcp add static-analysis -s user -- npx -y @r-mcp/static-analysis@latest
 ```
 
 ## 🤖 Auto Mode: Orchestrated Development
@@ -191,9 +202,10 @@ user "test mobile onboarding flow for new users"
 ## 📚 Learning Resources
 
 ### Getting Started
-1. **[Agents Overview](guides/claude-code-agents-overview.md)** - Complete workflow reference
-2. **[Auto Mode Guide](guides/claude-code-auto-mode-guide.md)** - Automated development workflows
-3. **[Control Mode Guide](guides/claude-code-control-mode-guide.md)** - Manual workflow orchestration
+1. **[🚀 Complete Installation Guide](quickstart.md)** - One-command setup for everything
+2. **[Agents Overview](guides/claude-code-agents-overview.md)** - Complete workflow reference
+3. **[Auto Mode Guide](guides/claude-code-auto-mode-guide.md)** - Automated development workflows
+4. **[Control Mode Guide](guides/claude-code-control-mode-guide.md)** - Manual workflow orchestration
 
 ### Advanced Usage
 - **[Hooks Usage](guides/claude-code-hooks-usage.md)** - Complete notification system setup

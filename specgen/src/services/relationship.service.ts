@@ -1,0 +1,378 @@
+import { DatabaseConnection } from '../database/connection.js';
+import { SpecGroupingService } from './grouping.service.js';
+
+export interface Spec {
+  id: number;
+  title: string;
+  body_md: string;
+  feature_group?: string;
+  theme_category?: string;
+  related_specs?: string;
+  parent_spec_id?: number;
+}
+
+export interface RelationshipSuggestion {
+  spec_id: number;
+  title: string;
+  score: number;
+  reason: string;
+  relationship_type: 'similar' | 'prerequisite' | 'dependent' | 'related';
+}
+
+/**
+ * Service for managing specification relationships and hierarchies
+ */
+export class RelationshipService {
+  /**
+   * Find related specifications for a given spec
+   */
+  static findRelatedSpecs(
+    spec: Spec,
+    options: {
+      limit?: number;
+      minScore?: number;
+      excludeIds?: number[];
+      sameGroupOnly?: boolean;
+    } = {}
+  ): RelationshipSuggestion[] {
+    const db = DatabaseConnection.getCurrentProjectConnection();
+    
+    const { 
+      limit = 10, 
+      minScore = 0.2, 
+      excludeIds = [], 
+      sameGroupOnly = false 
+    } = options;
+
+    // Build query to get candidate specs
+    let whereConditions = ['id != ?'];
+    let whereValues: any[] = [spec.id];
+
+    if (excludeIds.length > 0) {
+      whereConditions.push(`id NOT IN (${excludeIds.map(() => '?').join(', ')})`);
+      whereValues.push(...excludeIds);
+    }
+
+    if (sameGroupOnly && spec.feature_group) {
+      whereConditions.push('feature_group = ?');
+      whereValues.push(spec.feature_group);
+    }
+
+    const candidatesQuery = `
+      SELECT id, title, body_md, feature_group, theme_category 
+      FROM specs 
+      WHERE ${whereConditions.join(' AND ')}
+      ORDER BY updated_at DESC 
+      LIMIT 100
+    `;
+
+    const candidates = db.prepare(candidatesQuery).all(...whereValues) as Spec[];
+
+    // Use grouping service to calculate relationships
+    const suggestions = SpecGroupingService.suggestRelatedSpecs(
+      spec,
+      candidates,
+      minScore
+    );
+
+    // Enhance suggestions with relationship types
+    return suggestions.slice(0, limit).map(suggestion => {
+      const candidate = candidates.find(c => c.id === suggestion.id)!;
+      
+      return {
+        spec_id: suggestion.id,
+        title: candidate.title,
+        score: suggestion.score,
+        reason: suggestion.reason,
+        relationship_type: this.determineRelationshipType(spec, candidate, suggestion.score)
+      };
+    });
+  }
+
+  /**
+   * Update relationships for a specification
+   */
+  static updateSpecRelationships(
+    specId: number,
+    relatedSpecIds: number[],
+    parentSpecId?: number
+  ): boolean {
+    const db = DatabaseConnection.getCurrentProjectConnection();
+    
+    try {
+      const updates: any = {
+        related_specs: JSON.stringify(relatedSpecIds),
+        last_command: 'relationship_update'
+      };
+
+      if (parentSpecId !== undefined) {
+        // Validate parent exists and is not creating a cycle
+        if (parentSpecId && !this.isValidParent(specId, parentSpecId)) {
+          throw new Error('Invalid parent specification - would create cycle');
+        }
+        updates.parent_spec_id = parentSpecId;
+      }
+
+      const setClause = Object.keys(updates).map(key => `${key} = ?`).join(', ');
+      const values = [...Object.values(updates), specId];
+
+      const stmt = db.prepare(`
+        UPDATE specs 
+        SET ${setClause}, updated_at = datetime('now')
+        WHERE id = ?
+      `);
+
+      const result = stmt.run(...values);
+      return result.changes > 0;
+    } catch (error) {
+      console.error('Failed to update spec relationships:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get specification hierarchy (children and descendants)
+   */
+  static getSpecHierarchy(specId: number): {
+    children: Spec[];
+    descendants: Spec[];
+    ancestors: Spec[];
+  } {
+    const db = DatabaseConnection.getCurrentProjectConnection();
+    
+    // Get direct children
+    const children = db.prepare(`
+      SELECT id, title, body_md, feature_group, parent_spec_id 
+      FROM specs 
+      WHERE parent_spec_id = ?
+      ORDER BY title
+    `).all(specId) as Spec[];
+
+    // Get all descendants recursively
+    const descendants = this.getDescendants(specId);
+    
+    // Get ancestors
+    const ancestors = this.getAncestors(specId);
+
+    return { children, descendants, ancestors };
+  }
+
+  /**
+   * Auto-detect and suggest relationships for a new spec
+   */
+  static autoDetectRelationships(spec: Spec): {
+    suggested_related: RelationshipSuggestion[];
+    suggested_parent?: { id: number; title: string; reason: string };
+  } {
+    // Find related specs
+    const relatedSuggestions = this.findRelatedSpecs(spec, {
+      limit: 5,
+      minScore: 0.3
+    });
+
+    // Look for potential parent (higher-level, related spec)
+    const parentCandidates = this.findRelatedSpecs(spec, {
+      limit: 3,
+      minScore: 0.4,
+      sameGroupOnly: true
+    }).filter(suggestion => 
+      suggestion.relationship_type === 'prerequisite' ||
+      suggestion.title.toLowerCase().includes('system') ||
+      suggestion.title.toLowerCase().includes('overview')
+    );
+
+    return {
+      suggested_related: relatedSuggestions,
+      suggested_parent: parentCandidates.length > 0 ? {
+        id: parentCandidates[0].spec_id,
+        title: parentCandidates[0].title,
+        reason: 'High-level related specification'
+      } : undefined
+    };
+  }
+
+  /**
+   * Get relationship statistics for a project
+   */
+  static getRelationshipStats(): {
+    total_relationships: number;
+    specs_with_relationships: number;
+    average_relationships_per_spec: number;
+    hierarchy_depth: number;
+    orphaned_specs: number;
+  } {
+    const db = DatabaseConnection.getCurrentProjectConnection();
+    
+    // Count specs with relationships
+    const specsWithRelations = db.prepare(`
+      SELECT COUNT(*) as count 
+      FROM specs 
+      WHERE related_specs IS NOT NULL AND related_specs != '[]'
+    `).get() as { count: number };
+
+    // Count total relationships
+    const allSpecs = db.prepare(`
+      SELECT related_specs FROM specs 
+      WHERE related_specs IS NOT NULL AND related_specs != '[]'
+    `).all() as { related_specs: string }[];
+
+    let totalRelationships = 0;
+    allSpecs.forEach(spec => {
+      try {
+        const relations = JSON.parse(spec.related_specs);
+        totalRelationships += Array.isArray(relations) ? relations.length : 0;
+      } catch (e) {
+        // Skip invalid JSON
+      }
+    });
+
+    // Calculate hierarchy depth
+    const maxDepth = this.calculateMaxHierarchyDepth();
+
+    // Count orphaned specs (no relationships and no parent)
+    const orphaned = db.prepare(`
+      SELECT COUNT(*) as count 
+      FROM specs 
+      WHERE (related_specs IS NULL OR related_specs = '[]') 
+        AND parent_spec_id IS NULL
+    `).get() as { count: number };
+
+    const totalSpecs = db.prepare('SELECT COUNT(*) as count FROM specs').get() as { count: number };
+
+    return {
+      total_relationships: totalRelationships,
+      specs_with_relationships: specsWithRelations.count,
+      average_relationships_per_spec: totalSpecs.count > 0 ? totalRelationships / totalSpecs.count : 0,
+      hierarchy_depth: maxDepth,
+      orphaned_specs: orphaned.count
+    };
+  }
+
+  /**
+   * Determine the type of relationship between two specs
+   */
+  private static determineRelationshipType(
+    spec1: Spec, 
+    spec2: Spec, 
+    score: number
+  ): 'similar' | 'prerequisite' | 'dependent' | 'related' {
+    const title1 = spec1.title.toLowerCase();
+    const title2 = spec2.title.toLowerCase();
+    const content1 = spec1.body_md.toLowerCase();
+    const content2 = spec2.body_md.toLowerCase();
+
+    // Check for prerequisite patterns
+    if (title2.includes('system') || title2.includes('overview') || title2.includes('architecture')) {
+      return 'prerequisite';
+    }
+
+    // Check for dependency patterns  
+    if (content1.includes(title2) || content2.includes(title1) || 
+        (title1.includes('implementation') && title2.includes('spec'))) {
+      return 'dependent';
+    }
+
+    // High similarity suggests similar specs
+    if (score > 0.6) {
+      return 'similar';
+    }
+
+    return 'related';
+  }
+
+  /**
+   * Check if a parent assignment would create a cycle
+   */
+  private static isValidParent(childId: number, parentId: number): boolean {
+    const ancestors = this.getAncestors(parentId);
+    return !ancestors.some(ancestor => ancestor.id === childId);
+  }
+
+  /**
+   * Get all descendants of a spec recursively
+   */
+  private static getDescendants(specId: number): Spec[] {
+    const db = DatabaseConnection.getCurrentProjectConnection();
+    const descendants: Spec[] = [];
+    const visited = new Set<number>();
+
+    const getChildren = (id: number) => {
+      if (visited.has(id)) return; // Prevent cycles
+      visited.add(id);
+
+      const children = db.prepare(`
+        SELECT id, title, body_md, feature_group, parent_spec_id 
+        FROM specs 
+        WHERE parent_spec_id = ?
+      `).all(id) as Spec[];
+
+      descendants.push(...children);
+      children.forEach(child => getChildren(child.id));
+    };
+
+    getChildren(specId);
+    return descendants;
+  }
+
+  /**
+   * Get all ancestors of a spec
+   */
+  private static getAncestors(specId: number): Spec[] {
+    const db = DatabaseConnection.getCurrentProjectConnection();
+    const ancestors: Spec[] = [];
+    let currentId: number | null = specId;
+
+    while (currentId) {
+      const parent = db.prepare(`
+        SELECT s.id, s.title, s.body_md, s.feature_group, s.parent_spec_id
+        FROM specs s
+        JOIN specs child ON child.parent_spec_id = s.id
+        WHERE child.id = ?
+      `).get(currentId) as Spec | null;
+
+      if (parent) {
+        ancestors.unshift(parent); // Add to beginning for correct order
+        currentId = parent.parent_spec_id || null;
+      } else {
+        currentId = null;
+      }
+    }
+
+    return ancestors;
+  }
+
+  /**
+   * Calculate the maximum hierarchy depth in the project
+   */
+  private static calculateMaxHierarchyDepth(): number {
+    const db = DatabaseConnection.getCurrentProjectConnection();
+    
+    // Get all root specs (no parent)
+    const rootSpecs = db.prepare(`
+      SELECT id FROM specs WHERE parent_spec_id IS NULL
+    `).all() as { id: number }[];
+
+    let maxDepth = 0;
+
+    const calculateDepth = (specId: number, currentDepth: number = 0): number => {
+      const children = db.prepare(`
+        SELECT id FROM specs WHERE parent_spec_id = ?
+      `).all(specId) as { id: number }[];
+
+      if (children.length === 0) {
+        return currentDepth;
+      }
+
+      return Math.max(
+        ...children.map(child => calculateDepth(child.id, currentDepth + 1))
+      );
+    };
+
+    for (const root of rootSpecs) {
+      const depth = calculateDepth(root.id);
+      maxDepth = Math.max(maxDepth, depth);
+    }
+
+    return maxDepth;
+  }
+}
