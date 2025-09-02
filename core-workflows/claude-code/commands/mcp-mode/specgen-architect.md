@@ -185,13 +185,30 @@ Dependencies mapped: [feature relationships]
 MCP Tools: specgen integration configured
 ```
 
-## PHASE 4: SPECIFICATION GENERATION
+## PHASE 4: PLAN PRESENTATION AND APPROVAL
 
-Generate specifications using specgen MCP tools for seamless integration.
+Present the detailed plan to the user and await approval before specification generation.
+
+**Plan Presentation Protocol:**
+
+1. **Generate Detailed Plan Summary**: Create a comprehensive summary of what will be created, including:
+   - List of specifications to be generated
+   - Key features and functionality for each spec
+   - Technical approach and architectural decisions
+   - Implementation timeline and effort estimates
+   - Dependencies and risks identified
+
+2. **Present for Approval**: Use the ExitPlanMode tool to present the plan and request user approval
+
+3. **Await User Confirmation**: Wait for user to approve or request modifications before proceeding
+
+## PHASE 5: SPECIFICATION GENERATION
+
+Generate specifications using specgen MCP tools for seamless integration after user approval.
 
 **MCP Specification Creation Protocol:**
 
-For each specification identified in Phase 3:
+For each specification identified and approved in Phase 4:
 
 1. **Prepare Specification Content**: Structure the specification following the template below
 2. **Create via MCP**: Use `mcp__specgen-mcp__create_spec_with_grouping` for enhanced categorization or `mcp__specgen-mcp__create_spec` with:
@@ -344,6 +361,11 @@ Status: draft
 ```
 
 **Notification & Exit Instructions:**
+
+**After Phase 4 (Plan Presentation):**
+Use ExitPlanMode tool with the comprehensive plan summary to request user approval.
+
+**After Phase 5 (Specification Generation):**
 🔔 specgen_ARCHITECT_COMPLETE: Specifications created using specgen MCP - Architecture analysis complete, all layers documented
 
 "Analysis and planning are complete with [X]% confidence. I have created [N] specification(s) using specgen MCP tools. The specifications are now stored in the project's MCP database and ready for implementation using the specgen-engineer command."
