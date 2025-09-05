@@ -1,0 +1,176 @@
+import { ProjectManager, ProjectInfo } from '../database/project-manager.js';
+import { EnhancedDatabaseConnection } from '../database/enhanced-connection.js';
+
+/**
+ * Service for managing project operations and state
+ */
+export class ProjectService {
+  /**
+   * Initialize a new project for SpecGen use
+   */
+  static async initialize(projectPath?: string): Promise<ProjectInitResult> {
+    try {
+      const projectRoot = projectPath || ProjectManager.detectProject();
+      const info = ProjectManager.getProjectInfo(projectRoot);
+
+      if (info.isInitialized) {
+        return {
+          success: true,
+          message: `Project already initialized at ${projectRoot}`,
+          projectInfo: info,
+          isNewProject: false
+        };
+      }
+
+      // Create .specgen directory and initialize database
+      ProjectManager.ensureSpecgenDir(projectRoot);
+      
+      // Initialize database connection (will create schema)
+      EnhancedDatabaseConnection.getConnection(projectRoot);
+      
+      // Update project info
+      const updatedInfo = ProjectManager.getProjectInfo(projectRoot);
+      
+      return {
+        success: true,
+        message: `Project initialized successfully at ${projectRoot}`,
+        projectInfo: updatedInfo,
+        isNewProject: true
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: `Failed to initialize project: ${error instanceof Error ? error.message : String(error)}`,
+        projectInfo: null,
+        isNewProject: false
+      };
+    }
+  }
+
+  /**
+   * Get current project information
+   */
+  static getCurrentProject(): ProjectInfo {
+    const projectRoot = ProjectManager.detectProject();
+    return ProjectManager.getProjectInfo(projectRoot);
+  }
+
+  /**
+   * Get project information for a specific path
+   */
+  static getProject(projectPath: string): ProjectInfo {
+    return ProjectManager.getProjectInfo(projectPath);
+  }
+
+  /**
+   * Check if current directory is in an initialized project
+   */
+  static isInInitializedProject(): boolean {
+    const projectRoot = ProjectManager.detectProject();
+    return ProjectManager.isProjectInitialized(projectRoot);
+  }
+
+  /**
+   * Get database connection for current project
+   */
+  static getDatabaseConnection(): any {
+    return EnhancedDatabaseConnection.getCurrentProjectConnection();
+  }
+
+  /**
+   * Switch to a different project context
+   */
+  static switchProject(projectPath: string): ProjectSwitchResult {
+    try {
+      const info = ProjectManager.getProjectInfo(projectPath);
+      
+      if (!info.isInitialized) {
+        return {
+          success: false,
+          message: `Project at ${projectPath} is not initialized. Run 'specgen init' first.`,
+          projectInfo: info
+        };
+      }
+
+      // Get connection to ensure it works
+      EnhancedDatabaseConnection.getConnection(projectPath);
+      
+      return {
+        success: true,
+        message: `Switched to project: ${info.name}`,
+        projectInfo: info
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: `Failed to switch project: ${error instanceof Error ? error.message : String(error)}`,
+        projectInfo: null
+      };
+    }
+  }
+
+  /**
+   * Get database statistics for current project
+   */
+  static async getProjectStats(): Promise<ProjectStats> {
+    try {
+      const db = EnhancedDatabaseConnection.getCurrentProjectConnection();
+      
+      const totalSpecs = db.prepare('SELECT COUNT(*) as count FROM specs').get() as { count: number };
+      
+      const statusCounts = db.prepare(`
+        SELECT status, COUNT(*) as count 
+        FROM specs 
+        GROUP BY status
+      `).all() as Array<{ status: string; count: number }>;
+
+      const groupCounts = db.prepare(`
+        SELECT feature_group, COUNT(*) as count 
+        FROM specs 
+        WHERE feature_group IS NOT NULL
+        GROUP BY feature_group
+      `).all() as Array<{ feature_group: string; count: number }>;
+
+      const recentActivity = db.prepare(`
+        SELECT COUNT(*) as count 
+        FROM specs 
+        WHERE updated_at >= datetime('now', '-7 days')
+      `).get() as { count: number };
+
+      return {
+        total: totalSpecs.count,
+        byStatus: statusCounts.reduce((acc, item) => {
+          acc[item.status] = item.count;
+          return acc;
+        }, {} as Record<string, number>),
+        byGroup: groupCounts.reduce((acc, item) => {
+          acc[item.feature_group] = item.count;
+          return acc;
+        }, {} as Record<string, number>),
+        recentActivity: recentActivity.count
+      };
+    } catch (error) {
+      throw new Error(`Failed to get project stats: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+}
+
+export interface ProjectInitResult {
+  success: boolean;
+  message: string;
+  projectInfo: ProjectInfo | null;
+  isNewProject: boolean;
+}
+
+export interface ProjectSwitchResult {
+  success: boolean;
+  message: string;
+  projectInfo: ProjectInfo | null;
+}
+
+export interface ProjectStats {
+  total: number;
+  byStatus: Record<string, number>;
+  byGroup: Record<string, number>;
+  recentActivity: number;
+}

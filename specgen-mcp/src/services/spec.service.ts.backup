@@ -1,0 +1,714 @@
+import { EnhancedDatabaseConnection } from '../database/enhanced-connection.js';
+import { SpecStatus } from '../parsers/spec-parser.js';
+
+/**
+ * Core service for managing specifications in the database
+ */
+export class SpecService {
+  /**
+   * Create a new specification
+   */
+  static createSpec(data: CreateSpecData): Spec {
+    const db = EnhancedDatabaseConnection.getCurrentProjectConnection();
+    
+    // Check what columns exist in the specs table
+    const columns = this.getTableColumns(db, 'specs');
+    const hasExtendedColumns = columns.includes('theme_category');
+    
+    // Auto-detect feature group and theme if not provided
+    const feature_group = data.feature_group || this.autoDetectGroup(data.title, data.body_md);
+    
+    let stmt;
+    let values;
+    
+    if (hasExtendedColumns) {
+      // Use extended schema with all columns
+      const theme_category = data.theme_category || this.autoDetectTheme(feature_group);
+      const related_specs_json = data.related_specs ? JSON.stringify(data.related_specs) : null;
+      
+      stmt = db.prepare(`
+        INSERT INTO specs (
+          title, body_md, status, feature_group, theme_category, 
+          priority, related_specs, parent_spec_id, created_via
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      
+      values = [
+        data.title,
+        data.body_md,
+        data.status || 'draft',
+        feature_group,
+        theme_category,
+        data.priority || 'medium',
+        related_specs_json,
+        data.parent_spec_id || null,
+        data.created_via || null
+      ];
+    } else {
+      // Use basic schema with only core columns
+      stmt = db.prepare(`
+        INSERT INTO specs (title, body_md, status, feature_group)
+        VALUES (?, ?, ?, ?)
+      `);
+      
+      values = [
+        data.title,
+        data.body_md,
+        data.status || 'draft',
+        feature_group
+      ];
+    }
+
+    const result = stmt.run(...values);
+    return this.getSpecById(result.lastInsertRowid as number)!;
+  }
+
+  /**
+   * Get column names for a table
+   */
+  private static getTableColumns(db: any, tableName: string): string[] {
+    try {
+      const result = db.prepare(`PRAGMA table_info(${tableName})`).all();
+      return result.map((row: any) => row.name);
+    } catch {
+      return ['id', 'title', 'body_md', 'status', 'feature_group', 'created_at', 'updated_at'];
+    }
+  }
+
+  /**
+   * Ensure FTS index exists and is populated
+   */
+  private static ensureFTSIndex(db: any): void {
+    try {
+      // Check if specs_fts table exists
+      const tables = db.prepare(`
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name='specs_fts'
+      `).all();
+
+      if (tables.length === 0) {
+        // Create FTS table if it doesn't exist
+        this.createFTSTable(db);
+      } else {
+        // Check if FTS table is populated
+        const ftsCount = db.prepare('SELECT COUNT(*) as count FROM specs_fts').get();
+        const specsCount = db.prepare('SELECT COUNT(*) as count FROM specs').get();
+        
+        if (ftsCount.count !== specsCount.count) {
+          // Rebuild FTS index if counts don't match
+          this.rebuildFTSIndex(db);
+        }
+      }
+    } catch (error) {
+      console.error('Error ensuring FTS index:', error);
+      // Try to rebuild as a fallback
+      try {
+        this.rebuildFTSIndex(db);
+      } catch (rebuildError) {
+        console.error('Error rebuilding FTS index:', rebuildError);
+      }
+    }
+  }
+
+  /**
+   * Create FTS table with appropriate schema
+   */
+  private static createFTSTable(db: any): void {
+    const columns = this.getTableColumns(db, 'specs');
+    const hasExtendedColumns = columns.includes('theme_category');
+
+    if (hasExtendedColumns) {
+      // Extended FTS table with theme_category and feature_group
+      db.exec(`
+        CREATE VIRTUAL TABLE specs_fts USING fts5(
+          title, 
+          body_md,
+          theme_category,
+          feature_group,
+          content='specs', 
+          content_rowid='id'
+        );
+      `);
+
+      // Create triggers for extended schema
+      db.exec(`
+        CREATE TRIGGER specs_fts_insert AFTER INSERT ON specs BEGIN
+          INSERT INTO specs_fts(rowid, title, body_md, theme_category, feature_group) 
+          VALUES (new.id, new.title, new.body_md, new.theme_category, new.feature_group);
+        END;
+
+        CREATE TRIGGER specs_fts_update AFTER UPDATE ON specs BEGIN
+          UPDATE specs_fts 
+          SET title = new.title, 
+              body_md = new.body_md,
+              theme_category = new.theme_category,
+              feature_group = new.feature_group
+          WHERE rowid = new.id;
+        END;
+
+        CREATE TRIGGER specs_fts_delete AFTER DELETE ON specs BEGIN
+          DELETE FROM specs_fts WHERE rowid = old.id;
+        END;
+      `);
+    } else {
+      // Basic FTS table with only core fields
+      db.exec(`
+        CREATE VIRTUAL TABLE specs_fts USING fts5(
+          title, 
+          body_md,
+          content='specs', 
+          content_rowid='id'
+        );
+      `);
+
+      // Create triggers for basic schema
+      db.exec(`
+        CREATE TRIGGER specs_fts_insert AFTER INSERT ON specs BEGIN
+          INSERT INTO specs_fts(rowid, title, body_md) 
+          VALUES (new.id, new.title, new.body_md);
+        END;
+
+        CREATE TRIGGER specs_fts_update AFTER UPDATE ON specs BEGIN
+          UPDATE specs_fts 
+          SET title = new.title, body_md = new.body_md
+          WHERE rowid = new.id;
+        END;
+
+        CREATE TRIGGER specs_fts_delete AFTER DELETE ON specs BEGIN
+          DELETE FROM specs_fts WHERE rowid = old.id;
+        END;
+      `);
+    }
+
+    // Populate FTS table with existing data
+    this.populateFTSTable(db, hasExtendedColumns);
+  }
+
+  /**
+   * Rebuild FTS index
+   */
+  private static rebuildFTSIndex(db: any): void {
+    try {
+      // Clear existing FTS data
+      db.exec('DELETE FROM specs_fts;');
+      
+      // Repopulate
+      const columns = this.getTableColumns(db, 'specs');
+      const hasExtendedColumns = columns.includes('theme_category');
+      this.populateFTSTable(db, hasExtendedColumns);
+    } catch (error) {
+      console.error('Error rebuilding FTS index:', error);
+    }
+  }
+
+  /**
+   * Populate FTS table with existing spec data
+   */
+  private static populateFTSTable(db: any, hasExtendedColumns: boolean): void {
+    if (hasExtendedColumns) {
+      db.exec(`
+        INSERT INTO specs_fts(rowid, title, body_md, theme_category, feature_group)
+        SELECT id, title, body_md, theme_category, feature_group FROM specs;
+      `);
+    } else {
+      db.exec(`
+        INSERT INTO specs_fts(rowid, title, body_md)
+        SELECT id, title, body_md FROM specs;
+      `);
+    }
+  }
+
+  /**
+   * Update an existing specification
+   */
+  static updateSpec(spec_id: number, updates: UpdateSpecData): Spec | null {
+    const db = EnhancedDatabaseConnection.getCurrentProjectConnection();
+    
+    // Input validation and serialization
+    const sanitizedUpdates = { ...updates };
+    
+    // Ensure related_specs is properly serialized as JSON string
+    if (sanitizedUpdates.related_specs !== undefined) {
+      if (Array.isArray(sanitizedUpdates.related_specs)) {
+        // Convert array to JSON string for database storage
+        sanitizedUpdates.related_specs = JSON.stringify(sanitizedUpdates.related_specs);
+      } else if (typeof sanitizedUpdates.related_specs === 'string') {
+        // Validate that it's valid JSON if already a string
+        try {
+          JSON.parse(sanitizedUpdates.related_specs);
+        } catch (error) {
+          throw new Error(`Invalid related_specs JSON format: ${sanitizedUpdates.related_specs}`);
+        }
+      } else {
+        throw new Error(`Invalid related_specs format: expected array or JSON string, got ${typeof sanitizedUpdates.related_specs}`);
+      }
+    }
+    
+    // Build dynamic update query
+    const updateFields: string[] = [];
+    const updateValues: any[] = [];
+
+    if (sanitizedUpdates.title !== undefined) {
+      updateFields.push('title = ?');
+      updateValues.push(sanitizedUpdates.title);
+    }
+
+    if (sanitizedUpdates.body_md !== undefined) {
+      updateFields.push('body_md = ?');
+      updateValues.push(sanitizedUpdates.body_md);
+    }
+
+    if (sanitizedUpdates.status !== undefined) {
+      updateFields.push('status = ?');
+      updateValues.push(sanitizedUpdates.status);
+    }
+
+    if (sanitizedUpdates.feature_group !== undefined) {
+      updateFields.push('feature_group = ?');
+      updateValues.push(sanitizedUpdates.feature_group);
+    }
+
+    if (sanitizedUpdates.theme_category !== undefined) {
+      updateFields.push('theme_category = ?');
+      updateValues.push(sanitizedUpdates.theme_category);
+    }
+
+    if (sanitizedUpdates.priority !== undefined) {
+      updateFields.push('priority = ?');
+      updateValues.push(sanitizedUpdates.priority);
+    }
+
+    if (sanitizedUpdates.related_specs !== undefined) {
+      updateFields.push('related_specs = ?');
+      updateValues.push(sanitizedUpdates.related_specs);
+    }
+
+    if (sanitizedUpdates.parent_spec_id !== undefined) {
+      updateFields.push('parent_spec_id = ?');
+      updateValues.push(sanitizedUpdates.parent_spec_id);
+    }
+
+    if (sanitizedUpdates.last_command !== undefined) {
+      updateFields.push('last_command = ?');
+      updateValues.push(sanitizedUpdates.last_command);
+    }
+
+    if (updateFields.length === 0) {
+      return this.getSpecById(spec_id);
+    }
+
+    // Add updated_at timestamp
+    updateFields.push('updated_at = datetime(\'now\')');
+    updateValues.push(spec_id);
+
+    // Use transaction for atomic updates
+    const transaction = db.transaction(() => {
+      const stmt = db.prepare(`
+        UPDATE specs 
+        SET ${updateFields.join(', ')}
+        WHERE id = ?
+      `);
+
+      const result = stmt.run(...updateValues);
+
+      if (result.changes === 0) {
+        throw new Error(`Specification with ID ${spec_id} not found`);
+      }
+
+      return result;
+    });
+
+    try {
+      transaction();
+      return this.getSpecById(spec_id);
+    } catch (error) {
+      console.error(`[SpecService] Update transaction failed for spec ${spec_id}:`, error);
+      
+      // Check if it's a database corruption error
+      if (error instanceof Error && error.message.includes('malformed')) {
+        console.error(`[SpecService] Database corruption detected during update of spec ${spec_id}`);
+        throw new Error(`Database corruption detected. Please run database health check and repair.`);
+      }
+      
+      throw new Error(`Failed to update specification: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
+   * Get specification by ID
+   */
+  static getSpecById(spec_id: number): Spec | null {
+    const db = EnhancedDatabaseConnection.getCurrentProjectConnection();
+    const stmt = db.prepare('SELECT * FROM specs WHERE id = ?');
+    return stmt.get(spec_id) as Spec | null;
+  }
+
+  /**
+   * Delete specification
+   */
+  static deleteSpec(spec_id: number): boolean {
+    const db = EnhancedDatabaseConnection.getCurrentProjectConnection();
+    const stmt = db.prepare('DELETE FROM specs WHERE id = ?');
+    const result = stmt.run(spec_id);
+    return result.changes > 0;
+  }
+
+  /**
+   * List specifications with filtering and pagination
+   */
+  static listSpecs(options: ListSpecsOptions = {}): SpecListResult {
+    const db = EnhancedDatabaseConnection.getCurrentProjectConnection();
+    
+    // Build WHERE clause
+    const whereConditions: string[] = [];
+    const whereValues: any[] = [];
+
+    if (options.status) {
+      whereConditions.push('status = ?');
+      whereValues.push(options.status);
+    }
+
+    if (options.feature_group) {
+      whereConditions.push('feature_group = ?');
+      whereValues.push(options.feature_group);
+    }
+
+    if (options.theme_category) {
+      whereConditions.push('theme_category = ?');
+      whereValues.push(options.theme_category);
+    }
+
+    if (options.priority) {
+      whereConditions.push('priority = ?');
+      whereValues.push(options.priority);
+    }
+
+    if (options.created_via) {
+      whereConditions.push('created_via = ?');
+      whereValues.push(options.created_via);
+    }
+
+    const whereClause = whereConditions.length > 0 
+      ? `WHERE ${whereConditions.join(' AND ')}`
+      : '';
+
+    // Build ORDER BY clause
+    const sortBy = options.sort_by || 'created_at';
+    const sortOrder = options.sort_order || 'desc';
+    const orderClause = `ORDER BY ${sortBy} ${sortOrder}`;
+
+    // Build LIMIT/OFFSET clause
+    const limit = Math.min(options.limit || 50, 1000);
+    const offset = options.offset || 0;
+    const limitClause = `LIMIT ${limit} OFFSET ${offset}`;
+
+    // Get specs
+    const specsQuery = `
+      SELECT * FROM specs 
+      ${whereClause} 
+      ${orderClause} 
+      ${limitClause}
+    `;
+
+    const specs = db.prepare(specsQuery).all(...whereValues) as Spec[];
+
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as count FROM specs ${whereClause}`;
+    const totalResult = db.prepare(countQuery).get(...whereValues) as { count: number };
+    const total = totalResult.count;
+
+    return {
+      specs,
+      pagination: {
+        offset,
+        limit,
+        total,
+        has_more: offset + limit < total
+      }
+    };
+  }
+
+  /**
+   * Search specifications using full-text search
+   */
+  static searchSpecs(query: string, options: SearchOptions = {}): SpecSearchResult {
+    const db = EnhancedDatabaseConnection.getCurrentProjectConnection();
+    
+    // Ensure FTS table exists and is populated
+    this.ensureFTSIndex(db);
+    
+    const limit = Math.min(options.limit || 20, 100);
+    const offset = options.offset || 0;
+    const minScore = options.min_score !== undefined ? options.min_score : -10.0; // Allow negative BM25 scores
+
+    const stmt = db.prepare(`
+      SELECT s.*, 
+             bm25(specs_fts) as score
+      FROM specs s
+      JOIN specs_fts ON s.id = specs_fts.rowid
+      WHERE specs_fts MATCH ?
+        AND bm25(specs_fts) >= ?
+      ORDER BY score DESC
+      LIMIT ? OFFSET ?
+    `);
+
+    const results = stmt.all(query, minScore, limit, offset) as SpecSearchResult['results'];
+
+    // Get total count for search
+    const countStmt = db.prepare(`
+      SELECT COUNT(*) as count
+      FROM specs s
+      JOIN specs_fts ON s.id = specs_fts.rowid
+      WHERE specs_fts MATCH ?
+        AND bm25(specs_fts) >= ?
+    `);
+
+    const totalResult = countStmt.get(query, minScore) as { count: number };
+    const total = totalResult.count;
+
+    return {
+      query,
+      results,
+      pagination: {
+        offset,
+        limit,
+        total,
+        has_more: offset + limit < total
+      }
+    };
+  }
+
+  /**
+   * Get specification statistics
+   */
+  static getStats(include_details: boolean = false): SpecStats {
+    const db = EnhancedDatabaseConnection.getCurrentProjectConnection();
+    
+    // Basic counts
+    const totalResult = db.prepare('SELECT COUNT(*) as count FROM specs').get() as { count: number };
+    const total = totalResult.count;
+
+    // Status breakdown
+    const statusStats = db.prepare(`
+      SELECT status, COUNT(*) as count 
+      FROM specs 
+      GROUP BY status
+    `).all() as Array<{ status: string; count: number }>;
+
+    const byStatus = statusStats.reduce((acc, item) => {
+      acc[item.status] = item.count;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Group breakdown
+    const groupStats = db.prepare(`
+      SELECT feature_group, COUNT(*) as count 
+      FROM specs 
+      WHERE feature_group IS NOT NULL
+      GROUP BY feature_group
+    `).all() as Array<{ feature_group: string; count: number }>;
+
+    const byGroup = groupStats.reduce((acc, item) => {
+      acc[item.feature_group] = item.count;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const stats: SpecStats = {
+      total_specs: total,
+      by_status: byStatus,
+      by_group: byGroup
+    };
+
+    if (include_details) {
+      // Recent activity (last 7 days)
+      const recentResult = db.prepare(`
+        SELECT COUNT(*) as count 
+        FROM specs 
+        WHERE updated_at >= datetime('now', '-7 days')
+      `).get() as { count: number };
+
+      stats.recent_activity = recentResult.count;
+
+      // Latest specs
+      const latestSpecs = db.prepare(`
+        SELECT id, title, status, feature_group, created_at 
+        FROM specs 
+        ORDER BY created_at DESC 
+        LIMIT 5
+      `).all() as Array<{
+        id: number;
+        title: string;
+        status: string;
+        feature_group: string;
+        created_at: string;
+      }>;
+
+      stats.latest_specs = latestSpecs;
+    }
+
+    return stats;
+  }
+
+  /**
+   * Auto-detect feature group from title and content
+   */
+  private static autoDetectGroup(title: string, body_md: string): string {
+    const combined = (title + ' ' + body_md).toLowerCase();
+
+    if (combined.includes('auth') || combined.includes('login') || 
+        combined.includes('security') || combined.includes('jwt')) {
+      return 'auth';
+    }
+
+    if (combined.includes('dashboard') || combined.includes('component') || 
+        combined.includes('frontend') || combined.includes('react') || 
+        combined.includes('interface')) {
+      return 'ui';
+    }
+
+    if (combined.includes('endpoint') || combined.includes('rest') || 
+        combined.includes('graphql') || combined.includes('service') || 
+        combined.includes('backend')) {
+      return 'api';
+    }
+
+    if (combined.includes('database') || combined.includes('migration') || 
+        combined.includes('schema') || combined.includes('model') || 
+        combined.includes('storage')) {
+      return 'data';
+    }
+
+    if (combined.includes('mcp') || combined.includes('webhook') || 
+        combined.includes('external') || combined.includes('sync')) {
+      return 'integration';
+    }
+
+    if (combined.includes('specgen') || combined.includes('spec management')) {
+      return 'specgen';
+    }
+    
+    if (combined.includes('learning') || combined.includes('research') || 
+        combined.includes('documentation') || combined.includes('knowledge')) {
+      return 'learning';
+    }
+    
+    if (combined.includes('repository') || combined.includes('codebase') ||
+        combined.includes('git') || combined.includes('version control')) {
+      return 'repository';
+    }
+
+    return 'general';
+  }
+
+  /**
+   * Auto-detect theme category based on feature group
+   */
+  private static autoDetectTheme(feature_group: string): string {
+    const themeMap: Record<string, string> = {
+      'auth': 'backend',
+      'ui': 'frontend', 
+      'api': 'backend',
+      'data': 'backend',
+      'integration': 'integration',
+      'specgen': 'integration',
+      'learning': 'general',
+      'repository': 'general'
+    };
+    
+    return themeMap[feature_group] || 'general';
+  }
+}
+
+export interface Spec {
+  id: number;
+  title: string;
+  body_md: string;
+  status: SpecStatus;
+  feature_group: string;
+  theme_category?: string;
+  priority?: string;
+  related_specs?: string; // JSON array of spec IDs
+  parent_spec_id?: number;
+  created_via?: string;
+  last_command?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateSpecData {
+  title: string;
+  body_md: string;
+  status?: SpecStatus;
+  feature_group?: string;
+  theme_category?: string;
+  priority?: string;
+  related_specs?: number[];
+  parent_spec_id?: number;
+  created_via?: string;
+}
+
+export interface UpdateSpecData {
+  title?: string;
+  body_md?: string;
+  status?: SpecStatus;
+  feature_group?: string;
+  theme_category?: string;
+  priority?: string;
+  related_specs?: string; // JSON string
+  parent_spec_id?: number;
+  last_command?: string;
+}
+
+export interface ListSpecsOptions {
+  status?: SpecStatus;
+  feature_group?: string;
+  theme_category?: string;
+  priority?: string;
+  created_via?: string;
+  sort_by?: 'id' | 'title' | 'created_at' | 'updated_at' | 'priority';
+  sort_order?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
+}
+
+export interface SearchOptions {
+  limit?: number;
+  offset?: number;
+  min_score?: number;
+}
+
+export interface SpecListResult {
+  specs: Spec[];
+  pagination: {
+    offset: number;
+    limit: number;
+    total: number;
+    has_more: boolean;
+  };
+}
+
+export interface SpecSearchResult {
+  query: string;
+  results: Array<Spec & { score: number }>;
+  pagination: {
+    offset: number;
+    limit: number;
+    total: number;
+    has_more: boolean;
+  };
+}
+
+export interface SpecStats {
+  total_specs: number;
+  by_status: Record<string, number>;
+  by_group: Record<string, number>;
+  recent_activity?: number;
+  latest_specs?: Array<{
+    id: number;
+    title: string;
+    status: string;
+    feature_group: string;
+    created_at: string;
+  }>;
+}

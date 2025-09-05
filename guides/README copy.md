@@ -34,6 +34,13 @@ You know that feeling when you're deep in a complex feature, and you have to:
 📝 **Specs That Live**: Documentation that updates as you build
 🎯 **Purpose-Built**: Each agent is specialized for specific development tasks
 
+## How It Works
+
+```
+You → /architect → Research + Explore → Create Spec → /engineer → Build → /reviewer → Ship
+       ↓              ↓                    ↓           ↓           ↓         ↓
+   "Add auth"     Find patterns      Document plan   Implement   Quality   Done
+```
 
 ## 🏗️ architecture
 
@@ -52,6 +59,7 @@ You know that feeling when you're deep in a complex feature, and you have to:
   - `architect` - Feature analysis and specification generation
   - `engineer` - Implementation and development
   - `reviewer` - Code quality and architecture review
+  - `writer` - Documentation and content generation
 - **Hooks Directory**: System notifications and integrations
 - **Settings**: Local configuration for Claude Code
 
