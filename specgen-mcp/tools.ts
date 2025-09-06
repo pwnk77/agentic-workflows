@@ -229,14 +229,19 @@ async function handleListSpecs(status?: string, category?: string, limit?: numbe
     checksum: generateFileHashSync(spec.filename + spec.modified)
   }));
 
+  // Format as proper MCP CallToolResult
+  const responseText = `Found ${specs.length} specification(s):
+
+${mcpSpecs.map(spec => `• ${spec.title} (${spec.status}) - ${spec.category} - ${spec.priority} priority`).join('\n')}
+
+Total specs in metadata: ${Object.keys(metadata.specs).length}`;
+
   return {
-    success: true,
-    specs: mcpSpecs,
-    pagination: {
-      offset: 0,
-      limit: limit || specs.length,
-      total: specs.length
-    }
+    content: [{
+      type: "text",
+      text: responseText
+    }],
+    isError: false
   };
 }
 
@@ -273,25 +278,13 @@ async function handleGetSpec(feature: string) {
   const filePath = filePaths[0]; // Use first match
   const content = await fs.readFile(filePath, 'utf-8');
 
+  // Format as proper MCP CallToolResult  
   return {
-    success: true,
-    spec: {
-      id: generateSpecId(spec.filename),
-      title: spec.title,
-      status: spec.status,
-      category: spec.category,
-      priority: spec.priority,
-      created_at: spec.created,
-      updated_at: spec.modified,
-      created_via: 'discovery',
-      related_specs: [],
-      parent_spec_id: null,
-      tags: extractTags(content),
-      effort_estimate: null,
-      completion: spec.status === 'done' ? 100 : 0,
-      body_md: content,
-      feature_group: spec.category.toLowerCase()
-    }
+    content: [{
+      type: "text",
+      text: content
+    }],
+    isError: false
   };
 }
 
@@ -339,16 +332,20 @@ async function handleSearchSpecs(query: string, limit: number = 100) {
   results.sort((a, b) => b.score - a.score);
   const limitedResults = results.slice(0, limit);
 
+  // Format as proper MCP CallToolResult
+  const responseText = `Search Results for "${query}":
+
+${limitedResults.map(result => `• ${result.title} (${result.status}) - ${result.category}
+  Snippet: ${result.snippet}`).join('\n\n')}
+
+Found ${results.length} total matches, showing ${limitedResults.length}`;
+
   return {
-    success: true,
-    results: limitedResults,
-    query: query,
-    pagination: {
-      offset: 0,
-      limit: limit,
-      total: results.length,
-      has_more: results.length > limit
-    }
+    content: [{
+      type: "text",
+      text: responseText
+    }],
+    isError: false
   };
 }
 
@@ -357,13 +354,24 @@ async function handleRefreshMetadata(reason?: string) {
   const metadata = await JSONMetadataService.scanSpecs();
   const specCount = Object.keys(metadata.specs).length;
 
+  // Format as proper MCP CallToolResult
+  const responseText = `✅ Metadata refreshed successfully!
+
+📊 Stats:
+• Total specs found: ${specCount}
+• Last scan: ${metadata.last_full_scan}
+• Reason: ${reason || 'Manual refresh'}
+
+📁 Specs discovered:
+${Object.keys(metadata.specs).slice(0, 10).map(spec => `• ${spec}`).join('\n')}
+${specCount > 10 ? `... and ${specCount - 10} more` : ''}`;
+
   return {
-    success: true,
-    message: `Metadata refreshed: ${specCount} specs found`,
-    reason: reason || 'Manual refresh',
-    timestamp: metadata.last_full_scan,
-    spec_count: specCount,
-    specs_found: Object.keys(metadata.specs)
+    content: [{
+      type: "text",
+      text: responseText
+    }],
+    isError: false
   };
 }
 
@@ -405,20 +413,41 @@ async function handleLaunchDashboard(port: number = 3000) {
       console.error('Health check failed:', healthError);
     }
     
+    // Format as proper MCP CallToolResult
+    const responseText = `🚀 Dashboard launched successfully!
+
+📡 Server Details:
+• URL: ${dashboardUrl}
+• Process ID: ${serverProcess.pid}
+• Health Check: ${healthCheckPassed ? '✅ Passed' : '⚠️ Failed'}
+• Status: Running in background
+
+💡 The dashboard uses shared JSON metadata and will show all discovered specs.`;
+
     return {
-      success: true,
-      message: `Dashboard launched at ${dashboardUrl}`,
-      url: dashboardUrl,
-      pid: serverProcess.pid,
-      health_verified: healthCheckPassed,
-      note: "Dashboard is running in background and uses shared JSON metadata"
+      content: [{
+        type: "text",
+        text: responseText
+      }],
+      isError: false
     };
   } catch (error) {
+    // Format error as proper MCP CallToolResult
+    const errorText = `❌ Failed to launch dashboard server
+
+🔍 Error Details:
+• Error: ${String(error)}
+• Dashboard Path: ${CONFIG.dashboardPath}
+• Port: ${port}
+
+💡 Please check that the dashboard directory exists and node server.js can be executed.`;
+
     return {
-      success: false,
-      error: String(error),
-      details: "Failed to launch dashboard server",
-      dashboardPath: CONFIG.dashboardPath
+      content: [{
+        type: "text",
+        text: errorText
+      }],
+      isError: true
     };
   }
 }

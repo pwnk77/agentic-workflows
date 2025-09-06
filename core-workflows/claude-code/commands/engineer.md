@@ -40,27 +40,18 @@ CRITICAL: Always detect language first, then choose appropriate analysis approac
 
 ## CONTEXT MANAGEMENT PROTOCOL
 
-<context-storage-protocol>
-Storage Strategy: Hybrid decoupling architecture separates read and write operations
+**SPEC Document as Central Context**: The SPEC document serves as the single source of truth for implementation progress, execution logs, and task completion status.
 
-READ OPERATIONS (MCP):
-- Use mcp__specgen-mcp__get_spec for specification loading from markdown files
-- Use mcp__specgen-mcp__search_specs for specification discovery
-- Use mcp__specgen-mcp__list_specs for browsing specifications
-- Real-time search indexing with file system monitoring
+**MCP Operations (Read-Only)**:
+- Use `mcp__specgen-mcp__get_spec` to load specifications for implementation
+- Use `mcp__specgen-mcp__search_specs` to find specifications by title or content
+- Use `mcp__specgen-mcp__list_specs` to browse available specifications
+- Use `mcp__specgen-mcp__refresh_metadata` after implementation completion
 
-WRITE OPERATIONS (Direct Files):
-- Specification creation via Write tool to docs/SPEC-[YYYYMMDD]-[title].md
-- Progress logging via Edit tool to append execution logs
-- Status updates via Edit tool to modify frontmatter
-- File system monitoring triggers automatic search index updates
-
-BENEFITS:
-- 17% complexity reduction by eliminating MCP write operations
-- 3,782 tokens saved per update operation
-- Real-time synchronization without database corruption risk
-- Maintained search and organization capabilities
-</context-storage-protocol>
+**Direct File Operations (Write)**:
+- **Progress Logging**: Use Edit tool to append execution logs to `## Execution Logs` section
+- **Status Updates**: Use Edit tool to modify frontmatter status and completion
+- **Debug Information**: Use Edit tool to append debug logs to `## Debug Logs` section
 
 **Usage Pattern**: `/engineer [mode: implement|debug] [spec-file-path | spec-title] <task-description>`
 
@@ -169,24 +160,10 @@ Execute all tasks for one layer (e.g., Database) before moving to the next, foll
 
 **Trigger**: This phase is executed after all tasks in a logical layer are completed successfully.
 
-<hybrid-progress-logging-protocol>
-Direct File Logging Strategy: Update specification using Edit tool for progress tracking
-
-LOGGING PROCESS:
-1. **File Location**: Use the specification file path from initial read operation
-2. **Edit Operation**: Use Edit tool to append log entry to `## Execution Logs` section
-3. **Status Updates**: Use Edit tool to modify frontmatter status if needed  
-4. **Automatic Sync**: File watcher service automatically updates search index
-
-ADVANTAGES:
-- Context window efficiency: 50 tokens vs 3,832 tokens (98.7% reduction)
-- No database write complexity or corruption risk
-- Real-time search index updates via file monitoring
-- Git-friendly change tracking
-- Direct file access eliminates MCP serialization overhead
-
-Log Entry Creation Process:
-</hybrid-progress-logging-protocol>
+**Progress Logging Process:**
+1. Use Edit tool to append log entry to `## Execution Logs` section
+2. Update frontmatter status if needed using Edit tool
+3. Call `refresh_metadata` after major progress updates
 
 **Log Entry Format**:
 ```markdown
@@ -220,8 +197,6 @@ Log Entry Creation Process:
 
 1. **Final File Update**: Update specification status to "done"
    - Use Edit tool to modify frontmatter: `status: "done"`
-   - File watcher automatically updates search index and metadata
-   - No MCP write operations required
 
 2. **Refresh Metadata**: Update the metadata system after implementation completion
    - Call `mcp__specgen-mcp__refresh_metadata` with `reason: "engineer command completed"`
@@ -311,9 +286,6 @@ Log Entry Creation Process:
 
 3. **Update Documentation**:
    - Use Edit tool to append debug log to `## Debug Logs` section
-   - Use specification file path stored from initial context loading
-   - File watcher service automatically updates search index after edit
-   - No MCP write operations required - direct file editing only
 
 **Debug Log Format**:
 ```markdown

@@ -11,8 +11,14 @@ argument-hint: <feature-description>
 **Process Overview**: You will act as a senior architect. You will perform requirement crystallization, codebase exploration, and specification generation using MCP tools. The analysis leverages SpecGen MCP for specification management and optionally Static Analysis MCP for TypeScript codebases.
 
 **MCP Integration**: This command uses MCP tools for enhanced specification management:
-- **specgen MCP** (`mcp__specgen-mcp__*`) for specification management with auto-categorization
+- **specgen MCP** (`mcp__specgen-mcp__*`) for specification management with intelligent categorization
 - **Static Analysis MCP** (`mcp__static-analysis__*`) for TypeScript analysis (optional)
+
+**Auto-Categorization**: SpecGen automatically categorizes specifications based on:
+- **Content Analysis**: Keywords, frameworks, and architectural patterns automatically detect feature groups
+- **Existing Categories**: Uses MCP to discover existing categories and assign specs to appropriate groups  
+- **Category Intelligence**: Dashboard organizes specs by categories for improved navigation and project structure
+- **Metadata Enrichment**: Automatically adds frontmatter with category, status, and priority for enhanced searchability
 
 <codebase-analysis-protocol>
 IF TYPESCRIPT DETECTED:
@@ -34,22 +40,19 @@ CRITICAL: Always detect language first, then choose appropriate analysis approac
 
 ## CONTEXT MANAGEMENT PROTOCOL
 
-<context-storage-protocol>
-Storage Strategy: Hybrid decoupling architecture separates read and write operations
+**SPEC Document as Central Context**: The SPEC document serves as the single source of truth for all architectural analysis, subagent contexts, and implementation planning.
 
-READ OPERATIONS (MCP):
-- Use mcp__specgen-mcp__get_spec for specification loading (read-only)
-- Use mcp__specgen-mcp__search_specs for specification discovery (read-only)
-- Use mcp__specgen-mcp__list_specs for browsing specifications (read-only)
-- Real-time search indexing with file system monitoring
+**MCP Operations (Read-Only)**:
+- Use `mcp__specgen-mcp__list_specs` to discover existing specifications and categories
+- Use `mcp__specgen-mcp__search_specs` to find related specifications for context
+- Use `mcp__specgen-mcp__get_spec` to load existing specifications for reference
+- Use `mcp__specgen-mcp__refresh_metadata` after SPEC creation for dashboard synchronization
 
-WRITE OPERATIONS (Direct Files):
-- Specification creation via Write tool to docs/SPEC-[YYYYMMDD]-[feature-name].md
-- Updates via Edit tool for architectural analysis sections
-- File system monitoring triggers automatic search index updates
-- Auto-categorization based on content analysis and file paths
-
-</context-storage-protocol>
+**Direct File Operations (Write)**:
+- **SPEC Creation**: Use Write tool to create `docs/SPEC-[YYYYMMDD]-[feature-name].md`
+- **Architecture Updates**: Use Edit tool to add analysis sections (Backend Architecture, Frontend Architecture, etc.)
+- **Implementation Plans**: Use Edit tool to append implementation plan after user approval
+- **Context Consolidation**: All subagent insights are consolidated into the single SPEC document
 
 ## PHASE 1: REQUIREMENT CRYSTALLIZATION
 
@@ -102,30 +105,22 @@ The goal is to move from uncertainty to a >95% confidence level by asking target
 Once requirements are crystallized (95%+ confidence), immediately create the specification:
 
 **Dynamic Category Assignment Protocol:**
-Before creating the SPEC, determine the appropriate category:
+Use MCP to determine the appropriate category before SPEC creation:
 
-1. **Scan Existing Categories**: Use `mcp__specgen-mcp__list_specs` to get all existing specifications and their categories
-2. **Extract Category List**: Parse the returned specifications to build list of existing categories
-3. **Analyze Feature Context**: Based on feature description and requirements, determine best-fit category
-4. **Category Decision Logic**:
-   - If feature matches existing category patterns → Use existing category
-   - If feature represents new domain → Create new descriptive category
-   - Default categories: `general`, `api`, `ui`, `database`, `integration`, `architecture`
-5. **Category Assignment**: Include determined category in frontmatter during SPEC creation
-6. **Log Category Decision**: Document the reasoning for category choice in SPEC creation process
+1. **Get Category Metadata**: Use `mcp__specgen-mcp__list_specs` to retrieve all existing categories
+2. **Category Selection**: Analyze feature requirements against existing categories and select the best match
+3. **Category Assignment**: Include determined category in SPEC frontmatter
 
-**Specgen MCP usage:**
+**SPEC Creation Process:**
 
-<hybrid-spec-creation-protocol>
-Direct File Specification Creation:
 1. **Create docs/ folder** if it doesn't exist (especially for new repositories)
 2. **Use Write tool** to create: `docs/SPEC-[YYYYMMDD]-[feature-name].md`
-3. **Include proper frontmatter** for automatic categorization and indexing:
+3. **Include frontmatter** with determined category:
    ```yaml
    ---
    title: "SPEC-[YYYYMMDD]-[feature-name]"
    status: "draft"
-   category: "[auto-detected-category]"
+   category: "[determined-category]"
    priority: "medium"
    created_at: "[timestamp]"
    updated_at: "[timestamp]"
@@ -137,11 +132,8 @@ Direct File Specification Creation:
    completion: 0
    ---
    ```
-4. **File watcher automatically**: Detects new file, updates search index, categorizes content
-5. **Real-time sync**: Search index updated, metadata synchronized, dashboard reflects changes
-</hybrid-spec-creation-protocol>
 
-**Note:** The MCP tools OR the SPEC document will be the single source of truth where all sub-agent contexts are consolidated.
+**Note:** The SPEC document is the single source of truth where all subagent contexts and architectural analysis are consolidated.
 
 ## PHASE 2: DYNAMIC CODEBASE EXPLORATION
 
