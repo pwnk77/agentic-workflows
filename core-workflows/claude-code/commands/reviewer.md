@@ -53,7 +53,7 @@ feature_description: Combined arguments (description of feature/codebase to revi
 Storage Strategy: All reviewer specifications and analysis contexts use dual approach
 
 PRIMARY (MCP):
-- Use mcp__specgen-mcp__* tools for SQLite database via MCP
+- Use mcp__specgen-mcp__* tools for file-based specification storage via MCP
 - Naming: SPEC-[YYYYMMDD]-[feature-name]-improvements
 - Auto-categorized as "reviewer" for dashboard organization
 - Searchable, real-time updates, related to existing specifications

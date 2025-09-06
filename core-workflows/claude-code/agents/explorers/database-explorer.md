@@ -1,7 +1,7 @@
 ---
 name: database-explorer
 description: "Database architecture explorer for schema design, relationships, migrations, and ORM patterns. Provides focused data architecture insights for SPEC integration."
-tools: read, glob, grep, bash, mcp__static-analysis__*, mcp__specgen-mcp__*, mcp__sqlite__*, mcp__postgres__*
+tools: read, glob, grep, bash, mcp__static-analysis__*, mcp__specgen-mcp__*, mcp__postgres__*
 color: blue
 ---
 
@@ -43,20 +43,18 @@ Detect database technology and patterns:
 - Use `find . -name "*database*" -o -name "*db*" -name "*.config*"` for configuration
 
 **Database Connection Analysis (Optional MCP Tools)**:
-- **SQLite**: Use `mcp__sqlite__*` tools if available to analyze SQLite databases directly
+- **SQLite**: Use command line tools to analyze SQLite databases
 - **PostgreSQL**: Use `mcp__postgres__*` tools if available to connect and analyze PostgreSQL schemas
 - **Command Line**: Use bash commands for database connections when MCP tools unavailable
 
 ### Database Connection Protocol
 
 <database-connection-protocol>
-**SQLite Connection (MCP)**:
-IF mcp__sqlite__* tools available:
-- Use `mcp__sqlite__query` to execute SQL queries for schema analysis
-- Use `mcp__sqlite__execute` for database operations if needed
-- Query system tables: `SELECT name, sql FROM sqlite_master WHERE type='table';`
-- Analyze foreign keys: `PRAGMA foreign_key_list(table_name);`
-- Check indexes: `PRAGMA index_list(table_name);`
+**SQLite Connection (Command Line)**:
+Using command line tools:
+- Use `sqlite3 database.db "SELECT name, sql FROM sqlite_master WHERE type='table';"` for schema analysis
+- Analyze foreign keys: `sqlite3 database.db "PRAGMA foreign_key_list(table_name);"`
+- Check indexes: `sqlite3 database.db "PRAGMA index_list(table_name);"`
 
 **PostgreSQL Connection (MCP)**:
 IF mcp__postgres__* tools available:
