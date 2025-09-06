@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "specgen": {
+      "type": "stdio",
+      "command": "/opt/homebrew/bin/node",
+      "args": [
+        "/Users/pawanraviee/Documents/GitHub/agentic-workflows/specgen-mcp/dist/index.js"
+      ],
+      "env": {}
+    }
+  }
+}

@@ -32,11 +32,6 @@ Use traditional bash commands for code discovery:
 CRITICAL: Always detect language first, then choose appropriate analysis approach
 </codebase-analysis-protocol>
 
-**Auto-Categorization**: SpecGen now automatically categorizes specifications based on:
-- **Folder Structure**: `docs/articles/SPEC-*.md` → `articles` category
-- **Content Analysis**: Keywords and patterns automatically detect feature groups
-- **Category Organization**: Dashboard groups specs by categories for better organization
-
 ## CONTEXT MANAGEMENT PROTOCOL
 
 <context-storage-protocol>
@@ -54,12 +49,6 @@ WRITE OPERATIONS (Direct Files):
 - File system monitoring triggers automatic search index updates
 - Auto-categorization based on content analysis and file paths
 
-BENEFITS:
-- 98.7% token reduction (50 vs 3,832 tokens) for spec creation
-- Eliminates database write complexity and corruption risk
-- Real-time synchronization with file monitoring
-- Git-friendly change tracking and version control integration
-- Maintained search and organization capabilities through read-only MCP
 </context-storage-protocol>
 
 ## PHASE 1: REQUIREMENT CRYSTALLIZATION
@@ -150,13 +139,6 @@ Direct File Specification Creation:
    ```
 4. **File watcher automatically**: Detects new file, updates search index, categorizes content
 5. **Real-time sync**: Search index updated, metadata synchronized, dashboard reflects changes
-
-ADVANTAGES:
-- Direct file creation eliminates MCP write operation complexity
-- Automatic categorization via content analysis and file paths
-- Real-time search indexing via file monitoring
-- Git-friendly version control integration
-- 98.7% token reduction compared to MCP write operations
 </hybrid-spec-creation-protocol>
 
 **Note:** The MCP tools OR the SPEC document will be the single source of truth where all sub-agent contexts are consolidated.

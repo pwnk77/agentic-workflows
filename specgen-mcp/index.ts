@@ -8,7 +8,7 @@ const MCP_INSTRUCTIONS = `
 # SpecGen MCP Server v2.0.0
 ## Specification Management with Dashboard Integration
 
-### 🔧 AVAILABLE TOOLS (5 total)
+### 🔧 AVAILABLE TOOLS (5 total - READ-ONLY MCP)
 
 **list_specs** - List all specification files with metadata
 • Returns: All SPEC-*.md files with title, category, status, modified date
@@ -64,11 +64,17 @@ launch_dashboard() // Spawns at http://localhost:3000
 • File system monitoring integration
 • JSON-RPC 2.0 compliant error handling
 
-### 🔒 SECURITY
-• No direct file write operations (read-only)
+### 🔒 SECURITY & ARCHITECTURE
+• READ-ONLY MCP operations (no create_spec/update_spec tools)
+• Write operations handled by /architect and /engineer commands
 • Metadata updates via atomic writes
 • Path validation and sanitization
 • Dashboard launches in controlled environment
+
+### 📝 WRITE OPERATIONS (Via Commands)
+• Use /architect command to create new specs
+• Use /engineer command to update existing specs
+• MCP refresh_metadata called automatically after commands
 `;
 
 class SpecGenMCPServer {

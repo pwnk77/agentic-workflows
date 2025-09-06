@@ -72,36 +72,6 @@ export function setupTools(server: Server) {
         }
       },
       {
-        name: 'create_spec',
-        description: 'Create new specification file and update shared JSON metadata',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            title: { type: 'string', description: 'Specification title' },
-            body_md: { type: 'string', description: 'Markdown content' },
-            status: { type: 'string', description: 'Status (draft, todo, in-progress, done)', default: 'draft' },
-            priority: { type: 'string', description: 'Priority (low, medium, high)', default: 'medium' }
-          },
-          required: ['title', 'body_md']
-        }
-      },
-      {
-        name: 'update_spec',
-        description: 'Update existing specification and shared JSON metadata',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            spec_id: { type: 'number', description: 'Spec ID (hash of filename)' },
-            filename: { type: 'string', description: 'Filename (alternative to spec_id)' },
-            title: { type: 'string', description: 'New title' },
-            body_md: { type: 'string', description: 'New markdown content' },
-            status: { type: 'string', description: 'New status' },
-            priority: { type: 'string', description: 'New priority' }
-          },
-          required: []
-        }
-      },
-      {
         name: 'refresh_metadata',
         description: 'Scan docs folder and refresh shared JSON metadata',
         inputSchema: {
@@ -138,10 +108,6 @@ export function setupTools(server: Server) {
           return await handleGetSpec(args?.feature as string);
         case 'search_specs':
           return await handleSearchSpecs(args?.query as string, (args?.limit as number) || 100);
-        case 'create_spec':
-          return await handleCreateSpec(args?.title as string, args?.body_md as string, args?.status as string, args?.priority as string);
-        case 'update_spec':
-          return await handleUpdateSpec(args?.spec_id as number, args?.filename as string, args as any);
         case 'refresh_metadata':
           return await handleRefreshMetadata(args?.reason as string);
         case 'launch_dashboard':
@@ -156,7 +122,7 @@ export function setupTools(server: Server) {
 }
 
 // JSON Metadata Service
-class JSONMetadataService {
+export class JSONMetadataService {
   static async loadMetadata(): Promise<SpecMetadata> {
     try {
       const content = await fs.readFile(CONFIG.metadataFile, 'utf-8');
@@ -177,26 +143,36 @@ class JSONMetadataService {
 
   static async scanSpecs(): Promise<SpecMetadata> {
     try {
-      const files = await fs.readdir(CONFIG.docsPath);
+      // Use glob for recursive scanning of subdirectories
+      const pattern = path.join(CONFIG.docsPath, '**/SPEC-*.md');
+      const filePaths = await glob(pattern);
       const specs: any = {};
       
-      for (const file of files) {
-        if (file.startsWith('SPEC-') && file.endsWith('.md')) {
-          const filePath = path.join(CONFIG.docsPath, file);
-          const content = await fs.readFile(filePath, 'utf-8');
-          const stats = await fs.stat(filePath);
-          const title = extractTitle(content);
-          
-          specs[file] = {
-            filename: file,
-            title,
-            category: detectCategory(content),
-            status: detectStatus(content),
-            priority: detectPriority(content),
-            modified: stats.mtime.toISOString(),
-            created: stats.birthtime.toISOString()
-          };
+      for (const filePath of filePaths) {
+        const file = path.basename(filePath);
+        let content = await fs.readFile(filePath, 'utf-8');
+        const stats = await fs.stat(filePath);
+        const title = extractTitle(content);
+        const category = detectCategory(content);
+        const status = detectStatus(content);
+        const priority = detectPriority(content);
+        
+        // Add frontmatter to files that don't have it
+        if (!hasFrontmatter(content)) {
+          await addFrontmatterToFile(filePath, content, title, category, status, priority);
+          // Re-read the file to get updated content
+          content = await fs.readFile(filePath, 'utf-8');
         }
+        
+        specs[file] = {
+          filename: file,
+          title,
+          category,
+          status,
+          priority,
+          modified: stats.mtime.toISOString(),
+          created: stats.birthtime.toISOString()
+        };
       }
 
       const metadata: SpecMetadata = {
@@ -265,21 +241,36 @@ async function handleListSpecs(status?: string, category?: string, limit?: numbe
 }
 
 async function handleGetSpec(feature: string) {
-  const metadata = await JSONMetadataService.loadMetadata();
+  let metadata = await JSONMetadataService.loadMetadata();
   
   // Find spec by filename or title
-  const spec = Object.values(metadata.specs).find(s => 
+  let spec = Object.values(metadata.specs).find(s => 
     s.filename === feature || 
     s.filename.includes(feature) ||
     s.title.toLowerCase().includes(feature.toLowerCase())
   );
 
+  // Auto-refresh fallback if spec not found
+  if (!spec) {
+    metadata = await JSONMetadataService.scanSpecs();
+    spec = Object.values(metadata.specs).find(s => 
+      s.filename === feature || 
+      s.filename.includes(feature) ||
+      s.title.toLowerCase().includes(feature.toLowerCase())
+    );
+  }
+
   if (!spec) {
     throw new Error(`Specification not found: ${feature}`);
   }
 
-  // Load full content
-  const filePath = path.join(CONFIG.docsPath, spec.filename);
+  // Load full content - need to find the actual file path since files are in subdirectories
+  const pattern = path.join(CONFIG.docsPath, `**/${spec.filename}`);
+  const filePaths = await glob(pattern);
+  if (filePaths.length === 0) {
+    throw new Error(`File not found: ${spec.filename}`);
+  }
+  const filePath = filePaths[0]; // Use first match
   const content = await fs.readFile(filePath, 'utf-8');
 
   return {
@@ -361,115 +352,6 @@ async function handleSearchSpecs(query: string, limit: number = 100) {
   };
 }
 
-async function handleCreateSpec(title: string, bodyMd: string, status: string = 'draft', priority: string = 'medium') {
-  // Generate filename
-  const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
-  const slugTitle = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 50);
-  const filename = `SPEC-${timestamp}-${slugTitle}.md`;
-  
-  // Create markdown content
-  const content = `# ${title}
-
-${bodyMd}
-`;
-
-  // Write file
-  const filePath = path.join(CONFIG.docsPath, filename);
-  await fs.writeFile(filePath, content);
-
-  // Refresh metadata to include new spec
-  await JSONMetadataService.scanSpecs();
-
-  return {
-    success: true,
-    message: `Created specification: ${filename}`,
-    filename: filename,
-    spec: {
-      id: generateSpecId(filename),
-      title: title,
-      status: status,
-      category: detectCategory(content),
-      priority: priority,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      body_md: content
-    }
-  };
-}
-
-async function handleUpdateSpec(specId?: number, filename?: string, updates: any = {}) {
-  const metadata = await JSONMetadataService.loadMetadata();
-  
-  // Find spec by ID or filename
-  let targetSpec: any;
-  let targetFilename: string = '';
-
-  if (filename) {
-    targetSpec = metadata.specs[filename];
-    targetFilename = filename;
-  } else if (specId) {
-    // Find by generated ID
-    for (const [fname, spec] of Object.entries(metadata.specs)) {
-      if (generateSpecId(fname) === specId) {
-        targetSpec = spec;
-        targetFilename = fname;
-        break;
-      }
-    }
-  }
-
-  if (!targetSpec || !targetFilename) {
-    throw new Error(`Specification not found: ${specId || filename}`);
-  }
-
-  // Read current content
-  const filePath = path.join(CONFIG.docsPath, targetFilename);
-  let content = await fs.readFile(filePath, 'utf-8');
-
-  // Apply updates
-  if (updates.title) {
-    content = content.replace(/^#\s+.+/m, `# ${updates.title}`);
-  }
-  if (updates.body_md) {
-    content = updates.body_md;
-  }
-
-  // Write updated content
-  await fs.writeFile(filePath, content);
-
-  // Update metadata with manual flags for status/priority
-  if (updates.status || updates.priority) {
-    const updatedMetadata = await JSONMetadataService.loadMetadata();
-    if (updatedMetadata.specs[targetFilename]) {
-      if (updates.status) {
-        updatedMetadata.specs[targetFilename].status = updates.status;
-        updatedMetadata.specs[targetFilename].manualStatus = true;
-      }
-      if (updates.priority) {
-        updatedMetadata.specs[targetFilename].priority = updates.priority;
-        updatedMetadata.specs[targetFilename].manualPriority = true;
-      }
-      updatedMetadata.specs[targetFilename].modified = new Date().toISOString();
-      await JSONMetadataService.saveMetadata(updatedMetadata);
-    }
-  }
-
-  // Refresh metadata
-  await JSONMetadataService.scanSpecs();
-
-  return {
-    success: true,
-    message: `Updated specification: ${targetFilename}`,
-    filename: targetFilename,
-    spec: {
-      id: generateSpecId(targetFilename),
-      title: updates.title || targetSpec.title,
-      status: updates.status || targetSpec.status,
-      updated_at: new Date().toISOString(),
-      body_md: content
-    }
-  };
-}
 
 async function handleRefreshMetadata(reason?: string) {
   const metadata = await JSONMetadataService.scanSpecs();
@@ -495,16 +377,40 @@ async function handleLaunchDashboard(port: number = 3000) {
       stdio: ['ignore', 'pipe', 'pipe']
     });
 
-    // Wait for server to start
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Wait for server to start with basic health verification
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
+    // Basic health check - try to verify server is responding
     const dashboardUrl = `http://localhost:${port}`;
+    let healthCheckPassed = false;
+    
+    try {
+      // Simple health verification - if we can fetch, server is likely up
+      const http = await import('http');
+      const healthPromise = new Promise((resolve) => {
+        const req = http.request(`http://localhost:${port}`, { method: 'GET' }, (res) => {
+          resolve(res.statusCode === 200 || res.statusCode === 404); // 404 is OK, means server is up
+        });
+        req.on('error', () => resolve(false));
+        req.setTimeout(2000, () => {
+          req.destroy();
+          resolve(false);
+        });
+        req.end();
+      });
+      
+      healthCheckPassed = await healthPromise as boolean;
+    } catch (healthError) {
+      // Health check failed, but server might still be starting
+      console.error('Health check failed:', healthError);
+    }
     
     return {
       success: true,
       message: `Dashboard launched at ${dashboardUrl}`,
       url: dashboardUrl,
       pid: serverProcess.pid,
+      health_verified: healthCheckPassed,
       note: "Dashboard is running in background and uses shared JSON metadata"
     };
   } catch (error) {
@@ -651,4 +557,31 @@ function generateFileHashSync(content: string): string {
 
 async function generateFileHash(content: string): Promise<string> {
   return generateFileHashSync(content);
+}
+
+// Frontmatter utility functions
+function hasFrontmatter(content: string): boolean {
+  return content.trim().startsWith('---') && content.includes('\n---\n');
+}
+
+function generateFrontmatter(title: string, category: string, status: string, priority: string): string {
+  const now = new Date().toISOString();
+  return `---
+title: "${title}"
+category: "${category}"
+status: "${status}"
+priority: "${priority}"
+created: "${now}"
+modified: "${now}"
+---
+
+`;
+}
+
+async function addFrontmatterToFile(filePath: string, content: string, title: string, category: string, status: string, priority: string): Promise<void> {
+  if (!hasFrontmatter(content)) {
+    const frontmatter = generateFrontmatter(title, category, status, priority);
+    const newContent = frontmatter + content;
+    await fs.writeFile(filePath, newContent, 'utf-8');
+  }
 }
