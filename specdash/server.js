@@ -232,14 +232,12 @@ app.put('/api/specs/:filename', async (req, res) => {
     
     // CRITICAL FIX: Temporarily pause file watcher to prevent it from overriding our update
     if (watcher && (status || priority)) {
-      console.log('🔧 DEBUG: Temporarily pausing file watcher for 2 seconds');
       watcher.unwatch(path.join(DOCS_PATH, req.params.filename));
       
       // Re-enable watching after 2 seconds
       setTimeout(() => {
         if (watcher) {
           watcher.add(path.join(DOCS_PATH, req.params.filename));
-          console.log('🔧 DEBUG: File watcher resumed');
         }
       }, 2000);
     }
