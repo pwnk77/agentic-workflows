@@ -1,6 +1,6 @@
 ---
 description: MCP-integrated comprehensive code review and improvement specification generation using specialized subagents
-allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, TodoWrite, Task, mcp__specgen-mcp__*, mcp__static-analysis__*
+allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, TodoWrite, Task, mcp__specgen-mcp__get_spec, mcp__specgen-mcp__search_specs, mcp__specgen-mcp__list_specs, mcp__specgen-mcp__refresh_metadata, mcp__static-analysis__*
 argument-hint: <feature-or-codebase-description>
 ---
 
@@ -313,13 +313,7 @@ All specialized analyses complete, cross-domain synthesis finished, ready to cre
 
 <specgen-mcp-improvement-spec-creation>
 SPEC Creation Command:
-1. Try MCP: `mcp__specgen-mcp__create_spec` with:
-   - title: SPEC-[YYYYMMDD]-[feature-name]-improvements
-   - body_md: [Comprehensive improvement specification with implementation plan]
-   - status: todo
-   - created_via: reviewer
-
-2. If MCP fails, use direct markdown approach:
+1. Use Write tool to create specification directly:
    - Find docs/ folder (create if missing)
    - Write new file: `docs/SPEC-[YYYYMMDD]-[feature-name]-improvements.md`
    - Include full improvement specification content
@@ -448,11 +442,15 @@ SPEC Creation Command:
 
 **Final MCP Update and Specification Completion:**
 
-1. Try MCP: `mcp__specgen-mcp__update_spec` to finalize specification
-2. If MCP fails:
-   - Use Write tool to create: `docs/SPEC-[YYYYMMDD]-[feature-name]-improvements.md`
+1. Use Edit tool to finalize specification:
+   - Update existing `docs/SPEC-[YYYYMMDD]-[feature-name]-improvements.md` file
    - Include complete improvement specification with all layers
-   - Verify file was created with correct content
+   - Verify file was updated with correct content
+
+2. Refresh metadata system:
+   - Call `mcp__specgen-mcp__refresh_metadata` with `reason: "reviewer command completed"`
+   - Ensures dashboard and search systems are synchronized with new improvement specification
+   - Updates category and status information for real-time dashboard display
 
 ## PHASE 5: HANDOVER TO ENGINEER
 
@@ -513,10 +511,10 @@ The improvement specifications created by `/reviewer` are designed to be directl
 ## MCP INTEGRATION SUMMARY
 
 **MCP Tools Used:**
-- `mcp__specgen-mcp__create_spec`: Create improvement specifications with reviewer categorization
 - `mcp__specgen-mcp__search_specs`: Find existing related specifications
 - `mcp__specgen-mcp__get_spec`: Retrieve existing specifications for context
-- `mcp__specgen-mcp__update_spec`: Update specifications with analysis progress
+- `mcp__specgen-mcp__list_specs`: Browse available specifications for context
+- `mcp__specgen-mcp__refresh_metadata`: Update metadata system after specification creation
 
 **Static Analysis MCP Tools (Optional):**
 - `mcp__static-analysis__analyze_file`: Analyze TypeScript files for comprehensive understanding

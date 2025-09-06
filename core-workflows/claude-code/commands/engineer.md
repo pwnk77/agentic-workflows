@@ -1,7 +1,7 @@
 ---
 description: MCP-integrated systematic implementation of specifications with built-in debug protocol for error handling
-allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, TodoWrite, Task, mcp__specgen-mcp__get_spec, mcp__specgen-mcp__search_specs, mcp__specgen-mcp__list_specs, mcp__static-analysis__*
-argument-hint: [mode: implement|debug] [spec-id|spec-title] <task-description>
+allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, TodoWrite, Task, mcp__specgen-mcp__get_spec, mcp__specgen-mcp__search_specs, mcp__specgen-mcp__list_specs, mcp__specgen-mcp__refresh_metadata, mcp__static-analysis__*
+argument-hint: [mode: implement|debug] [spec-file-path|spec-title] <task-description>
 ---
 
 # ENGINEER MODE IMPLEMENTATION COMMAND
@@ -62,20 +62,25 @@ BENEFITS:
 - Maintained search and organization capabilities
 </context-storage-protocol>
 
-**Usage Pattern**: `/engineer [mode: implement|debug] [spec-id | path-to-spec-file] <task-description>`
+**Usage Pattern**: `/engineer [mode: implement|debug] [spec-file-path | spec-title] <task-description>`
 
 **Variables:**
 ```
 mode: First argument (optional, 'implement' or 'debug', defaults to 'implement')
-spec_identifier: Second argument (spec ID number or path to spec file)
+spec_identifier: Second argument (file path to spec file or spec title for search)
 task_description: Remaining arguments (task description or issue description)
 ```
 
 **ARGUMENTS PARSING:**
 Parse the following arguments from "$ARGUMENTS":
 1. Extract `mode` from first argument if it matches 'implement' or 'debug'
-2. Extract `spec_identifier` (numeric ID or file path to spec)
+2. Extract `spec_identifier` (file path to spec file or spec title for search)
 3. Combine remaining arguments as `task_description`
+
+**Spec Identifier Priority:**
+- If spec_identifier ends with `.md` or contains `/` → Treat as file path
+- If spec_identifier matches `docs/SPEC-*.md` pattern → Use as direct file path
+- Otherwise → Treat as search term for spec title/content
 
 ---
 
@@ -87,14 +92,10 @@ This is the default mode for executing a specification using MCP tools.
 
 1. **Specification Discovery & Loading**:
    
-   **If spec_identifier is numeric (ID):**
-   ```xml
-   <mcp-get-spec>
-   ID: [spec_identifier]
-   </mcp-get-spec>
-   ```
+   **If spec_identifier is file path (ends with .md or contains /):**
+   Read the specification file directly using Read tool.
    
-   **If spec_identifier is file path:**
+   **If spec_identifier matches docs/SPEC-*.md pattern:**
    Read the specification file directly using Read tool.
    
    **If spec_identifier is text (search term):**
@@ -222,10 +223,15 @@ Log Entry Creation Process:
    - File watcher automatically updates search index and metadata
    - No MCP write operations required
 
-2. **Final Summary**: 
+2. **Refresh Metadata**: Update the metadata system after implementation completion
+   - Call `mcp__specgen-mcp__refresh_metadata` with `reason: "engineer command completed"`
+   - Ensures dashboard and search systems are synchronized with implementation progress
+   - Updates status and completion information for real-time dashboard display
+
+3. **Final Summary**: 
    🔔 ENGINEER_COMPLETE: Implementation finished successfully - All layers executed using MCP, feature implementation complete
    
-   "ENGINEER, the implementation for `[Feature Name]` is complete. All layers from specification ID [spec_id] have been executed and logged successfully in MCP."
+   "ENGINEER, the implementation for `[Feature Name]` is complete. All layers from specification have been executed and logged successfully. Metadata refreshed for dashboard synchronization."
 
 ---
 
@@ -332,11 +338,11 @@ Log Entry Creation Process:
 ## USAGE EXAMPLES
 
 ```bash
-# Default implement mode with specification ID
-/engineer 42
+# Default implement mode with specification file path
+/engineer docs/SPEC-20250106-user-authentication.md
 
-# Explicit implement mode with specification ID  
-/engineer implement 42
+# Explicit implement mode with specification file path  
+/engineer implement docs/SPEC-20250106-user-authentication.md
 
 # Implement mode with specification search
 /engineer implement user-authentication
@@ -344,8 +350,8 @@ Log Entry Creation Process:
 # Implement mode with task description (searches for relevant spec)
 /engineer implement Add user registration form with validation
 
-# Debug mode with specification ID and issue description
-/engineer debug 42 Database connection failing on login
+# Debug mode with specification file path and issue description
+/engineer debug docs/SPEC-20250106-user-authentication.md Database connection failing on login
 
 # Debug mode with specification search and issue description  
 /engineer debug user-auth Login form validation not working properly
@@ -355,8 +361,8 @@ Log Entry Creation Process:
 ```
 
 **Argument Resolution Examples**:
-- `/engineer 42` → mode: 'implement', spec_identifier: '42', task_description: ''
-- `/engineer debug 42 Connection timeout` → mode: 'debug', spec_identifier: '42', task_description: 'Connection timeout'
+- `/engineer docs/SPEC-20250106-feature.md` → mode: 'implement', spec_identifier: 'docs/SPEC-20250106-feature.md', task_description: ''
+- `/engineer debug docs/SPEC-20250106-feature.md Connection timeout` → mode: 'debug', spec_identifier: 'docs/SPEC-20250106-feature.md', task_description: 'Connection timeout'
 - `/engineer user-auth` → mode: 'implement', spec_identifier: 'user-auth', task_description: ''
 - `/engineer debug Button not responding` → mode: 'debug', spec_identifier: '', task_description: 'Button not responding'
 
@@ -367,8 +373,8 @@ Log Entry Creation Process:
 **MCP Tools Used:**
 - `mcp__specgen-mcp__get_spec`: Retrieve specifications by ID
 - `mcp__specgen-mcp__search_specs`: Find specifications by search terms
-- `mcp__specgen-mcp__update_spec`: Log progress and debug information
 - `mcp__specgen-mcp__list_specs`: Browse available specifications
+- `mcp__specgen-mcp__refresh_metadata`: Update metadata system after implementation
 
 **Static Analysis MCP Tools (Optional):**
 - `mcp__static-analysis__analyze_file`: Analyze TypeScript files for better understanding

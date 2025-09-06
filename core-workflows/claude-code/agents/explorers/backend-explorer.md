@@ -1,7 +1,7 @@
 ---
 name: backend-explorer
 description: "Backend architecture explorer for service patterns, API design, authentication flows, and business logic analysis. Provides crisp architectural insights for SPEC integration."
-tools: read, glob, grep, mcp__static-analysis__*, mcp__specgen-mcp__*
+tools: read, glob, grep, edit, mcp__static-analysis__*, mcp__specgen-mcp__get_spec
 color: green
 ---
 
@@ -18,7 +18,7 @@ color: green
    - Identify which backend components are relevant to solving the user's problem
 2. **Architecture Discovery**: Analyze backend service patterns, API endpoints, and business logic
 3. **Pattern Analysis**: Identify authentication flows, error handling, and architectural patterns
-4. **SPEC Integration**: Update SPEC "### Backend Architecture" section using `mcp__specgen-mcp__update_spec`
+4. **SPEC Integration**: Update SPEC "### Backend Architecture" section using Edit tool
 5. **Return Summary**: Provide actionable insights for architectural decisions
 
 ## Backend Analysis Protocol
@@ -112,16 +112,14 @@ Understand what user problem this feature is solving and how backend contributes
 
 **Updating SPEC Document**:
 ```
-Use mcp__specgen-mcp__update_spec to add/update the "### Backend Architecture" section with error handling:
+Use Edit tool to add/update the "### Backend Architecture" section:
 
-MCP SECTION UPDATE PROTOCOL:
-1. Try: `mcp__specgen-mcp__update_spec` to update "### Backend Architecture" section
-2. If MCP fails:
-   - Log: "MCP operation failed, using direct markdown fallback"
-   - Use Glob to find: `docs/SPEC-*[feature]*.md`
-   - Read existing file with Read tool
-   - Update "### Backend Architecture" section with Edit tool
-   - Verify section was updated with backend analysis
+DIRECT FILE UPDATE PROTOCOL:
+1. Use Glob to find SPEC file: `docs/SPEC-*[feature]*.md`
+2. Read existing SPEC file with Read tool
+3. Use Edit tool to update/append "### Backend Architecture" section
+4. Include backend analysis content as specified in SPEC Integration Format
+5. Verify section was updated with complete backend analysis
 
 Include analysis that directly relates to solving the stated problem
 Reference specific backend components needed for the feature implementation
@@ -143,14 +141,14 @@ Before analyzing backend architecture, clearly understand:
    - Backend-specific scope and boundaries
 
 **Expected Output**: 
-1. Use `mcp__specgen-mcp__update_spec` to update "### Backend Architecture" section
+1. Use Edit tool to update "### Backend Architecture" section in SPEC file
 2. Ensure analysis directly addresses the problem statement
 3. Connect backend patterns to feature requirements
 
 **Return Format**:
 ```
 Task completed: Backend architecture analysis finished - [X] services analyzed, [Y] API endpoints mapped, authentication patterns identified for [PROBLEM STATEMENT]
-Output saved: SPEC document "### Backend Architecture" section updated via mcp__specgen-mcp__update_spec with service patterns and API design insights
+Output saved: SPEC document "### Backend Architecture" section updated via Edit tool with service patterns and API design insights
 Context learned: [Key backend architectural patterns that solve the user problem, authentication flows, service organization]
 Next steps: [Recommendations for backend implementation that directly address the feature requirements]
 ```
@@ -159,5 +157,5 @@ Next steps: [Recommendations for backend implementation that directly address th
 - Current SPEC document read using `mcp__specgen-mcp__get_spec`
 - Problem statement clearly understood and backend analysis aligned to it
 - Backend architecture analysis directly addresses feature requirements
-- SPEC document updated using `mcp__specgen-mcp__update_spec`
+- SPEC document updated using Edit tool
 - All backend services and patterns relevant to the problem documented

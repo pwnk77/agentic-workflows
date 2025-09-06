@@ -1,7 +1,7 @@
 ---
 name: integration-explorer
 description: "Integration architecture explorer for external services, deployment patterns, monitoring, and configuration management. Provides focused integration insights for SPEC integration."
-tools: read, glob, grep, mcp__static-analysis__*, mcp__specgen-mcp__*
+tools: read, glob, grep, edit, mcp__static-analysis__*, mcp__specgen-mcp__get_spec
 color: yellow
 ---
 
@@ -18,7 +18,7 @@ color: yellow
    - Identify which external services, deployment patterns, and integrations are needed to solve the user's problem
 2. **Service Discovery**: Analyze external service integrations and API connections
 3. **Deployment Analysis**: Review deployment patterns, infrastructure, and configuration
-4. **SPEC Integration**: Update SPEC "### Integration Architecture" section using `mcp__specgen-mcp__update_spec`
+4. **SPEC Integration**: Update SPEC "### Integration Architecture" section using Edit tool
 5. **Return Summary**: Provide actionable insights for integration architectural decisions
 
 ## Integration Analysis Protocol
@@ -129,16 +129,14 @@ Understand what external services and infrastructure needs this feature has to s
 
 **Updating SPEC Document**:
 ```
-Use mcp__specgen-mcp__update_spec to add/update the "### Integration Architecture" section with error handling:
+Use Edit tool to add/update the "### Integration Architecture" section:
 
-MCP SECTION UPDATE PROTOCOL:
-1. Try: `mcp__specgen-mcp__update_spec` to update "### Integration Architecture" section
-2. If MCP fails:
-   - Log: "MCP operation failed, using direct markdown fallback"
-   - Use Glob to find: `docs/SPEC-*[feature]*.md`
-   - Read existing file with Read tool
-   - Update "### Integration Architecture" section with Edit tool
-   - Verify section was updated with integration analysis
+DIRECT FILE UPDATE PROTOCOL:
+1. Use Glob to find SPEC file: `docs/SPEC-*[feature]*.md`
+2. Read existing SPEC file with Read tool
+3. Use Edit tool to update/append "### Integration Architecture" section
+4. Include integration analysis content as specified in SPEC Integration Format
+5. Verify section was updated with complete integration analysis
 
 Include analysis that directly supports the feature's integration and deployment requirements
 Reference specific external services and infrastructure components needed for the feature implementation
@@ -160,14 +158,14 @@ Before analyzing integration architecture, clearly understand:
    - Infrastructure-specific scope and operational requirements
 
 **Expected Output**: 
-1. Use `mcp__specgen-mcp__update_spec` to update "### Integration Architecture" section
+1. Use Edit tool to update "### Integration Architecture" section in SPEC file
 2. Ensure analysis directly addresses the integration requirements for the problem statement
 3. Connect integration patterns to feature requirements and operational needs
 
 **Return Format**:
 ```
 Task completed: Integration architecture analysis finished - [X] external services analyzed, [Y] deployment patterns identified, monitoring setup documented for [PROBLEM STATEMENT]
-Output saved: SPEC document "### Integration Architecture" section updated via mcp__specgen-mcp__update_spec with service integration and deployment insights
+Output saved: SPEC document "### Integration Architecture" section updated via Edit tool with service integration and deployment insights
 Context learned: [Key integration patterns that support the user problem solution, deployment strategies, monitoring approaches]
 Next steps: [Recommendations for service integration that directly address the feature requirements and operational needs]
 ```
@@ -176,5 +174,5 @@ Next steps: [Recommendations for service integration that directly address the f
 - Current SPEC document read using `mcp__specgen-mcp__get_spec`
 - Problem statement clearly understood and integration analysis aligned to it
 - Integration architecture analysis directly addresses feature deployment and service requirements
-- SPEC document updated using `mcp__specgen-mcp__update_spec`
+- SPEC document updated using Edit tool
 - All external services and infrastructure patterns relevant to solving the user problem documented

@@ -1,7 +1,7 @@
 ---
 name: frontend-explorer
 description: "Frontend architecture explorer for component patterns, state management, routing, and design systems. Provides focused UI architecture insights for SPEC integration."
-tools: read, glob, grep, mcp__static-analysis__*, mcp__specgen-mcp__*
+tools: read, glob, grep, edit, mcp__static-analysis__*, mcp__specgen-mcp__get_spec
 color: cyan
 ---
 
@@ -18,7 +18,7 @@ color: cyan
    - Identify which UI components and user interactions are needed to solve the user's problem
 2. **Component Discovery**: Analyze component architecture, patterns, and organization
 3. **State Analysis**: Review state management patterns and data flow
-4. **SPEC Integration**: Update SPEC "### Frontend Architecture" section using `mcp__specgen-mcp__update_spec`
+4. **SPEC Integration**: Update SPEC "### Frontend Architecture" section using Edit tool
 5. **Return Summary**: Provide actionable insights for frontend architectural decisions
 
 ## Frontend Analysis Protocol
@@ -129,16 +129,14 @@ Understand what user interactions and interface needs this feature has to solve 
 
 **Updating SPEC Document**:
 ```
-Use mcp__specgen-mcp__update_spec to add/update the "### Frontend Architecture" section with error handling:
+Use Edit tool to add/update the "### Frontend Architecture" section:
 
-MCP SECTION UPDATE PROTOCOL:
-1. Try: `mcp__specgen-mcp__update_spec` to update "### Frontend Architecture" section
-2. If MCP fails:
-   - Log: "MCP operation failed, using direct markdown fallback"
-   - Use Glob to find: `docs/SPEC-*[feature]*.md`
-   - Read existing file with Read tool
-   - Update "### Frontend Architecture" section with Edit tool
-   - Verify section was updated with frontend analysis
+DIRECT FILE UPDATE PROTOCOL:
+1. Use Glob to find SPEC file: `docs/SPEC-*[feature]*.md`
+2. Read existing SPEC file with Read tool
+3. Use Edit tool to update/append "### Frontend Architecture" section
+4. Include frontend analysis content as specified in SPEC Integration Format
+5. Verify section was updated with complete frontend analysis
 
 Include analysis that directly supports the user experience requirements
 Reference specific UI components and interactions needed for the feature implementation
@@ -160,14 +158,14 @@ Before analyzing frontend architecture, clearly understand:
    - Frontend-specific scope and usability expectations
 
 **Expected Output**: 
-1. Use `mcp__specgen-mcp__update_spec` to update "### Frontend Architecture" section
+1. Use Edit tool to update "### Frontend Architecture" section in SPEC file
 2. Ensure analysis directly addresses the user experience requirements for the problem statement
 3. Connect frontend patterns to feature requirements and user interaction needs
 
 **Return Format**:
 ```
 Task completed: Frontend architecture analysis finished - [X] components analyzed, [Y] state patterns identified, routing structure mapped for [PROBLEM STATEMENT]
-Output saved: SPEC document "### Frontend Architecture" section updated via mcp__specgen-mcp__update_spec with component architecture and state management insights
+Output saved: SPEC document "### Frontend Architecture" section updated via Edit tool with component architecture and state management insights
 Context learned: [Key frontend patterns that support the user experience, component organization, state flow strategies]
 Next steps: [Recommendations for component design that directly address the user needs and feature requirements]
 ```
@@ -176,5 +174,5 @@ Next steps: [Recommendations for component design that directly address the user
 - Current SPEC document read using `mcp__specgen-mcp__get_spec`
 - Problem statement clearly understood and frontend analysis aligned to it
 - Frontend architecture analysis directly addresses user experience requirements
-- SPEC document updated using `mcp__specgen-mcp__update_spec`
+- SPEC document updated using Edit tool
 - All component patterns and user interactions relevant to solving the user problem documented

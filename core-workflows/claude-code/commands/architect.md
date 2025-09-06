@@ -1,6 +1,6 @@
 ---
 description: MCP-integrated systematic feature analysis and specification generation through requirement crystallization and codebase exploration
-allowed-tools: Task, TodoWrite, Read, Write, Edit, Glob, Grep, WebFetch, mcp__specgen-mcp__get_spec, mcp__specgen-mcp__search_specs, mcp__specgen-mcp__list_specs, mcp__specgen-mcp__launch_dashboard, mcp__static-analysis__*
+allowed-tools: Task, TodoWrite, Read, Write, Edit, Glob, Grep, WebFetch, mcp__specgen-mcp__get_spec, mcp__specgen-mcp__search_specs, mcp__specgen-mcp__list_specs, mcp__specgen-mcp__launch_dashboard, mcp__specgen-mcp__refresh_metadata, mcp__static-analysis__*
 argument-hint: <feature-description>
 ---
 
@@ -111,6 +111,19 @@ The goal is to move from uncertainty to a >95% confidence level by asking target
 
 **SPEC Creation Protocol:**
 Once requirements are crystallized (95%+ confidence), immediately create the specification:
+
+**Dynamic Category Assignment Protocol:**
+Before creating the SPEC, determine the appropriate category:
+
+1. **Scan Existing Categories**: Use `mcp__specgen-mcp__list_specs` to get all existing specifications and their categories
+2. **Extract Category List**: Parse the returned specifications to build list of existing categories
+3. **Analyze Feature Context**: Based on feature description and requirements, determine best-fit category
+4. **Category Decision Logic**:
+   - If feature matches existing category patterns → Use existing category
+   - If feature represents new domain → Create new descriptive category
+   - Default categories: `general`, `api`, `ui`, `database`, `integration`, `architecture`
+5. **Category Assignment**: Include determined category in frontmatter during SPEC creation
+6. **Log Category Decision**: Document the reasoning for category choice in SPEC creation process
 
 **Specgen MCP usage:**
 
@@ -281,7 +294,9 @@ Present the final plan to the user:
 
 ## PHASE 5: IMPLEMENTATION PLAN ADDITION
 
-Add detailed implementation plan to the existing SPEC document.
+Add detailed implementation plan to the existing SPEC document after user approval.
+
+**User Approval Required**: Present the implementation plan summary and request approval before adding to SPEC.
 
 **Update SPEC with Implementation Plan:**
 Use Edit tool to add `## Implementation Plan` section to existing SPEC document:
@@ -292,10 +307,58 @@ Use Edit tool to add `## Implementation Plan` section to existing SPEC document:
 3. Metadata synchronization happens in real-time
 4. Dashboard reflects changes immediately without manual refresh
 
-- **Task Breakdown**: Database, Backend, API, Frontend, Integration, Testing layers  
-- **Dependencies**: Task sequence and relationships
-- **Timeline**: Effort estimates and critical path
-- **Success Metrics**: Measurable goals
+**Implementation Plan Content Structure:**
+```markdown
+## Implementation Plan
+
+### Task Breakdown by Layer
+
+#### Database Layer
+- [TASK-DB-001]: Schema design and migration scripts
+- [TASK-DB-002]: Data model relationships setup
+- [TASK-DB-003]: Database indexing and optimization
+
+#### Backend Layer
+- [TASK-BE-001]: Core service implementation
+- [TASK-BE-002]: API endpoint creation
+- [TASK-BE-003]: Authentication and authorization
+
+#### Frontend Layer
+- [TASK-FE-001]: Component architecture setup
+- [TASK-FE-002]: User interface implementation
+- [TASK-FE-003]: State management integration
+
+#### Integration Layer
+- [TASK-INT-001]: External service connections
+- [TASK-INT-002]: Configuration management
+- [TASK-INT-003]: Deployment pipeline setup
+
+#### Testing Layer
+- [TASK-TEST-001]: Unit test coverage
+- [TASK-TEST-002]: Integration testing
+- [TASK-TEST-003]: End-to-end validation
+
+### Dependencies and Sequencing
+- Database layer must complete before Backend layer
+- Backend API must be ready before Frontend integration
+- Core functionality before Integration layer
+- Testing throughout all layers
+
+### Timeline and Effort Estimates
+- Database Layer: [X] hours/days
+- Backend Layer: [X] hours/days
+- Frontend Layer: [X] hours/days
+- Integration Layer: [X] hours/days
+- Testing Layer: [X] hours/days
+- **Total Estimated Effort**: [X] hours/days
+
+### Success Metrics
+- All unit tests passing
+- Integration tests functional
+- Performance benchmarks met
+- Security requirements satisfied
+- User acceptance criteria fulfilled
+```
 
 **Completion:**
 
@@ -304,6 +367,12 @@ Use `mcp__specgen-mcp__launch_dashboard` to display the completed SPEC in the da
 - Opens browser with interactive SPEC visualization
 - Shows auto-categorized specifications by feature group
 - Provides easy navigation through architecture analysis sections
+
+**Refresh Metadata**:
+Use `mcp__specgen-mcp__refresh_metadata` to update the metadata system after SPEC completion:
+- Call `refresh_metadata(reason: "architect command completed")`
+- Ensures dashboard and search systems are synchronized with new SPEC
+- Updates category and status information for real-time dashboard display
 
 🔔 ARCHITECT_COMPLETE: Specification ready with architecture analysis and implementation plan
 

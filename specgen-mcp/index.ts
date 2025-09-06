@@ -31,8 +31,8 @@ const MCP_INSTRUCTIONS = `
 • Usage: Call after file changes (especially post-architect/engineer)
 
 **launch_dashboard** - Start web dashboard interface
-• Parameters: port (number, optional) - default: 3000
-• Returns: Dashboard URL (http://localhost:3000)
+• Parameters: port (number, optional) - default: 4567
+• Returns: Dashboard URL (http://localhost:4567)
 • Usage: Launch CRUD interface for visual spec management
 
 ### 📋 WORKFLOW INTEGRATION
