@@ -3,145 +3,84 @@
 
 This guide gets you from zero to productive AI workflows that actually remember your project context.
 
-> **How it works now**: Agents automatically create and manage specifications through MCP integration. No manual spec creation needed - just use the workflow commands and watch the magic happen!
+> **How it works**: Agents automatically create and manage specifications through MCP integration. No manual spec creation needed - just use the workflow commands and watch the magic happen!
 
-## 🚀 One-Command Installation (Recommended)
+## 🚀 Choose Your Installation Method
 
-The easiest way to get started is through Claude Code's built-in intelligence:
+### Option 1: 3-Command Quick Start (Recommended)
 
-### Ask Claude Code
+The fastest way to get started with full control:
 
-Simply type this prompt in Claude Code:
+```bash
+# 1. Install SpecGen globally
+npm install -g specgen-mcp
+
+# 2. Add MCP integration to Claude Code
+claude mcp add specgen-mcp "npx specgen-mcp"
+
+# 3. Set up your project (creates .claude configs automatically)
+specgen setup
+```
+
+**That's it!** Restart Claude Code and you're ready to use `/architect`, `/engineer`, and `/reviewer` commands.
+
+### Option 2: AI-Assisted Installation
+
+Let Claude Code handle everything for you:
 
 ```
-Install specgen-mcp for me from https://github.com/pwnk77/agentic-workflows
+Install and set up the complete agentic workflow from https://github.com/pwnk77/agentic-workflows
+
+Follow the 3-command quickstart: npm install -g specgen-mcp, claude mcp add specgen-mcp, and specgen setup after referring the quickstart.md file from the repository
 ```
 
-**What this does automatically:**
+**What Claude Code does automatically:**
 - ✅ Fetches the repository and reads installation instructions
-- ✅ Installs the latest SpecGen MCP from npm
-- ✅ Configures Claude Code MCP integration
+- ✅ Runs the 3-command installation sequence
+- ✅ Verifies MCP connection and setup
 - ✅ Copies `.claude` workflow configuration files
 - ✅ Sets up specialized agents (explorers, reviewers)
 - ✅ Enables workflow commands (architect, engineer, reviewer)
 - ✅ Configures notification hooks
-- ✅ Restarts Claude Code to load new configurations
+- ✅ Tests the installation and provides next steps
 
-### Alternative Prompts
+---
 
-If you want more specific control:
+## 🔧 What Gets Installed
 
-```
-# For just SpecGen MCP
-Install specgen-mcp from https://github.com/pwnk77/agentic-workflows with MCP integration
-
-# For development workflow setup  
-Set up the agentic development workflow from https://github.com/pwnk77/agentic-workflows
-
-# For existing project integration
-Add SpecGen specification management from https://github.com/pwnk77/agentic-workflows to my project
-```
-
-## 📦 Manual Installation
-
-If you prefer to install manually or need more control:
-
-### Step 1: Install SpecGen MCP
-
-```bash
-# Global installation
-npm install -g specgen-mcp
-
-# Or use npx for latest version
-npx specgen-mcp@latest --help
-```
-
-### Step 2: Configure Claude Code MCP
-
-**Option A: NPX Method (Recommended for Development)**
-```bash
-# Add SpecGen MCP using NPX - most reliable method
-claude mcp add specgen-mcp "npx specgen-mcp"
-
-# Restart Claude Code to load the MCP
-# (Claude Code will prompt you to restart)
-```
-
-**Option B: Global Installation Method**
-```bash
-# Find global installation path
-which specgen-mcp
-# or npm list -g specgen-mcp --depth=0
-
-# Add with absolute path (replace with your actual path)
-claude mcp add specgen-mcp "/usr/local/lib/node_modules/specgen-mcp/bin/specgen-mcp.js"
-```
-
-**Option C: Local Project Method**
-```bash
-# Install in your project directory
-cd your-project
-npm install specgen-mcp
-
-# Add with absolute path to local installation
-claude mcp add specgen-mcp "node $(pwd)/node_modules/specgen-mcp/dist/index.js"
-```
-
-### Step 3: Initialize Your Project
-
-```bash
-# Navigate to your project directory
-cd your-project
-
-# Initialize SpecGen for your project
-specgen init
-```
-
-### Step 4: Verify Installation
-
-Test that everything is working in Claude Code:
-
-```bash
-# Test the workflow (in Claude Code)
-/architect "Add a user profile page"
-
-# Watch as agents automatically:
-# → Create specifications
-# → Research best practices  
-# → Analyze your codebase
-# → Store everything for future use
-```
-
-## 🔧 Configuration
-
-### Project Setup
-
-After installation, the setup is automatic:
-
-1. **Initialize SpecGen in your project (optional):**
-   ```bash
-   specgen init
-   ```
-   *This is optional - agents will create the structure automatically*
-
-2. **Start using workflows in Claude Code:**
-   ```
-   /architect "Add user authentication system"
-   ```
-   *Agents automatically create and manage specifications - no manual commands needed!*
+After installation, you'll have:
 
 ### Claude Code Integration
-
-The installation automatically configures:
-
+- **MCP Server**: `specgen-mcp` connected and ready
 - **Agents**: Specialized AI agents in `.claude/agents/`
 - **Commands**: Workflow commands in `.claude/commands/`
 - **Hooks**: Notification systems in `.claude/hooks/`
 - **Settings**: Local configuration in `.claude/settings.local.json`
 
+### Project Structure
+- **Specifications**: Auto-generated in `docs/SPEC-*.md`
+- **Dashboard**: Web interface for visual spec management
+- **Metadata**: Shared cache for fast spec operations
+
+---
+
 ## 💡 First Steps
 
-### 1. Try the Architect Command
+### 1. Verify Installation
+
+Check that everything is working:
+
+```bash
+# Verify MCP connection
+claude mcp list
+# Should show: specgen-mcp: ✓ Connected
+
+# Test the server
+npx specgen-mcp --help
+# Should show available MCP tools
+```
+
+### 2. Try the Architect Command
 
 Create your first AI-driven specification:
 
@@ -155,25 +94,24 @@ Watch the magic happen:
 - 📝 Specification gets created automatically
 - 🎯 Everything saved for future agents to use
 
-### 2. View the Dashboard
+### 3. View the Dashboard
 
-See your specifications visually in Claude Code:
+See your specifications visually:
 
 ```javascript
 // Ask Claude to launch the dashboard
 "Launch the SpecGen dashboard for me"
 
-// Claude will use the MCP tool to start the dashboard
 // Usually opens at http://localhost:4567
 ```
 
-Dashboard shows:
+Dashboard features:
 - 📊 Visual overview of all specifications
 - 🔍 Search and filter capabilities
 - 📈 Progress tracking
 - 🎯 Smart categorization
 
-### 3. Use Engineer Command
+### 4. Use Engineer Command
 
 Implement the feature Claude just architected:
 
@@ -186,7 +124,7 @@ Claude automatically:
 - 🛠️ Follows your existing code patterns
 - 📊 Updates the spec as work progresses
 
-### 4. Review Your Work
+### 5. Review Your Work
 
 Get specialized analysis of your implementation:
 
@@ -194,10 +132,12 @@ Get specialized analysis of your implementation:
 /reviewer SPEC-20250105-todo-api --security --performance
 ```
 
-Deployment of expert review agents:
+Expert review agents:
 - 🔒 Security agent finds vulnerabilities
 - ⚡ Performance agent spots bottlenecks
 - 📝 Updates specifications with findings
+
+---
 
 ## 📚 Example Workflows
 
@@ -213,127 +153,103 @@ Deployment of expert review agents:
 # 3. Review & Quality Check
 /reviewer --all
 
-# 4. Documentation
+# 4. Documentation (if needed)
 /writer "Update API documentation for WebSocket endpoints"
 ```
 
-### Specification Management
-
-Specifications are managed automatically by agents:
+### Multi-Feature Development
 
 ```bash
-# Agents create specs during workflows
+# Create multiple related features
 /architect "User Dashboard Redesign"
 /architect "Payment Integration" 
 
 # View your specs in the dashboard
 "Show me the SpecGen dashboard"
 
-# Search happens automatically when agents need context
-# Agents find related specs and build upon them
-
-# Check what specs you have (optional)
-specgen status
+# Agents automatically find related specs and build upon them
 ```
+
+---
 
 ## 🛠️ Troubleshooting
 
-### MCP Not Working
+### Installation Issues
 
-If MCP commands aren't available:
+**Command not found: specgen**
+```bash
+# Check global installation
+npm list -g specgen-mcp
 
-1. **Restart Claude Code** (required after MCP installation)
+# Reinstall if needed
+npm install -g specgen-mcp --force
+```
 
-2. **Check MCP configuration:**
-   ```bash
-   claude mcp list
-   ```
-   Look for `specgen-mcp: ✓ Connected` or `✗ Failed to connect`
+**MCP Not Connected**
+```bash
+# Check MCP status
+claude mcp list
 
-3. **Test MCP server independently:**
-   ```bash
-   # Test the server directly
-   npx specgen-mcp
-   # Should show server banner with 5 available tools
-   ```
+# Remove and re-add if needed
+claude mcp remove specgen-mcp
+claude mcp add specgen-mcp "npx specgen-mcp"
 
-4. **Fix connection issues:**
-   ```bash
-   # Remove old configuration
-   claude mcp remove specgen-mcp
-   
-   # Re-add with NPX method (most reliable)
-   claude mcp add specgen-mcp "npx specgen-mcp"
-   
-   # Restart Claude Code
-   ```
+# Restart Claude Code (required)
+```
 
-5. **Validate MCP protocol compliance:**
-   ```bash
-   # Use MCP inspector to test server
-   npx @modelcontextprotocol/inspector npx specgen-mcp
-   ```
+**Commands Not Available**
+```bash
+# Check .claude directory exists
+ls -la .claude/
 
-### Common Connection Issues
+# Re-run setup if missing
+specgen setup
+```
+
+### Connection Issues
 
 **"Failed to Connect" Error**:
-- Verify server builds correctly: `npm run build` in specgen-mcp directory
-- Check Node.js version compatibility (Node 18+ recommended)
-- Ensure all dependencies installed: `npm install`
+- Restart Claude Code after MCP changes
+- Check Node.js version (18+ recommended)
+- Verify npm global path is accessible
 
 **Server Not Found**:
-- Use absolute paths instead of relative paths
-- Verify executable permissions: `chmod +x /path/to/server`
+- Use `npx specgen-mcp` method (most reliable)
 - Check PATH includes npm global binaries
+- Verify executable permissions
 
 **Protocol Errors**:
-- Update to latest @modelcontextprotocol/sdk version
-- Test JSON-RPC communication manually
-- Review server logs for detailed error messages
+- Update to latest version: `npm install -g specgen-mcp@latest`
+- Test independently: `npx specgen-mcp --help`
+- Use MCP inspector: `npx @modelcontextprotocol/inspector npx specgen-mcp`
 
-### Commands Not Available
+### Dashboard Issues
 
-If `/architect`, `/engineer` commands aren't working:
+**Dashboard Won't Start**:
+```javascript
+// Ask Claude to launch it
+"Launch the SpecGen dashboard for me"
+```
 
-1. **Check `.claude` directory exists in your project**
-2. **Verify configuration files were copied:**
-   ```bash
-   ls -la .claude/
-   ```
-3. **Reinstall with copy fix:**
-   ```
-   Ask Claude Code: "Reinstall specgen-mcp and fix the .claude configuration files"
-   ```
+**No Specifications Visible**:
+```bash
+# Check project has specs
+ls docs/SPEC-*.md
 
-### Dashboard Not Loading
+# Create your first spec
+/architect "test feature"
+```
 
-If the dashboard won't start when requested:
-
-1. **Ask Claude to launch it:**
-   ```
-   "Launch the SpecGen dashboard for me"
-   ```
-   Claude will use the MCP tool to start the dashboard
-
-2. **Check project initialization:**
-   ```bash
-   specgen status
-   ```
-
-3. **Reinitialize if needed:**
-   ```bash
-   specgen init
-   ```
+---
 
 ## 🔗 Next Steps
 
 Now that you're set up:
 
-1. **Read the [SpecGen Documentation](./specgen-mcp/README.md)** for detailed usage
-2. **Explore [Agent Capabilities](./core-workflows/claude-code/agents/)** to understand each agent
-3. **Try [Advanced Workflows](./README.md#example-workflows)** for complex development tasks
+1. **Try the workflow**: `/architect "your first feature idea"`
+2. **Read the [SpecGen Documentation](./specgen-mcp/README.md)** for advanced usage
+3. **Explore [Agent Capabilities](./core-workflows/claude-code/agents/)** to understand each agent
 4. **Configure [Additional MCPs](./README.md#recommended-mcps)** for enhanced functionality
-
 
 ---
 
