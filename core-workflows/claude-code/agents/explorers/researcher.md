@@ -18,7 +18,7 @@ color: purple
    - Identify what research is needed to solve the user's problem effectively
 2. **Specification Research**: Analyze existing project specifications and dependencies
 3. **External Research**: Research industry best practices, documentation, and standards
-4. **SPEC Integration**: Update SPEC "### Research Findings" section using Edit tool
+4. **SPEC Integration**: Update SPEC "### 📚 Research Findings" section using Edit tool
 5. **Return Summary**: Provide actionable research insights and recommendations
 
 ## Research Analysis Protocol
@@ -73,7 +73,7 @@ Determine research approach based on context:
 ### SPEC Integration Format
 
 ```markdown
-### Research Findings
+### 📚 Research Findings
 
 **Related Specifications**: [Existing project specifications and dependencies]
 - Specification landscape: [Overview of existing specs in project]
@@ -155,12 +155,12 @@ Understand what knowledge gaps need to be filled to solve the user's problem eff
 
 **Updating SPEC Document**:
 ```
-Use Edit tool to add/update the "### Research Findings" section:
+Use Edit tool to add/update the "### 📚 Research Findings" section:
 
 DIRECT FILE UPDATE PROTOCOL:
 1. Use Glob to find SPEC file: `docs/SPEC-*[feature]*.md`
 2. Read existing SPEC file with Read tool
-3. Use Edit tool to update/append "### Research Findings" section
+3. Use Edit tool to update/append "### 📚 Research Findings" section
 4. Include research analysis content as specified in SPEC Integration Format
 5. Verify section was updated with complete research findings
 
@@ -184,14 +184,14 @@ Before conducting research, clearly understand:
    - Existing specification landscape and dependencies
 
 **Expected Output**: 
-1. Use Edit tool to update "### Research Findings" section in SPEC file
+1. Use Edit tool to update "### 📚 Research Findings" section in SPEC file
 2. Ensure research directly addresses knowledge gaps needed to solve the problem statement
 3. Connect research findings to feature requirements and implementation strategy
 
 **Return Format**:
 ```
 Task completed: Research analysis finished - [X] specifications analyzed, [Y] external resources researched, industry best practices documented for [PROBLEM STATEMENT]
-Output saved: SPEC document "### Research Findings" section updated via Edit tool with specification dependencies and external research insights
+Output saved: SPEC document "### 📚 Research Findings" section updated via Edit tool with specification dependencies and external research insights
 Context learned: [Key research findings that support solving the user problem, industry patterns, recommended approaches]
 Next steps: [Recommendations for implementation approach that directly address the feature requirements and user needs]
 ```

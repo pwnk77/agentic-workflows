@@ -176,7 +176,7 @@ Use the backend-explorer subagent for backend architecture analysis.
 Context: Current SPEC document (MCP or docs/SPEC-[YYYYMMDD]-[feature-name].md)
 Feature Context: [Backend service, API development, authentication, business logic]
 Task: Analyze service patterns, API design, error handling, authentication flows
-Expected Output: Update SPEC "### Backend Architecture" section with actionable insights
+Expected Output: Update SPEC "### 🔧 Backend Architecture" section with actionable insights
 Constraints: research-only, focus on architectural patterns and implementation strategies
 ```
 
@@ -187,7 +187,7 @@ Use the database-explorer subagent for data architecture analysis.
 Context: Current SPEC document (MCP or docs/SPEC-[YYYYMMDD]-[feature-name].md)
 Feature Context: [Data modeling, migrations, performance, relationships]
 Task: Analyze schema design, relationship patterns, migration strategies, ORM usage
-Expected Output: Update SPEC "### Database Architecture" section with schema insights
+Expected Output: Update SPEC "### 🗄️ Database Architecture" section with schema insights
 Constraints: research-only, focus on data architecture and performance considerations
 ```
 
@@ -198,7 +198,7 @@ Use the frontend-explorer subagent for user interface architecture analysis.
 Context: Current SPEC document (MCP or docs/SPEC-[YYYYMMDD]-[feature-name].md)
 Feature Context: [UI components, state management, routing, user experience]
 Task: Analyze component architecture, state patterns, routing strategies, design systems
-Expected Output: Update SPEC "### Frontend Architecture" section with component insights
+Expected Output: Update SPEC "### 🎨 Frontend Architecture" section with component insights
 Constraints: research-only, focus on component patterns and user experience architecture
 ```
 
@@ -209,7 +209,7 @@ Use the integration-explorer subagent for external service and deployment analys
 Context: Current SPEC document (MCP or docs/SPEC-[YYYYMMDD]-[feature-name].md)
 Feature Context: [External APIs, deployment, monitoring, third-party services]
 Task: Analyze external integrations, deployment patterns, configuration management
-Expected Output: Update SPEC "### Integration Architecture" section with integration insights
+Expected Output: Update SPEC "### 🔗 Integration Architecture" section with integration insights
 Constraints: research-only, focus on external dependencies and deployment strategies
 ```
 
@@ -220,7 +220,7 @@ Use the researcher subagent for specification research and documentation analysi
 Context: Current SPEC document (MCP or docs/SPEC-[YYYYMMDD]-[feature-name].md)
 Feature Context: [Documentation research, best practices, industry standards]
 Task: Research existing specifications, industry best practices, relevant documentation
-Expected Output: Update SPEC "### Research Findings" section with comprehensive research insights
+Expected Output: Update SPEC "### 📚 Research Findings" section with comprehensive research insights
 Constraints: research-only, focus on external research and documentation synthesis
 
 DEPLOYMENT CONDITIONS:
@@ -241,7 +241,7 @@ DEPLOYMENT CONDITIONS:
 **Expected Return Format from Each Agent:**
 ```
 Task completed: [Summary of architectural findings]
-Output saved: SPEC document "### [Section] Architecture" section updated
+Output saved: SPEC document "### [Icon] [Section] Architecture" section updated
 Context learned: [Key architectural patterns/constraints discovered]
 Next steps: [Actionable recommendations for architectural decisions]
 ```
@@ -281,44 +281,91 @@ Use Edit tool to add `## Implementation Plan` section to existing SPEC document:
 3. Metadata synchronization happens in real-time
 4. Dashboard reflects changes immediately without manual refresh
 
-**Implementation Plan Content Structure:**
+**Complete SPEC Document Template Structure:**
+The architect creates SPEC documents with the following standardized template for optimal dashboard rendering:
+
 ```markdown
-## Implementation Plan
+---
+title: "SPEC-[YYYYMMDD]-[feature-name]"
+status: "draft"
+category: "[determined-category]"
+priority: "medium"
+created_at: "[timestamp]"
+updated_at: "[timestamp]"
+created_via: "architect"
+related_specs: []
+parent_spec_id: null
+tags: []
+effort_estimate: null
+completion: 0
+---
 
-### Task Breakdown by Layer
+# 📋 SPEC: [Feature Name]
 
-#### Database Layer
+## 📊 Executive Summary
+Brief overview of the feature, its purpose, and key benefits.
+
+## 📝 Product Specifications
+Detailed functional requirements, user stories, and acceptance criteria.
+
+## 🏗️ Architecture Analysis
+
+### 🔧 Backend Architecture
+*[Updated by backend-explorer subagent]*
+Service patterns, API design, authentication flows, and business logic analysis.
+
+### 🎨 Frontend Architecture  
+*[Updated by frontend-explorer subagent]*
+Component patterns, state management, routing strategies, and design systems.
+
+### 🗄️ Database Architecture
+*[Updated by database-explorer subagent]*
+Schema design, relationship patterns, migration strategies, and ORM usage.
+
+### 🔗 Integration Architecture
+*[Updated by integration-explorer subagent]*
+External integrations, deployment patterns, and configuration management.
+
+### 📚 Research Findings
+*[Updated by researcher subagent]*
+External research, industry best practices, and relevant documentation.
+
+## 🚀 Implementation Plan
+
+### 📋 Task Breakdown by Layer
+
+#### 🗄️ Database Layer
 - [TASK-DB-001]: Schema design and migration scripts
 - [TASK-DB-002]: Data model relationships setup
 - [TASK-DB-003]: Database indexing and optimization
 
-#### Backend Layer
+#### ⚙️ Backend Layer
 - [TASK-BE-001]: Core service implementation
 - [TASK-BE-002]: API endpoint creation
 - [TASK-BE-003]: Authentication and authorization
 
-#### Frontend Layer
+#### 🎨 Frontend Layer
 - [TASK-FE-001]: Component architecture setup
 - [TASK-FE-002]: User interface implementation
 - [TASK-FE-003]: State management integration
 
-#### Integration Layer
+#### 🔗 Integration Layer
 - [TASK-INT-001]: External service connections
 - [TASK-INT-002]: Configuration management
 - [TASK-INT-003]: Deployment pipeline setup
 
-#### Testing Layer
+#### 🧪 Testing Layer
 - [TASK-TEST-001]: Unit test coverage
 - [TASK-TEST-002]: Integration testing
 - [TASK-TEST-003]: End-to-end validation
 
-### Dependencies and Sequencing
+### 📊 Dependencies and Sequencing
 - Database layer must complete before Backend layer
 - Backend API must be ready before Frontend integration
 - Core functionality before Integration layer
 - Testing throughout all layers
 
-### Timeline and Effort Estimates
+### ⏱️ Timeline and Effort Estimates
 - Database Layer: [X] hours/days
 - Backend Layer: [X] hours/days
 - Frontend Layer: [X] hours/days
@@ -326,12 +373,18 @@ Use Edit tool to add `## Implementation Plan` section to existing SPEC document:
 - Testing Layer: [X] hours/days
 - **Total Estimated Effort**: [X] hours/days
 
-### Success Metrics
+### ✅ Success Metrics
 - All unit tests passing
 - Integration tests functional
 - Performance benchmarks met
 - Security requirements satisfied
 - User acceptance criteria fulfilled
+
+## 📈 Execution Logs
+*[Updated by engineer command during implementation]*
+
+## 🐛 Debug Logs
+*[Updated by engineer command during debugging]*
 ```
 
 **Completion:**

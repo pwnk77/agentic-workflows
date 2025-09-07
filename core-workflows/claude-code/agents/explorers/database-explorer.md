@@ -18,7 +18,7 @@ color: blue
    - Identify which data models and database patterns are needed to solve the user's problem
 2. **Schema Discovery**: Analyze database schema, table structures, and relationship patterns
 3. **Migration Analysis**: Review migration strategies and database evolution patterns
-4. **SPEC Integration**: Update SPEC "### Database Architecture" section using Edit tool
+4. **SPEC Integration**: Update SPEC "### 🗄️ Database Architecture" section using Edit tool
 5. **Return Summary**: Provide actionable insights for data architecture decisions
 
 ## Database Analysis Protocol
@@ -107,7 +107,7 @@ IF MCP tools unavailable:
 ### SPEC Integration Format
 
 ```markdown
-### Database Architecture
+### 🗄️ Database Architecture
 
 **Schema Design**: [Database structure and table organization]
 - Database type: [PostgreSQL, MySQL, SQLite, MongoDB, etc.]
@@ -160,12 +160,12 @@ Understand what data needs this feature has and how database design supports the
 
 **Updating SPEC Document**:
 ```
-Use Edit tool to add/update the "### Database Architecture" section:
+Use Edit tool to add/update the "### 🗄️ Database Architecture" section:
 
 DIRECT FILE UPDATE PROTOCOL:
 1. Use Glob to find SPEC file: `docs/SPEC-*[feature]*.md`
 2. Read existing SPEC file with Read tool
-3. Use Edit tool to update/append "### Database Architecture" section
+3. Use Edit tool to update/append "### 🗄️ Database Architecture" section
 4. Include database analysis content as specified in SPEC Integration Format
 5. Verify section was updated with complete database analysis
 
@@ -189,14 +189,14 @@ Before analyzing database architecture, clearly understand:
    - Database-specific scope and performance expectations
 
 **Expected Output**: 
-1. Use Edit tool to update "### Database Architecture" section in SPEC file
+1. Use Edit tool to update "### 🗄️ Database Architecture" section in SPEC file
 2. Ensure analysis directly addresses the data requirements for the problem statement
 3. Connect database patterns to feature requirements and user needs
 
 **Return Format**:
 ```
 Task completed: Database architecture analysis finished - [X] entities analyzed, [Y] relationships mapped, migration patterns identified for [PROBLEM STATEMENT]
-Output saved: SPEC document "### Database Architecture" section updated via Edit tool with schema design and relationship insights
+Output saved: SPEC document "### 🗄️ Database Architecture" section updated via Edit tool with schema design and relationship insights
 Context learned: [Key data patterns that support the user problem solution, relationship strategies, performance considerations]
 Next steps: [Recommendations for data modeling that directly address the feature requirements and user needs]
 ```

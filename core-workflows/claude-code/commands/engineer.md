@@ -49,9 +49,9 @@ CRITICAL: Always detect language first, then choose appropriate analysis approac
 - Use `mcp__specgen-mcp__refresh_metadata` after implementation completion
 
 **Direct File Operations (Write)**:
-- **Progress Logging**: Use Edit tool to append execution logs to `## Execution Logs` section
+- **Progress Logging**: Use Edit tool to append execution logs to `## 📈 Execution Logs` section
 - **Status Updates**: Use Edit tool to modify frontmatter status and completion
-- **Debug Information**: Use Edit tool to append debug logs to `## Debug Logs` section
+- **Debug Information**: Use Edit tool to append debug logs to `## 🐛 Debug Logs` section
 
 **Usage Pattern**: `/engineer [mode: implement|debug] [spec-file-path | spec-title] <task-description>`
 
@@ -161,15 +161,15 @@ Execute all tasks for one layer (e.g., Database) before moving to the next, foll
 **Trigger**: This phase is executed after all tasks in a logical layer are completed successfully.
 
 **Progress Logging Process:**
-1. Use Edit tool to append log entry to `## Execution Logs` section
+1. Use Edit tool to append log entry to `## 📈 Execution Logs` section
 2. Update frontmatter status if needed using Edit tool
 3. Call `refresh_metadata` after major progress updates
 
 **Log Entry Format**:
 ```markdown
-## Execution Logs
+## 📈 Execution Logs
 
-### Layer Completed: [Layer Name - e.g., Database Layer]
+### ✅ Layer Completed: [Layer Name - e.g., Database Layer]
 - **Status**: Completed
 - **Timestamp**: [YYYY-MM-DD HH:MM:SS]
 - **Tasks Completed**:
@@ -181,9 +181,9 @@ Execute all tasks for one layer (e.g., Database) before moving to the next, foll
 
 **If a failure occurred, the log entry should be:**
 ```markdown
-## Debug Logs
+## 🐛 Debug Logs
 
-### Task Failed: [TASK-ID] - [Task Description]
+### ❌ Task Failed: [TASK-ID] - [Task Description]
 - **Status**: Failed
 - **Timestamp**: [YYYY-MM-DD HH:MM:SS]
 - **Layer**: [Layer Name]
@@ -285,13 +285,13 @@ Execute all tasks for one layer (e.g., Database) before moving to the next, foll
    - Validate no new issues were introduced
 
 3. **Update Documentation**:
-   - Use Edit tool to append debug log to `## Debug Logs` section
+   - Use Edit tool to append debug log to `## 🐛 Debug Logs` section
 
 **Debug Log Format**:
 ```markdown
-## Debug Logs
+## 🐛 Debug Logs
 
-### Systematic Debug Session: [YYYY-MM-DD HH:MM:SS]
+### 🔍 Systematic Debug Session: [YYYY-MM-DD HH:MM:SS]
 - **Issue**: Task `[TASK-ID]` failed with error: `[Error Message]`
 - **Attempt 1**: Initial analysis revealed: [findings]
 - **Attempt 2**: Enhanced logging showed: [detailed findings]  
