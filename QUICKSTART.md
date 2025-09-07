@@ -19,7 +19,7 @@ npm install -g specgen-mcp
 claude mcp add specgen-mcp "npx specgen-mcp"
 
 # 3. Set up your project (creates .claude configs automatically)
-specgen setup
+specgen-setup
 ```
 
 **That's it!** Restart Claude Code and you're ready to use `/architect`, `/engineer`, and `/reviewer` commands.
@@ -31,7 +31,7 @@ Let Claude Code handle everything for you:
 ```
 Install and set up the complete agentic workflow from https://github.com/pwnk77/agentic-workflows
 
-Follow the 3-command quickstart: npm install -g specgen-mcp, claude mcp add specgen-mcp, and specgen setup after referring the quickstart.md file from the repository
+Follow the 3-command quickstart: npm install -g specgen-mcp, claude mcp add specgen-mcp, and specgen-setup after referring the quickstart.md file from the repository
 ```
 
 **What Claude Code does automatically:**
@@ -203,7 +203,7 @@ claude mcp add specgen-mcp "npx specgen-mcp"
 ls -la .claude/
 
 # Re-run setup if missing
-specgen setup
+specgen-setup
 ```
 
 ### Connection Issues
