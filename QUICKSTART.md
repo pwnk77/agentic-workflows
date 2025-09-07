@@ -58,12 +58,33 @@ npx specgen-mcp@latest --help
 
 ### Step 2: Configure Claude Code MCP
 
+**Option A: NPX Method (Recommended for Development)**
 ```bash
-# Add SpecGen MCP to Claude Code
-claude mcp add specgen -s user -- npx -y specgen-mcp@latest
+# Add SpecGen MCP using NPX - most reliable method
+claude mcp add specgen-mcp "npx specgen-mcp"
 
 # Restart Claude Code to load the MCP
 # (Claude Code will prompt you to restart)
+```
+
+**Option B: Global Installation Method**
+```bash
+# Find global installation path
+which specgen-mcp
+# or npm list -g specgen-mcp --depth=0
+
+# Add with absolute path (replace with your actual path)
+claude mcp add specgen-mcp "/usr/local/lib/node_modules/specgen-mcp/bin/specgen-mcp.js"
+```
+
+**Option C: Local Project Method**
+```bash
+# Install in your project directory
+cd your-project
+npm install specgen-mcp
+
+# Add with absolute path to local installation
+claude mcp add specgen-mcp "node $(pwd)/node_modules/specgen-mcp/dist/index.js"
 ```
 
 ### Step 3: Initialize Your Project
@@ -222,15 +243,53 @@ specgen status
 If MCP commands aren't available:
 
 1. **Restart Claude Code** (required after MCP installation)
+
 2. **Check MCP configuration:**
    ```bash
    claude mcp list
    ```
-3. **Reinstall if needed:**
+   Look for `specgen-mcp: ✓ Connected` or `✗ Failed to connect`
+
+3. **Test MCP server independently:**
    ```bash
-   claude mcp remove specgen
-   claude mcp add specgen -s user -- npx -y specgen-mcp@latest
+   # Test the server directly
+   npx specgen-mcp
+   # Should show server banner with 5 available tools
    ```
+
+4. **Fix connection issues:**
+   ```bash
+   # Remove old configuration
+   claude mcp remove specgen-mcp
+   
+   # Re-add with NPX method (most reliable)
+   claude mcp add specgen-mcp "npx specgen-mcp"
+   
+   # Restart Claude Code
+   ```
+
+5. **Validate MCP protocol compliance:**
+   ```bash
+   # Use MCP inspector to test server
+   npx @modelcontextprotocol/inspector npx specgen-mcp
+   ```
+
+### Common Connection Issues
+
+**"Failed to Connect" Error**:
+- Verify server builds correctly: `npm run build` in specgen-mcp directory
+- Check Node.js version compatibility (Node 18+ recommended)
+- Ensure all dependencies installed: `npm install`
+
+**Server Not Found**:
+- Use absolute paths instead of relative paths
+- Verify executable permissions: `chmod +x /path/to/server`
+- Check PATH includes npm global binaries
+
+**Protocol Errors**:
+- Update to latest @modelcontextprotocol/sdk version
+- Test JSON-RPC communication manually
+- Review server logs for detailed error messages
 
 ### Commands Not Available
 

@@ -12,8 +12,8 @@ const __dirname = path.dirname(__filename);
 
 // Configuration - Shared JSON metadata system
 const CONFIG = {
-  docsPath: path.resolve(__dirname, '../../docs'),
-  metadataFile: path.resolve(__dirname, '../../docs/.spec-metadata.json'),
+  docsPath: path.resolve(__dirname, '../../../docs'),
+  metadataFile: path.resolve(__dirname, '../../../docs/.spec-metadata.json'),
   dashboardPath: path.resolve(__dirname, '../../specdash')
 };
 

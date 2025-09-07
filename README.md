@@ -1,4 +1,5 @@
 # Agentic Workflows
+
 *Stop juggling between 15 browser tabs, scattered notes, and endless context switching*
 
 ![Banner](assets/banner.png)
@@ -136,6 +137,71 @@ specgen dashboard
 
 See [QUICKSTART.md](./QUICKSTART.md) for detailed setup instructions.
 
+## 📊 SpecGen Dashboard Overview
+
+![SpecGen Dashboard](assets/specgen-main-page.jpg)
+*Visual overview of all specifications with status tracking and filtering*
+
+![SpecGen Spec View](assets/specgen-spec-view.jpg)
+*Detailed specification view with metadata and content*
+
+The integrated dashboard provides a visual interface for managing your specifications:
+- **Real-time sync** with file changes
+- **Status tracking** (Todo, In Progress, Completed)
+- **Category filtering** and search
+- **Direct editing** capabilities
+- **Export options** for sharing
+
+## 🎯 Complete Workflow Example
+
+**Scenario**: Building a task management API from scratch
+
+### 1. Architecture Phase
+```
+/architect "Create a REST API for task management with CRUD operations, user authentication, and task categories. Include database schema, API endpoints, and security considerations."
+```
+**Result**: Creates `docs/SPEC-001-task-management-api.md` with:
+- Complete API endpoint specifications
+- Database schema design
+- Authentication flow
+- Security considerations
+- Performance requirements
+
+### 2. Implementation Phase
+```
+/engineer "Implement the task management API from SPEC-001. Focus on the user authentication and task CRUD endpoints first."
+```
+**Result**: Generates:
+- Express.js server setup
+- JWT authentication middleware
+- Task model and routes
+- Database connection and migrations
+- Input validation and error handling
+
+### 3. Quality Assurance
+```
+/reviewer security "Review the task API implementation for authentication vulnerabilities and data validation issues"
+```
+**Result**: Provides:
+- Security vulnerability analysis
+- Input sanitization recommendations
+- JWT best practices review
+- Rate limiting suggestions
+
+### 4. Visual Tracking
+```
+# In Claude Code MCP tools
+refresh_metadata(reason: "updating after implementation")
+launch_dashboard()
+```
+**Result**: 
+- Dashboard shows SPEC-001 status as "In Progress"
+- Visual overview of all project specifications
+- Easy navigation between related specs
+- Real-time sync with file changes
+
+**Outcome**: Complete task management API built following specification-driven development with integrated code review and visual project tracking.
+
 ## Real Workflows That Save Time
 
 ### Before Agentic Workflows:
@@ -199,20 +265,6 @@ specgen show SPEC-20250101-user-auth
 *Real projects using Agentic Workflows will be featured here soon*
 
 Have a cool project? [Share it with us!](./showcase/)
-
-## 🤝 Join the Community
-
-- 📖 [Documentation](./docs/) - Deep dives and guides
-- 💬 [Discussions](https://github.com/pwnk77/agentic-workflows/discussions) - Questions and ideas
-- 🐛 [Issues](https://github.com/pwnk77/agentic-workflows/issues) - Bug reports and feature requests
-- 📢 [Changelog](./CHANGELOG.md) - See what's new
-
-## 📚 Learn More
-
-- [Quick Start Guide](./QUICKSTART.md) - Get up and running quickly
-- [SpecGen MCP Documentation](./specgen-mcp/README.md) - Detailed SpecGen usage
-- [Agent Reference](./core-workflows/claude-code/agents/) - Individual agent capabilities
-- [Command Reference](./core-workflows/claude-code/commands/) - Workflow command details
 
 ## 🔧 Development
 
