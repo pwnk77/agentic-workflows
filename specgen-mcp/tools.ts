@@ -4,12 +4,17 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { glob } from 'glob';
 import { spawn } from 'child_process';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Configuration - Shared JSON metadata system
 const CONFIG = {
-  docsPath: path.resolve(process.cwd(), '../docs'),
-  metadataFile: path.resolve(process.cwd(), '../docs/.spec-metadata.json'),
-  dashboardPath: path.resolve(process.cwd(), '../specdash')
+  docsPath: path.resolve(__dirname, '../../docs'),
+  metadataFile: path.resolve(__dirname, '../../docs/.spec-metadata.json'),
+  dashboardPath: path.resolve(__dirname, '../../specdash')
 };
 
 // Shared JSON metadata interface (matches Dashboard format)
@@ -377,12 +382,47 @@ ${specCount > 10 ? `... and ${specCount - 10} more` : ''}`;
 
 async function handleLaunchDashboard(port: number = 3000) {
   try {
+    // Check if server.js exists
+    const serverPath = path.join(CONFIG.dashboardPath, 'server.js');
+    try {
+      await fs.access(serverPath);
+    } catch {
+      throw new Error(`server.js not found at ${serverPath}`);
+    }
+
+    // Check if port is already in use
+    const http = await import('http');
+    const isPortInUse = await new Promise((resolve) => {
+      const testServer = http.createServer();
+      testServer.once('error', () => resolve(true));
+      testServer.once('listening', () => {
+        testServer.close();
+        resolve(false);
+      });
+      testServer.listen(port);
+    });
+
+    if (isPortInUse) {
+      return {
+        content: [{
+          type: "text",
+          text: `⚠️ Port ${port} is already in use. Dashboard may already be running at http://localhost:${port}`
+        }],
+        isError: false
+      };
+    }
+
     // Start dashboard server
-    const serverProcess = spawn('node', ['server.js'], {
+    const serverProcess = spawn('node', [serverPath], {
       cwd: CONFIG.dashboardPath,
       env: { ...process.env, PORT: port.toString() },
-      detached: true,
-      stdio: ['ignore', 'pipe', 'pipe']
+      detached: false,
+      stdio: 'ignore'
+    });
+
+    // Handle process errors
+    serverProcess.on('error', (error) => {
+      console.error('Failed to start dashboard:', error);
     });
 
     // Wait for server to start with basic health verification
