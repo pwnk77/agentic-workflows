@@ -52,15 +52,29 @@ refresh_metadata(reason: "engineer command completed")
 \`\`\`
 # IMPORTANT: Always refresh metadata before launching dashboard
 refresh_metadata(reason: "preparing dashboard data")
-launch_dashboard(port: 3000) // Spawns dashboard with all specs visible
+launch_dashboard(port: 4567) // Spawns dashboard with all specs visible
 \`\`\`
 
 **Note:** The dashboard requires metadata to be refreshed first to see all specifications from subdirectories.
 
-### 📁 FILE STRUCTURE
-• Specs: ../docs/SPEC-*.md
-• Metadata: ../docs/.spec-metadata.json (shared with dashboard)
-• Dashboard: ../specdash/ (auto-launched)
+### 📁 FILE STRUCTURE & DOCS DETECTION
+
+**Project Structure Required:**
+• Specs: ./docs/SPEC-*.md (relative to where MCP is run)
+• Metadata: ./docs/.spec-metadata.json (shared with dashboard)
+• Dashboard: Uses globally installed specdash (auto-detected)
+
+**How Docs Folder Detection Works:**
+• MCP always looks for specs in the 'docs/' folder relative to your current directory
+• Run MCP commands from your project root (where you want docs/ to be)
+• Global install: Dashboard from /opt/homebrew/lib/node_modules/specgen-mcp/specdash
+• Local install: Dashboard from project/.specgen/specdash
+• Specs always from: {your-current-directory}/docs/
+
+**Troubleshooting:**
+• No specs found? Ensure you're in the right directory with a docs/ folder
+• Dashboard not launching? Check that specgen-mcp is installed globally or locally
+• Wrong specs showing? Make sure you're running from the correct project root
 
 ### ⚡ CAPABILITIES
 • Read-only operations on markdown files

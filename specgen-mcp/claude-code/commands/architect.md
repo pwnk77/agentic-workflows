@@ -143,6 +143,13 @@ For existing repositories with SPEC files, gather related context before SPEC cr
    ---
    ```
 
+**Launch Dashboard Immediately:**
+After creating the SPEC template, immediately refresh metadata and launch the dashboard:
+1. **Refresh Metadata**: Call `mcp__specgen-mcp__refresh_metadata(reason: "SPEC template created - preparing dashboard")`
+2. **Launch Dashboard**: Call `mcp__specgen-mcp__launch_dashboard(port: 4567)`
+3. **User Experience**: Dashboard shows the initial SPEC template while analysis continues
+4. **Live Updates**: As explorers add analysis, the SPEC updates are visible in real-time
+
 **Note:** The SPEC document is the single source of truth where all subagent contexts and architectural analysis are consolidated.
 
 ## PHASE 2: DYNAMIC CODEBASE EXPLORATION
@@ -399,18 +406,17 @@ External research, industry best practices, and relevant documentation.
 
 **Completion:**
 
-**Launch SpecGen Dashboard**:
-Use `mcp__specgen-mcp__launch_dashboard` to display the completed SPEC in the dashboard interface
-- Opens browser with interactive SPEC visualization
-- Shows auto-categorized specifications by feature group
-- Provides easy navigation through architecture analysis sections
+**Final Metadata Refresh**:
+Use `mcp__specgen-mcp__refresh_metadata` to finalize the metadata after all analysis:
+- Call `refresh_metadata(reason: "architect command completed - SPEC finalized")`
+- Ensures dashboard shows the complete SPEC with all explorer analysis
+- Updates final status and completion percentage
 
-**Refresh Metadata**:
-Use `mcp__specgen-mcp__refresh_metadata` to update the metadata system after SPEC completion:
-- Call `refresh_metadata(reason: "architect command completed")`
-- Ensures dashboard and search systems are synchronized with new SPEC
-- Updates category and status information for real-time dashboard display
+**Dashboard Status**:
+- Dashboard was launched earlier and has been showing live updates
+- User can review the complete SPEC in the already-running dashboard
+- All architecture analysis sections are now visible
 
 🔔 ARCHITECT_COMPLETE: Specification ready with architecture analysis and implementation plan
 
-"ARCHITECT analysis complete with [X]% confidence. SPEC document contains comprehensive architecture analysis from dynamic explorer deployment and detailed implementation plan. Dashboard launched for SPEC review. Ready for engineer command execution."
+"ARCHITECT analysis complete with [X]% confidence. SPEC document contains comprehensive architecture analysis from dynamic explorer deployment and detailed implementation plan. Dashboard is running with complete SPEC visible. Ready for engineer command execution."

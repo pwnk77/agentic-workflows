@@ -11,22 +11,45 @@ import process from 'process';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Get current working directory - fallback to process.cwd() or __dirname
+// Detect if running in global install context
+function isGlobalInstall(): boolean {
+  try {
+    // Check if we're running from a global node_modules directory
+    const packagePath = path.resolve(__dirname, '..');
+    return packagePath.includes('/lib/node_modules/') || packagePath.includes('\\lib\\node_modules\\');
+  } catch {
+    return false;
+  }
+}
+
+// Get current working directory - always where user runs the MCP command
 function getCurrentWorkingDirectory(): string {
   try {
-    return process.cwd();
+    return process.cwd(); // Always use where the user launched the MCP command
   } catch (error) {
     console.warn('Failed to get process.cwd(), falling back to __dirname:', error);
     return path.dirname(__dirname);
   }
 }
 
-// Configuration - Shared JSON metadata system (uses current working directory)
-const CONFIG = {
-  docsPath: path.resolve(getCurrentWorkingDirectory(), 'docs'),
-  metadataFile: path.resolve(getCurrentWorkingDirectory(), 'docs/.spec-metadata.json'),
-  dashboardPath: path.resolve(getCurrentWorkingDirectory(), '.specgen/specdash')
-};
+// Configuration - Separate project paths from package paths
+function getConfig() {
+  const projectRoot = getCurrentWorkingDirectory(); // Where user runs MCP (always process.cwd())
+  const isGlobal = isGlobalInstall();
+  
+  return {
+    // Project paths - always relative to where user runs MCP command
+    docsPath: path.resolve(projectRoot, 'docs'),
+    metadataFile: path.resolve(projectRoot, 'docs/.spec-metadata.json'),
+    
+    // Dashboard path - depends on where package is installed
+    dashboardPath: isGlobal 
+      ? path.resolve(__dirname, '..', 'specdash')    // Global: /opt/homebrew/lib/node_modules/specgen-mcp/specdash
+      : path.resolve(projectRoot, '.specgen/specdash') // Local: project/.specgen/specdash
+  };
+}
+
+const CONFIG = getConfig();
 
 // Shared JSON metadata interface (matches Dashboard format)
 interface SpecMetadata {
@@ -391,14 +414,39 @@ ${specCount > 10 ? `... and ${specCount - 10} more` : ''}`;
   };
 }
 
-async function handleLaunchDashboard(port: number = 3000) {
+async function handleLaunchDashboard(port: number = 4567) {
   try {
-    // Check if server.js exists
-    const serverPath = path.join(CONFIG.dashboardPath, 'server.js');
+    // Check if server.js exists with fallback paths
+    let serverPath = path.join(CONFIG.dashboardPath, 'server.js');
+    let dashboardPath = CONFIG.dashboardPath;
+    
     try {
       await fs.access(serverPath);
     } catch {
-      throw new Error(`server.js not found at ${serverPath}`);
+      // Fallback: Try alternative paths if primary fails
+      const fallbackPaths = [
+        path.resolve(__dirname, '..', 'specdash'), // Global package specdash
+        path.resolve(process.cwd(), '.specgen/specdash'), // Local .specgen/specdash
+        path.resolve(__dirname, 'specdash'), // Adjacent specdash
+      ];
+      
+      let found = false;
+      for (const fallbackPath of fallbackPaths) {
+        const fallbackServer = path.join(fallbackPath, 'server.js');
+        try {
+          await fs.access(fallbackServer);
+          serverPath = fallbackServer;
+          dashboardPath = fallbackPath;
+          found = true;
+          break;
+        } catch {
+          continue;
+        }
+      }
+      
+      if (!found) {
+        throw new Error(`server.js not found at ${CONFIG.dashboardPath} or fallback locations: ${fallbackPaths.join(', ')}`);
+      }
     }
 
     // Check if port is already in use
@@ -425,8 +473,12 @@ async function handleLaunchDashboard(port: number = 3000) {
 
     // Start dashboard server
     const serverProcess = spawn('node', [serverPath], {
-      cwd: CONFIG.dashboardPath,
-      env: { ...process.env, PORT: port.toString() },
+      cwd: dashboardPath,
+      env: { 
+        ...process.env, 
+        PORT: port.toString(),
+        DOCS_PATH: CONFIG.docsPath // Pass the correct project docs path
+      },
       detached: false,
       stdio: 'ignore'
     });

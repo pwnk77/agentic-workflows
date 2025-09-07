@@ -5,7 +5,7 @@ const chokidar = require('chokidar');
 
 const app = express();
 const PORT = process.env.PORT || 4567;
-const DOCS_PATH = path.resolve(__dirname, '../docs');
+const DOCS_PATH = process.env.DOCS_PATH || path.resolve(__dirname, '../docs');
 const METADATA_FILE = path.join(DOCS_PATH, '.spec-metadata.json'); // SHARED with MCP
 
 // Middleware
