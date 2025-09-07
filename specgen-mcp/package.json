@@ -1,6 +1,6 @@
 {
   "name": "specgen-mcp",
-  "version": "2.2.0",
+  "version": "2.2.2",
   "description": "Complete specification management system for Claude Code with MCP integration, commands, and dashboard",
   "type": "module",
   "main": "dist/index.js",
@@ -60,7 +60,11 @@
       ".ts"
     ],
     "testEnvironment": "node",
-    "moduleNameMapping": {
+    "testPathIgnorePatterns": [
+      "<rootDir>/.specgen/",
+      "<rootDir>/node_modules/"
+    ],
+    "moduleNameMapper": {
       "^(\\.{1,2}/.*)\\.js$": "$1"
     },
     "transform": {

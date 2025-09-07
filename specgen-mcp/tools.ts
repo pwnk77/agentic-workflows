@@ -5,16 +5,27 @@ import * as path from 'path';
 import { glob } from 'glob';
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
+import process from 'process';
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configuration - Shared JSON metadata system
+// Get current working directory - fallback to process.cwd() or __dirname
+function getCurrentWorkingDirectory(): string {
+  try {
+    return process.cwd();
+  } catch (error) {
+    console.warn('Failed to get process.cwd(), falling back to __dirname:', error);
+    return path.dirname(__dirname);
+  }
+}
+
+// Configuration - Shared JSON metadata system (uses current working directory)
 const CONFIG = {
-  docsPath: path.resolve(__dirname, '../../../docs'),
-  metadataFile: path.resolve(__dirname, '../../../docs/.spec-metadata.json'),
-  dashboardPath: path.resolve(__dirname, '../../specdash')
+  docsPath: path.resolve(getCurrentWorkingDirectory(), 'docs'),
+  metadataFile: path.resolve(getCurrentWorkingDirectory(), 'docs/.spec-metadata.json'),
+  dashboardPath: path.resolve(getCurrentWorkingDirectory(), '.specgen/specdash')
 };
 
 // Shared JSON metadata interface (matches Dashboard format)

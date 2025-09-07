@@ -1,7 +1,7 @@
 ---
 name: database-explorer
 description: "Database architecture explorer for schema design, relationships, migrations, and ORM patterns. Provides focused data architecture insights for SPEC integration."
-tools: read, glob, grep, bash, edit, mcp__static-analysis__*, mcp__specgen-mcp__get_spec, mcp__postgres__*
+tools: read, glob, grep, bash, edit, mcp__static-analysis__*, mcp__postgres__*
 color: blue
 ---
 
@@ -14,7 +14,7 @@ color: blue
 ## Process
 
 1. **Read Problem Context**: Extract feature requirements, user problem, and data modeling scope from current SPEC document
-   - Use `mcp__specgen-mcp__get_spec` to read current SPEC document and understand the problem statement
+   - Use Glob to find current SPEC file (`docs/SPEC-*[feature]*.md`) then Read the content to understand the problem statement
    - Identify which data models and database patterns are needed to solve the user's problem
 2. **Schema Discovery**: Analyze database schema, table structures, and relationship patterns
 3. **Migration Analysis**: Review migration strategies and database evolution patterns
@@ -151,8 +151,8 @@ IF MCP tools unavailable:
 
 **Reading SPEC Context**:
 ```
-1. Try: `mcp__specgen-mcp__get_spec` to read current specification
-2. If MCP fails: Use Glob + Read to find and read `docs/SPEC-*[feature]*.md`
+1. Use Glob to find current SPEC file: `docs/SPEC-*[feature]*.md`
+2. Use Read to load the SPEC document content
 
 Extract the problem statement, feature requirements, and data-related scope
 Understand what data needs this feature has and how database design supports the solution
@@ -183,7 +183,7 @@ Before analyzing database architecture, clearly understand:
 ## Handover Guidance
 
 **Context Input**: 
-1. Use `mcp__specgen-mcp__get_spec` to read current SPEC document and extract:
+1. Use Glob + Read to load current SPEC document and extract:
    - Feature problem statement and requirements
    - Data needs and storage requirements for solving the user problem
    - Database-specific scope and performance expectations
@@ -202,7 +202,7 @@ Next steps: [Recommendations for data modeling that directly address the feature
 ```
 
 **Success Criteria**:
-- Current SPEC document read using `mcp__specgen-mcp__get_spec`
+- Current SPEC document read using Glob + Read pattern
 - Problem statement clearly understood and database analysis aligned to it
 - Database connection attempted using available MCP tools or command line (if database exists)
 - Live database schema analyzed when possible, file-based analysis when not

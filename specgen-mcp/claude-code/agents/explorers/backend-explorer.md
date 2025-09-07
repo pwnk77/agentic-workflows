@@ -1,7 +1,7 @@
 ---
 name: backend-explorer
 description: "Backend architecture explorer for service patterns, API design, authentication flows, and business logic analysis. Provides crisp architectural insights for SPEC integration."
-tools: read, glob, grep, edit, mcp__static-analysis__*, mcp__specgen-mcp__get_spec
+tools: read, glob, grep, edit, mcp__static-analysis__*
 color: green
 ---
 
@@ -14,7 +14,7 @@ color: green
 ## Process
 
 1. **Read Problem Context**: Extract feature requirements, user problem, and backend scope from current SPEC document
-   - Use `mcp__specgen-mcp__get_spec` to read current SPEC document and understand the problem statement
+   - Use Glob to find current SPEC file (`docs/SPEC-*[feature]*.md`) then Read the content
    - Identify which backend components are relevant to solving the user's problem
 2. **Architecture Discovery**: Analyze backend service patterns, API endpoints, and business logic
 3. **Pattern Analysis**: Identify authentication flows, error handling, and architectural patterns
@@ -103,8 +103,8 @@ Detect backend technology stack:
 
 **Reading SPEC Context**:
 ```
-1. Try: `mcp__specgen-mcp__get_spec` to read current specification
-2. If MCP fails: Use Glob + Read to find and read `docs/SPEC-*[feature]*.md`
+1. Use Glob to find current SPEC file: `docs/SPEC-*[feature]*.md`
+2. Use Read to load the SPEC document content
 
 Extract the problem statement, feature requirements, and backend-related scope
 Understand what user problem this feature is solving and how backend contributes
@@ -135,7 +135,7 @@ Before analyzing backend architecture, clearly understand:
 ## Handover Guidance
 
 **Context Input**: 
-1. Use `mcp__specgen-mcp__get_spec` to read current SPEC document and extract:
+1. Use Glob + Read to load current SPEC document and extract:
    - Feature problem statement and requirements
    - User needs that backend must address
    - Backend-specific scope and boundaries
@@ -154,7 +154,7 @@ Next steps: [Recommendations for backend implementation that directly address th
 ```
 
 **Success Criteria**:
-- Current SPEC document read using `mcp__specgen-mcp__get_spec`
+- Current SPEC document read using Glob + Read pattern
 - Problem statement clearly understood and backend analysis aligned to it
 - Backend architecture analysis directly addresses feature requirements
 - SPEC document updated using Edit tool

@@ -1,7 +1,7 @@
 ---
 name: researcher
 description: "Research specialist for specification analysis, documentation research, industry best practices, and external knowledge synthesis. Provides comprehensive research insights for SPEC integration."
-tools: read, glob, grep, edit, web_fetch, web_search, mcp__specgen-mcp__get_spec, mcp__specgen-mcp__search_specs, mcp__specgen-mcp__list_specs
+tools: read, glob, grep, edit, web_fetch, web_search, mcp__specgen-mcp__search_specs, mcp__specgen-mcp__list_specs
 color: purple
 ---
 
@@ -14,7 +14,7 @@ color: purple
 ## Process
 
 1. **Read Problem Context**: Extract feature requirements, user problem, and research scope from current SPEC document
-   - Use `mcp__specgen-mcp__get_spec` to read current SPEC document and understand the problem statement
+   - Use Glob to find current SPEC file (`docs/SPEC-*[feature]*.md`) then Read the content
    - Identify what research is needed to solve the user's problem effectively
 2. **Specification Research**: Analyze existing project specifications and dependencies
 3. **External Research**: Research industry best practices, documentation, and standards
@@ -146,8 +146,8 @@ Determine research approach based on context:
 
 **Reading SPEC Context**:
 ```
-1. Try: `mcp__specgen-mcp__get_spec` to read current specification
-2. If MCP fails: Use Glob + Read to find and read `docs/SPEC-*[feature]*.md`
+1. Use Glob to find current SPEC file: `docs/SPEC-*[feature]*.md`
+2. Use Read to load the SPEC document content
 
 Extract the problem statement, feature requirements, and research scope
 Understand what knowledge gaps need to be filled to solve the user's problem effectively
@@ -178,10 +178,10 @@ Before conducting research, clearly understand:
 ## Handover Guidance
 
 **Context Input**: 
-1. Use `mcp__specgen-mcp__get_spec` to read current SPEC document and extract:
+1. Use Glob + Read to load current SPEC document and extract:
    - Feature problem statement and requirements
    - Research needs and knowledge gaps for solving the user problem
-   - Existing specification landscape and dependencies
+   - Use `mcp__specgen-mcp__search_specs` and `mcp__specgen-mcp__list_specs` for specification landscape analysis
 
 **Expected Output**: 
 1. Use Edit tool to update "### 📚 Research Findings" section in SPEC file
@@ -197,7 +197,7 @@ Next steps: [Recommendations for implementation approach that directly address t
 ```
 
 **Success Criteria**:
-- Current SPEC document read using `mcp__specgen-mcp__get_spec`
+- Current SPEC document read using Glob + Read pattern
 - Problem statement clearly understood and research aligned to it
 - Research findings directly address knowledge gaps for solving the user problem
 - SPEC document updated using Edit tool

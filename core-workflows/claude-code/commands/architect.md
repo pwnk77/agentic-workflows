@@ -93,7 +93,9 @@ The goal is to move from uncertainty to a >95% confidence level by asking target
    - Based on the risks and ambiguities identified in the deep analysis, formulate up to questions with options for the user.
    - Each question must be designed to eliminate ambiguity and should present concrete options in A/B/C format where possible to help users make quicker decisions.
    - Focus on a logical progression: start with high-level conceptual questions and move towards detailed behavior, edge cases, and integration points.
-   - Example format: "For user authentication, would you prefer: A) OAuth integration, B) Custom JWT implementation, or C) Third-party service like Auth0?"
+   - **IMPORTANT: Number all questions (1., 2., 3., etc.) so users can easily respond by referencing question numbers**
+   - Example format: "1. For user authentication, would you prefer: A) OAuth integration, B) Custom JWT implementation, or C) Third-party service like Auth0?"
+   - Tell users: "Please respond with question numbers and your answers (e.g., '1A, 2B, 3C')"
 2. **Synthesize Answers & Update Understanding:**
    - After receiving answers, update the internal understanding of the requirements.
    - Re-evaluate the confidence level.
@@ -110,6 +112,14 @@ Use MCP to determine the appropriate category before SPEC creation:
 1. **Get Category Metadata**: Use `mcp__specgen-mcp__list_specs` to retrieve all existing categories
 2. **Category Selection**: Analyze feature requirements against existing categories and select the best match
 3. **Category Assignment**: Include determined category in SPEC frontmatter
+
+**Automated Context Discovery Protocol:**
+For existing repositories with SPEC files, gather related context before SPEC creation:
+
+1. **Repository Detection**: Check if `docs/` folder exists with SPEC files
+2. **Context Search**: Use `mcp__specgen-mcp__search_specs(query: [feature-keywords])` to find related specifications
+3. **Related SPEC Discovery**: Use `mcp__specgen-mcp__list_specs()` for category context and existing patterns
+4. **Context Integration**: Pass relevant context to agents via SPEC document by including related findings in the initial SPEC content
 
 **SPEC Creation Process:**
 

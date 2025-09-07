@@ -1,7 +1,7 @@
 ---
 name: integration-explorer
 description: "Integration architecture explorer for external services, deployment patterns, monitoring, and configuration management. Provides focused integration insights for SPEC integration."
-tools: read, glob, grep, edit, mcp__static-analysis__*, mcp__specgen-mcp__get_spec
+tools: read, glob, grep, edit, mcp__static-analysis__*
 color: yellow
 ---
 
@@ -14,7 +14,7 @@ color: yellow
 ## Process
 
 1. **Read Problem Context**: Extract feature requirements, user problem, and integration scope from current SPEC document
-   - Use `mcp__specgen-mcp__get_spec` to read current SPEC document and understand the problem statement
+   - Use Glob to find current SPEC file (`docs/SPEC-*[feature]*.md`) then Read the content to understand the problem statement
    - Identify which external services, deployment patterns, and integrations are needed to solve the user's problem
 2. **Service Discovery**: Analyze external service integrations and API connections
 3. **Deployment Analysis**: Review deployment patterns, infrastructure, and configuration
@@ -120,8 +120,8 @@ Detect integration technology and patterns:
 
 **Reading SPEC Context**:
 ```
-1. Try: `mcp__specgen-mcp__get_spec` to read current specification
-2. If MCP fails: Use Glob + Read to find and read `docs/SPEC-*[feature]*.md`
+1. Use Glob to find current SPEC file: `docs/SPEC-*[feature]*.md`
+2. Use Read to load the SPEC document content
 
 Extract the problem statement, feature requirements, and integration/deployment scope
 Understand what external services and infrastructure needs this feature has to solve the problem
@@ -152,7 +152,7 @@ Before analyzing integration architecture, clearly understand:
 ## Handover Guidance
 
 **Context Input**: 
-1. Use `mcp__specgen-mcp__get_spec` to read current SPEC document and extract:
+1. Use Glob + Read to load current SPEC document and extract:
    - Feature problem statement and requirements
    - Integration and deployment needs for solving the user problem
    - Infrastructure-specific scope and operational requirements
@@ -171,7 +171,7 @@ Next steps: [Recommendations for service integration that directly address the f
 ```
 
 **Success Criteria**:
-- Current SPEC document read using `mcp__specgen-mcp__get_spec`
+- Current SPEC document read using Glob + Read pattern
 - Problem statement clearly understood and integration analysis aligned to it
 - Integration architecture analysis directly addresses feature deployment and service requirements
 - SPEC document updated using Edit tool

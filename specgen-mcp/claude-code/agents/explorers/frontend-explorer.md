@@ -1,7 +1,7 @@
 ---
 name: frontend-explorer
 description: "Frontend architecture explorer for component patterns, state management, routing, and design systems. Provides focused UI architecture insights for SPEC integration."
-tools: read, glob, grep, edit, mcp__static-analysis__*, mcp__specgen-mcp__get_spec
+tools: read, glob, grep, edit, mcp__static-analysis__*
 color: cyan
 ---
 
@@ -14,7 +14,7 @@ color: cyan
 ## Process
 
 1. **Read Problem Context**: Extract feature requirements, user problem, and frontend scope from current SPEC document
-   - Use `mcp__specgen-mcp__get_spec` to read current SPEC document and understand the problem statement
+   - Use Glob to find current SPEC file (`docs/SPEC-*[feature]*.md`) then Read the content to understand the problem statement
    - Identify which UI components and user interactions are needed to solve the user's problem
 2. **Component Discovery**: Analyze component architecture, patterns, and organization
 3. **State Analysis**: Review state management patterns and data flow
@@ -120,8 +120,8 @@ Detect frontend technology stack:
 
 **Reading SPEC Context**:
 ```
-1. Try: `mcp__specgen-mcp__get_spec` to read current specification
-2. If MCP fails: Use Glob + Read to find and read `docs/SPEC-*[feature]*.md`
+1. Use Glob to find current SPEC file: `docs/SPEC-*[feature]*.md`
+2. Use Read to load the SPEC document content
 
 Extract the problem statement, feature requirements, and UI/UX scope
 Understand what user interactions and interface needs this feature has to solve the problem
@@ -152,7 +152,7 @@ Before analyzing frontend architecture, clearly understand:
 ## Handover Guidance
 
 **Context Input**: 
-1. Use `mcp__specgen-mcp__get_spec` to read current SPEC document and extract:
+1. Use Glob + Read to load current SPEC document and extract:
    - Feature problem statement and requirements
    - User experience needs and interface requirements for solving the user problem
    - Frontend-specific scope and usability expectations
@@ -171,7 +171,7 @@ Next steps: [Recommendations for component design that directly address the user
 ```
 
 **Success Criteria**:
-- Current SPEC document read using `mcp__specgen-mcp__get_spec`
+- Current SPEC document read using Glob + Read pattern
 - Problem statement clearly understood and frontend analysis aligned to it
 - Frontend architecture analysis directly addresses user experience requirements
 - SPEC document updated using Edit tool
