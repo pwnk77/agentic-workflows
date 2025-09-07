@@ -58,7 +58,7 @@ async function scanDocs() {
         filename: file,
         relativePath: relativePath,  // Store the relative path
         title,
-        category: detectCategory(content),
+        category: detectCategory(content, relativePath),
         status: hasManualStatus ? existingMeta.status : detectStatus(content),
         priority: hasManualPriority ? existingMeta.priority : detectPriority(content),
         modified: stats.mtime.toISOString(),
@@ -84,7 +84,44 @@ async function scanDocs() {
   }
 }
 
-function detectCategory(content) {
+function formatFolderToCategory(folderPath) {
+  if (!folderPath) return 'General';
+  
+  // Extract the first folder from the relative path
+  const firstFolder = folderPath.split('/')[0];
+  if (!firstFolder) return 'General';
+  
+  // Convert folder name to category format:
+  // 1. Remove trailing slashes
+  // 2. Replace hyphens/underscores with spaces
+  // 3. Capitalize each word
+  return firstFolder
+    .replace(/\/$/, '')
+    .replace(/[-_]/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
+function detectCategory(content, relativePath) {
+  // Priority 1: Use folder-based mapping
+  if (relativePath) {
+    const folderCategory = formatFolderToCategory(relativePath);
+    if (folderCategory !== 'General') {
+      return folderCategory;
+    }
+  }
+  
+  // Priority 2: Check YAML frontmatter for explicit category
+  const frontmatterMatch = content.match(/^---\s*\n([\s\S]*?)\n---/);
+  if (frontmatterMatch) {
+    const categoryMatch = frontmatterMatch[1].match(/^category:\s*(.+)$/m);
+    if (categoryMatch) {
+      return categoryMatch[1].trim().replace(/^["']|["']$/g, '');
+    }
+  }
+  
+  // Priority 3: Fall back to content analysis (existing logic)
   const contentLower = content.toLowerCase();
   
   // Check in order of specificity - more specific categories first

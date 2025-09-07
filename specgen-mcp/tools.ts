@@ -191,8 +191,9 @@ export class JSONMetadataService {
         const file = path.basename(filePath);
         let content = await fs.readFile(filePath, 'utf-8');
         const stats = await fs.stat(filePath);
+        const relativePath = path.relative(CONFIG.docsPath, path.dirname(filePath));
         const title = extractTitle(content);
-        const category = detectCategory(content);
+        const category = detectCategory(content, relativePath);
         const status = detectStatus(content);
         const priority = detectPriority(content);
         
@@ -572,7 +573,44 @@ function extractTitle(content: string): string {
   return match ? match[1].trim() : 'Untitled';
 }
 
-function detectCategory(content: string): string {
+function formatFolderToCategory(folderPath: string): string {
+  if (!folderPath) return 'General';
+  
+  // Extract the first folder from the relative path
+  const firstFolder = folderPath.split('/')[0];
+  if (!firstFolder) return 'General';
+  
+  // Convert folder name to category format:
+  // 1. Remove trailing slashes
+  // 2. Replace hyphens/underscores with spaces
+  // 3. Capitalize each word
+  return firstFolder
+    .replace(/\/$/, '')
+    .replace(/[-_]/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
+function detectCategory(content: string, relativePath?: string): string {
+  // Priority 1: Use folder-based mapping
+  if (relativePath) {
+    const folderCategory = formatFolderToCategory(relativePath);
+    if (folderCategory !== 'General') {
+      return folderCategory;
+    }
+  }
+  
+  // Priority 2: Check YAML frontmatter for explicit category
+  const frontmatterMatch = content.match(/^---\s*\n([\s\S]*?)\n---/);
+  if (frontmatterMatch) {
+    const categoryMatch = frontmatterMatch[1].match(/^category:\s*(.+)$/m);
+    if (categoryMatch) {
+      return categoryMatch[1].trim().replace(/^["']|["']$/g, '');
+    }
+  }
+  
+  // Priority 3: Fall back to content analysis (existing logic)
   const contentLower = content.toLowerCase();
   
   if (contentLower.includes('api') || contentLower.includes('endpoint') || contentLower.includes('rest') || contentLower.includes('graphql')) {

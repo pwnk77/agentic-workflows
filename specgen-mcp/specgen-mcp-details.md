@@ -148,9 +148,10 @@ launch_dashboard(port: 3000)
 ## File Structure
 
 ### Specifications
-- **Location**: `docs/SPEC-*.md`
+- **Location**: `docs/SPEC-*.md` (supports folder organization)
 - **Format**: Markdown with YAML frontmatter
 - **Naming**: `SPEC-YYYYMMDD-feature-name.md`
+- **Categorization**: Automatic folder-based categorization with YAML override
 
 ### Metadata Cache
 - **File**: `docs/.spec-metadata.json`
@@ -215,6 +216,38 @@ search_specs(query: "database migration")
 - **Search returns empty**: Ensure SPEC files exist and metadata is current
 - **Port issues**: Try different port or check for running processes
 
+## Folder-Based Categorization (v2.3.0)
+
+### Automatic Category Detection
+Specifications are automatically categorized using a priority-based system:
+
+1. **Folder-Based Mapping (Priority 1)**
+   - Files in `authentication/` → "Authentication"
+   - Files in `core-specgen/` → "Core Specgen"
+   - Files in `dashboard-ui/` → "Dashboard UI"
+   - Any new folder automatically becomes a category
+
+2. **YAML Frontmatter Override (Priority 2)**
+   - Explicit `category:` field in YAML frontmatter
+   - Quotes automatically removed from YAML values
+   - Serves as fallback when folder categorization returns "General"
+
+3. **Content Analysis Fallback (Priority 3)**
+   - Keyword-based detection for uncategorized files
+   - API, UI, Database, Backend, Integration, etc.
+
+### Folder → Category Formatting
+- Folder names converted to proper case categories
+- Hyphens and underscores become spaces
+- `test-edge-cases/` → "Test Edge Cases"
+- `user_management/` → "User Management"
+- `api-v2/` → "Api V2"
+
+### Implementation Files
+- **MCP Server**: `tools.ts:detectCategory()` function
+- **Dashboard Server**: `specdash/server.js:detectCategory()` function
+- **Both systems**: Use shared `.spec-metadata.json` for consistency
+
 ## Security & Architecture
 
 ### Read-Only MCP Operations
@@ -238,7 +271,7 @@ search_specs(query: "database migration")
 
 ## Version Information
 
-- **Current Version**: 2.2.1
+- **Current Version**: 2.3.0
 - **MCP Protocol**: JSON-RPC 2.0 compliant
 - **Node.js**: Requires 18+ for ES modules
-- **Dependencies**: @modelcontextprotocol/sdk, glob, express
+- **Dependencies**: @modelcontextprotocol/sdk, glob, express, chokidar, fs-extra
