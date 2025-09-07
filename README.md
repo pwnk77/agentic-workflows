@@ -262,9 +262,51 @@ specgen show SPEC-20250101-user-auth
 
 ## 🌟 Who's Using This
 
-*Real projects using Agentic Workflows will be featured here soon*
+### 🎬 Live Demo: Expense Reimbursement System
+
+**Location**: [`/Users/pawanraviee/Documents/GitHub/agentic-workflows/showcase/expense-reimbursement-demo`](/Users/pawanraviee/Documents/GitHub/agentic-workflows/showcase/expense-reimbursement-demo)
+
+A complete three-stage approval workflow demonstration built using Agentic Workflows methodology:
+
+![Demo Stage 1](showcase/demo-screenshots/expense-reimbursement-demo-1.jpg)
+*Employee expense submission interface*
+
+![Demo Stage 2](showcase/demo-screenshots/expense-reimbursement-demo-2.jpg)
+*Manager review and approval process*
+
+![Demo Stage 3](showcase/demo-screenshots/expense-reimbursement-demo-3.jpg)
+*Finance team final processing*
+
+![Demo Stage 4](showcase/demo-screenshots/expense-reimbursement-demo-4.jpg)
+*Real-time status tracking and notifications*
+
+![Demo Stage 5](showcase/demo-screenshots/expense-reimbursement-demo-5.jpg)
+*Complete audit trail and reporting*
+
+**Technical Stack**: Express.js, SQLite, Session Management, File Upload, Multi-user Authentication
+**Workflow Stages**: Employee → Manager → Finance → Complete
+**Key Features**: Role-based access, real-time updates, complete audit trail
 
 Have a cool project? [Share it with us!](./showcase/)
+
+## 📊 Project Statistics
+
+**Code Metrics** (as of September 2025):
+- **Total Files**: 35,976 files across the entire project
+- **Lines of Code**: 195,386 total lines
+- **Python Files**: 50 files (33,851 lines)
+- **TypeScript/JavaScript**: 27,167 files 
+- **Documentation**: 4,261 Markdown files
+- **Components**: 2 major packages (SpecGen MCP + Core Workflows)
+- **Agents**: 8 specialized AI agents
+- **Commands**: 3 high-level workflow orchestrators
+- **Demo Applications**: 1 complete expense reimbursement system
+
+**Architecture**:
+- **Modular Design**: Separation between core workflows and MCP implementation
+- **Agent-Based**: Specialized agents for different development phases
+- **Specification-Driven**: Living documentation that evolves with your code
+- **MCP Integration**: Direct protocol support for Claude Code integration
 
 ## 🔧 Development
 

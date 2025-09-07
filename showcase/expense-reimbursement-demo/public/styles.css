@@ -1,0 +1,381 @@
+/* Custom styles for Expense Reimbursement Demo */
+/* Note: Using CDN Tailwind, so no @tailwind directives needed */
+
+/* Base typography */
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+
+.font-poppins {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Dark blue theme components - converted to regular CSS from Tailwind @apply */
+
+/* Primary buttons with dark blue theme */
+.btn-primary {
+  background-color: rgb(30 58 138);
+  color: white;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s;
+}
+.btn-primary:hover {
+  background-color: rgb(30 64 175);
+}
+
+.btn-secondary {
+  background-color: rgb(219 234 254);
+  color: rgb(30 58 138);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s;
+}
+.btn-secondary:hover {
+  background-color: rgb(191 219 254);
+}
+
+/* Form inputs with dark blue accents */
+.form-input {
+  width: 100%;
+  border: 1px solid rgb(209 213 219);
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  outline: none;
+  transition: all 0.2s;
+}
+.form-input:focus {
+  box-shadow: 0 0 0 2px rgb(30 58 138);
+  border-color: transparent;
+}
+
+/* Status badges with custom colors */
+.status-pending {
+  background-color: rgb(254 243 199);
+  color: rgb(146 64 14);
+}
+
+.status-approved {
+  background-color: rgb(220 252 231);
+  color: rgb(22 101 52);
+}
+
+.status-rejected {
+  background-color: rgb(254 226 226);
+  color: rgb(153 27 27);
+}
+
+.status-paid {
+  background-color: rgb(219 234 254);
+  color: rgb(30 64 175);
+}
+
+/* Navigation with dark blue theme */
+.nav-header {
+  background-color: rgb(30 58 138);
+  border-bottom: 1px solid rgb(30 64 175);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.nav-header h1 {
+  color: white;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.nav-user-info {
+  color: rgb(191 219 254);
+}
+
+.nav-user-name {
+  color: white;
+  font-weight: 500;
+}
+
+/* Card components */
+.card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.card-header {
+  background-color: rgb(239 246 255);
+  padding: 1.5rem;
+  border-bottom: 1px solid rgb(191 219 254);
+}
+
+.card-header h3 {
+  font-size: 1.125rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  color: rgb(30 58 138);
+}
+
+/* Modal components */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-width: 42rem;
+  width: 100%;
+  margin: 1rem;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgb(229 231 235);
+  background-color: rgb(239 246 255);
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  color: rgb(30 58 138);
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid rgb(229 231 235);
+  background-color: rgb(249 250 251);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* Action buttons with role-specific colors */
+.btn-review {
+  background-color: rgb(22 163 74);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+.btn-review:hover {
+  background-color: rgb(21 128 61);
+}
+
+.btn-process {
+  background-color: rgb(147 51 234);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+.btn-process:hover {
+  background-color: rgb(126 34 206);
+}
+
+.btn-approve {
+  background-color: rgb(22 163 74);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+.btn-approve:hover {
+  background-color: rgb(21 128 61);
+}
+
+.btn-reject {
+  background-color: rgb(220 38 38);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+.btn-reject:hover {
+  background-color: rgb(185 28 28);
+}
+
+/* File upload styling */
+.file-upload {
+  border: 2px dashed rgb(209 213 219);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.file-upload:hover {
+  border-color: rgb(96 165 250);
+}
+
+.file-upload.dragover {
+  border-color: rgb(59 130 246);
+  background-color: rgb(239 246 255);
+}
+
+/* Receipt preview */
+.receipt-preview {
+  max-width: 20rem;
+  margin: 0 auto;
+  border: 1px solid rgb(209 213 219);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive table */
+.table-responsive {
+  min-width: 100%;
+  overflow-x: auto;
+}
+
+/* Loading states */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+  border-radius: 50%;
+  border-bottom: 2px solid rgb(37 99 235);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Notification toasts */
+.toast-success {
+  background-color: rgb(34 197 94);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.toast-error {
+  background-color: rgb(239 68 68);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.toast-info {
+  background-color: rgb(59 130 246);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Utility classes */
+.text-balance {
+  text-wrap: balance;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animation utilities */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.bounce-in {
+  animation: bounceIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes bounceIn {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.3); 
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.05); 
+  }
+  70% { 
+    transform: scale(0.9); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
+/* Responsive design helpers */
+@media (max-width: 640px) {
+  .table-responsive table {
+    font-size: 0.875rem;
+  }
+  
+  .modal-content {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+}

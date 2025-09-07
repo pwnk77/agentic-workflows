@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Reimbursement Demo</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js CDN -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Google Fonts - Outfit and Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-50 font-poppins min-h-screen" x-data="expenseApp()">
+    <!-- Loading Spinner -->
+    <div x-show="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 flex items-center">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <span class="ml-3 text-gray-700">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Navigation Header -->
+    <nav class="nav-header">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1>
+                        Expense Reimbursement Demo
+                    </h1>
+                </div>
+                
+                <!-- User Info & Role Switcher -->
+                <div class="flex items-center space-x-4" x-show="currentUser">
+                    <div class="text-sm nav-user-info">
+                        <span>Welcome, </span>
+                        <span class="nav-user-name" x-text="currentUser?.name"></span>
+                        <span class="text-xs bg-white bg-opacity-20 text-white px-2 py-1 rounded-full ml-2" x-text="currentUser?.role"></span>
+                    </div>
+                    
+                    <!-- Role Switcher -->
+                    <select x-model="selectedRole" @change="switchRole()" 
+                            class="text-sm border border-gray-300 rounded-md px-3 py-1 bg-white">
+                        <option value="employee@demo.com">Employee View</option>
+                        <option value="manager@demo.com">Manager View</option>
+                        <option value="finance@demo.com">Finance View</option>
+                    </select>
+                    
+                    <button @click="logout()" 
+                            class="text-sm text-white hover:text-blue-200 px-3 py-1 border border-white border-opacity-30 rounded-md hover:bg-white hover:bg-opacity-10 transition-colors">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Login Form (shown when not authenticated) -->
+        <div x-show="!currentUser" class="max-w-md mx-auto">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-outfit font-bold text-gray-900 mb-6 text-center">
+                    Demo Login
+                </h2>
+                <form @submit.prevent="login()">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Select Demo User
+                        </label>
+                        <select x-model="selectedRole" required
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="employee@demo.com">Employee (John Smith)</option>
+                            <option value="manager@demo.com">Manager (Sarah Johnson)</option>
+                            <option value="finance@demo.com">Finance (Michael Chen)</option>
+                        </select>
+                    </div>
+                    <button type="submit" 
+                            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 font-medium">
+                        Login as Demo User
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Dashboard Content (shown when authenticated) -->
+        <div x-show="currentUser" class="space-y-6">
+            <!-- Dashboard Header -->
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-outfit font-bold text-gray-900" 
+                    x-text="getDashboardTitle()"></h2>
+                    
+                <!-- Action Button (varies by role) -->
+                <button x-show="currentUser?.role === 'employee'" 
+                        @click="openModal('submit', 'Submit New Expense Claim')"
+                        class="btn-primary">
+                    Submit New Claim
+                </button>
+            </div>
+
+            <!-- Claims List -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 x-text="getClaimsListTitle()"></h3>
+                </div>
+                
+                <!-- Claims Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Claim Details
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Amount
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Date
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <template x-for="claim in claims" :key="claim.id">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900" 
+                                                 x-text="claim.category.charAt(0).toUpperCase() + claim.category.slice(1)"></div>
+                                            <div class="text-sm text-gray-500" x-text="claim.description || 'No description'"></div>
+                                            <div x-show="currentUser?.role !== 'employee'" 
+                                                 class="text-xs text-gray-400" x-text="'By: ' + claim.employee_name"></div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        $<span x-text="parseFloat(claim.amount).toFixed(2)"></span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                                              :class="getStatusClass(claim.status)">
+                                            <span x-text="getStatusText(claim.status)"></span>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" 
+                                        x-text="new Date(claim.expense_date).toLocaleDateString()"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button @click="viewClaimDetails(claim)" 
+                                                class="text-blue-600 hover:text-blue-900 mr-3">
+                                            View
+                                        </button>
+                                        <button x-show="canReviewClaim(claim)" 
+                                                @click="openReviewModal(claim)"
+                                                class="text-green-600 hover:text-green-900 mr-3">
+                                            Review
+                                        </button>
+                                        <button x-show="canProcessClaim(claim)" 
+                                                @click="openProcessModal(claim)"
+                                                class="text-purple-600 hover:text-purple-900">
+                                            Process
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                            <tr x-show="claims.length === 0">
+                                <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                    No claims found
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Notification Toast -->
+    <div x-show="notification" 
+         x-transition
+         class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-40">
+        <span x-text="notification"></span>
+    </div>
+
+    <!-- Error Toast -->
+    <div x-show="error" 
+         x-transition
+         class="fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-40">
+        <span x-text="error"></span>
+    </div>
+
+    <!-- Expense Submission Modal -->
+    <div x-show="showSubmissionForm" 
+         x-transition
+         class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="flex justify-between items-center">
+                    <h3 class="modal-title">Submit New Expense Claim</h3>
+                    <button @click="closeModal()" 
+                            class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <form @submit.prevent="submitClaim()" class="modal-body space-y-6">
+                <!-- Amount Field -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Amount *
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2 text-gray-500">$</span>
+                        <input type="number" 
+                               x-model="newClaim.amount" 
+                               step="0.01" 
+                               min="0.01" 
+                               max="10000"
+                               required
+                               class="form-input pl-8"
+                               placeholder="0.00">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Maximum $10,000.00</p>
+                </div>
+
+                <!-- Category Field -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Category *
+                    </label>
+                    <select x-model="newClaim.category" required class="form-input">
+                        <option value="">Select a category</option>
+                        <option value="meals">Meals & Entertainment</option>
+                        <option value="travel">Travel & Transportation</option>
+                        <option value="supplies">Office Supplies</option>
+                        <option value="equipment">Equipment & Software</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <!-- Expense Date Field -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Expense Date *
+                    </label>
+                    <input type="date" 
+                           x-model="newClaim.expense_date" 
+                           required
+                           :max="today"
+                           class="form-input">
+                    <p class="text-xs text-gray-500 mt-1">Date cannot be in the future or more than 90 days old</p>
+                </div>
+
+                <!-- Description Field -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Description
+                    </label>
+                    <textarea x-model="newClaim.description" 
+                              class="form-input" 
+                              rows="3" 
+                              maxlength="500"
+                              placeholder="Brief description of the expense (optional)"></textarea>
+                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>Optional</span>
+                        <span x-text="(newClaim.description || '').length + '/500'"></span>
+                    </div>
+                </div>
+
+                <!-- Receipt Upload Field -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Receipt Image
+                    </label>
+                    
+                    <!-- File Upload Area -->
+                    <div class="file-upload" 
+                         @click="$refs.receiptInput.click()"
+                         @dragover.prevent="$event.currentTarget.classList.add('dragover')"
+                         @dragleave.prevent="$event.currentTarget.classList.remove('dragover')"
+                         @drop.prevent="handleReceiptDrop($event)"
+                         :class="{'dragover': dragover}">
+                        <input type="file" 
+                               x-ref="receiptInput"
+                               @change="handleReceiptUpload($event)"
+                               accept="image/jpeg,image/png,image/jpg"
+                               class="hidden">
+                        
+                        <div x-show="!newClaim.receipt_data">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-600">
+                                    <span class="font-medium text-blue-600 hover:text-blue-500 cursor-pointer">
+                                        Click to upload
+                                    </span> or drag and drop
+                                </p>
+                                <p class="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Receipt Preview -->
+                        <div x-show="newClaim.receipt_data" class="receipt-preview">
+                            <img :src="newClaim.receipt_data" alt="Receipt preview" class="w-full h-32 object-cover">
+                            <div class="p-2 bg-gray-50 text-center">
+                                <p class="text-xs text-gray-600" x-text="newClaim.receipt_filename"></p>
+                                <button type="button" 
+                                        @click.stop="removeReceipt()"
+                                        class="text-xs text-red-600 hover:text-red-800 mt-1">
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validation Errors -->
+                <div x-show="submissionErrors.length > 0" 
+                     class="bg-red-50 border border-red-200 rounded-md p-3">
+                    <div class="flex">
+                        <svg class="flex-shrink-0 h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">
+                                Please fix the following errors:
+                            </h3>
+                            <ul class="mt-1 text-sm text-red-700 list-disc list-inside">
+                                <template x-for="error in submissionErrors" :key="error">
+                                    <li x-text="error"></li>
+                                </template>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            
+            <div class="modal-footer">
+                <button type="button" 
+                        @click="closeModal()"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        @click="submitClaim()"
+                        :disabled="submitting"
+                        class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span x-show="submitting">Submitting...</span>
+                    <span x-show="!submitting">Submit Claim</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Claim Review Modal -->
+    <div x-show="showReviewModal && selectedClaim" 
+         x-transition
+         class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="flex justify-between items-center">
+                    <h3 class="modal-title">Review Expense Claim</h3>
+                    <button @click="closeReviewModal()" 
+                            class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Claim Details -->
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <h4 class="font-medium text-gray-900 mb-3">Claim Details</h4>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-500">Employee:</span>
+                            <span class="ml-2 font-medium" x-text="selectedClaim?.employee_name"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Amount:</span>
+                            <span class="ml-2 font-medium">$<span x-text="parseFloat(selectedClaim?.amount || 0).toFixed(2)"></span></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Category:</span>
+                            <span class="ml-2 font-medium capitalize" x-text="selectedClaim?.category"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Date:</span>
+                            <span class="ml-2 font-medium" x-text="new Date(selectedClaim?.expense_date).toLocaleDateString()"></span>
+                        </div>
+                    </div>
+                    <div x-show="selectedClaim?.description" class="mt-3">
+                        <span class="text-gray-500">Description:</span>
+                        <p class="mt-1 text-gray-900" x-text="selectedClaim?.description"></p>
+                    </div>
+                </div>
+
+                <!-- Receipt Display -->
+                <div x-show="selectedClaim?.receipt_data" class="mb-6">
+                    <h4 class="font-medium text-gray-900 mb-3">Receipt</h4>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <img :src="selectedClaim?.receipt_data" 
+                             alt="Receipt" 
+                             class="max-w-full h-auto max-h-96 mx-auto border rounded">
+                        <p class="text-center text-sm text-gray-500 mt-2" x-text="selectedClaim?.receipt_filename"></p>
+                    </div>
+                </div>
+
+                <!-- Review Form -->
+                <form @submit.prevent="submitReview()" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Decision *
+                        </label>
+                        <div class="flex space-x-4">
+                            <label class="flex items-center">
+                                <input type="radio" 
+                                       x-model="reviewForm.action" 
+                                       value="approved"
+                                       class="mr-2 text-green-600 focus:ring-green-500">
+                                <span class="text-green-700 font-medium">Approve</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" 
+                                       x-model="reviewForm.action" 
+                                       value="rejected"
+                                       class="mr-2 text-red-600 focus:ring-red-500">
+                                <span class="text-red-700 font-medium">Reject</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Comments <span x-show="reviewForm.action === 'rejected'" class="text-red-500">*</span>
+                        </label>
+                        <textarea x-model="reviewForm.comments" 
+                                  :required="reviewForm.action === 'rejected'"
+                                  class="form-input" 
+                                  rows="4" 
+                                  maxlength="1000"
+                                  placeholder="Add your review comments (required for rejections)"></textarea>
+                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                            <span x-show="reviewForm.action === 'rejected'">Required for rejections</span>
+                            <span x-show="reviewForm.action !== 'rejected'">Optional</span>
+                            <span x-text="(reviewForm.comments || '').length + '/1000'"></span>
+                        </div>
+                    </div>
+
+                    <!-- Review Validation Errors -->
+                    <div x-show="reviewErrors.length > 0" 
+                         class="bg-red-50 border border-red-200 rounded-md p-3">
+                        <div class="flex">
+                            <svg class="flex-shrink-0 h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800">
+                                    Please fix the following errors:
+                                </h3>
+                                <ul class="mt-1 text-sm text-red-700 list-disc list-inside">
+                                    <template x-for="error in reviewErrors" :key="error">
+                                        <li x-text="error"></li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" 
+                        @click="closeReviewModal()"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="button" 
+                        @click="submitReview()"
+                        :disabled="reviewing || !reviewForm.action"
+                        :class="reviewForm.action === 'approved' ? 'btn-approve' : 'btn-reject'"
+                        class="disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span x-show="reviewing">Processing...</span>
+                    <span x-show="!reviewing && reviewForm.action === 'approved'">Approve Claim</span>
+                    <span x-show="!reviewing && reviewForm.action === 'rejected'">Reject Claim</span>
+                    <span x-show="!reviewing && !reviewForm.action">Select Decision</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Claim Details Modal -->
+    <div x-show="showDetailsModal && selectedClaim" 
+         x-transition
+         class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="flex justify-between items-center">
+                    <h3 class="modal-title">Expense Claim Details</h3>
+                    <button @click="closeDetailsModal()" 
+                            class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="modal-body space-y-6">
+                <!-- Basic Details -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="font-medium text-gray-900 mb-3">Claim Information</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-500">Claim ID:</span>
+                            <span class="ml-2 font-mono" x-text="selectedClaim?.id"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Employee:</span>
+                            <span class="ml-2 font-medium" x-text="selectedClaim?.employee_name"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Amount:</span>
+                            <span class="ml-2 font-medium">$<span x-text="parseFloat(selectedClaim?.amount || 0).toFixed(2)"></span></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Category:</span>
+                            <span class="ml-2 font-medium capitalize" x-text="selectedClaim?.category"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Expense Date:</span>
+                            <span class="ml-2 font-medium" x-text="new Date(selectedClaim?.expense_date).toLocaleDateString()"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Status:</span>
+                            <span class="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                                  :class="getStatusClass(selectedClaim?.status)">
+                                <span x-text="getStatusText(selectedClaim?.status)"></span>
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Submitted:</span>
+                            <span class="ml-2" x-text="new Date(selectedClaim?.created_at).toLocaleDateString()"></span>
+                        </div>
+                    </div>
+                    <div x-show="selectedClaim?.description" class="mt-3">
+                        <span class="text-gray-500">Description:</span>
+                        <p class="mt-1 text-gray-900" x-text="selectedClaim?.description"></p>
+                    </div>
+                </div>
+
+                <!-- Review Information -->
+                <div x-show="selectedClaim?.review_action" class="bg-blue-50 rounded-lg p-4">
+                    <h4 class="font-medium text-gray-900 mb-3">Review Details</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-500">Reviewer:</span>
+                            <span class="ml-2 font-medium" x-text="selectedClaim?.reviewer_name"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Decision:</span>
+                            <span class="ml-2 font-medium capitalize" 
+                                  :class="selectedClaim?.review_action === 'approved' ? 'text-green-700' : 'text-red-700'"
+                                  x-text="selectedClaim?.review_action"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Review Date:</span>
+                            <span class="ml-2" x-text="new Date(selectedClaim?.reviewed_at).toLocaleDateString()"></span>
+                        </div>
+                    </div>
+                    <div x-show="selectedClaim?.review_comments" class="mt-3">
+                        <span class="text-gray-500">Comments:</span>
+                        <p class="mt-1 text-gray-900" x-text="selectedClaim?.review_comments"></p>
+                    </div>
+                </div>
+
+                <!-- Payment Information -->
+                <div x-show="selectedClaim?.payment_date" class="bg-green-50 rounded-lg p-4">
+                    <h4 class="font-medium text-gray-900 mb-3">Payment Details</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-500">Processed By:</span>
+                            <span class="ml-2 font-medium" x-text="selectedClaim?.processor_name"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Payment Date:</span>
+                            <span class="ml-2" x-text="new Date(selectedClaim?.payment_date).toLocaleDateString()"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Method:</span>
+                            <span class="ml-2 capitalize" x-text="selectedClaim?.payment_method?.replace('_', ' ')"></span>
+                        </div>
+                        <div x-show="selectedClaim?.reference_number">
+                            <span class="text-gray-500">Reference:</span>
+                            <span class="ml-2 font-mono" x-text="selectedClaim?.reference_number"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Receipt Display -->
+                <div x-show="selectedClaim?.receipt_data">
+                    <h4 class="font-medium text-gray-900 mb-3">Receipt</h4>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <img :src="selectedClaim?.receipt_data" 
+                             alt="Receipt" 
+                             class="max-w-full h-auto max-h-96 mx-auto border rounded cursor-pointer"
+                             @click="openReceiptModal()">
+                        <p class="text-center text-sm text-gray-500 mt-2" x-text="selectedClaim?.receipt_filename"></p>
+                        <p class="text-center text-xs text-gray-400 mt-1">Click to view full size</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" 
+                        @click="closeDetailsModal()"
+                        class="btn-secondary">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Processing Modal -->
+    <div x-show="showProcessModal && selectedClaim" 
+         x-transition
+         class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="flex justify-between items-center">
+                    <h3 class="modal-title">Process Payment</h3>
+                    <button @click="closeProcessModal()" 
+                            class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Claim Summary -->
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <h4 class="font-medium text-gray-900 mb-3">Claim to Process</h4>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-500">Employee:</span>
+                            <span class="ml-2 font-medium" x-text="selectedClaim?.employee_name"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Amount:</span>
+                            <span class="ml-2 font-medium text-green-600">$<span x-text="parseFloat(selectedClaim?.amount || 0).toFixed(2)"></span></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Category:</span>
+                            <span class="ml-2 font-medium capitalize" x-text="selectedClaim?.category"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Approved By:</span>
+                            <span class="ml-2 font-medium" x-text="selectedClaim?.reviewer_name"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Form -->
+                <form @submit.prevent="submitPayment()" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Payment Date *
+                        </label>
+                        <input type="date" 
+                               x-model="processForm.payment_date" 
+                               required
+                               :max="today"
+                               class="form-input">
+                        <p class="text-xs text-gray-500 mt-1">Date when payment was processed</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Payment Method
+                        </label>
+                        <select x-model="processForm.payment_method" class="form-input">
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="check">Check</option>
+                            <option value="cash">Cash</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Reference Number
+                        </label>
+                        <input type="text" 
+                               x-model="processForm.reference_number" 
+                               class="form-input"
+                               maxlength="100"
+                               placeholder="e.g., TXN-2025-001">
+                        <p class="text-xs text-gray-500 mt-1">Optional reference number for tracking</p>
+                    </div>
+
+                    <!-- Processing Validation Errors -->
+                    <div x-show="processErrors.length > 0" 
+                         class="bg-red-50 border border-red-200 rounded-md p-3">
+                        <div class="flex">
+                            <svg class="flex-shrink-0 h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800">
+                                    Please fix the following errors:
+                                </h3>
+                                <ul class="mt-1 text-sm text-red-700 list-disc list-inside">
+                                    <template x-for="error in processErrors" :key="error">
+                                        <li x-text="error"></li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" 
+                        @click="closeProcessModal()"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="button" 
+                        @click="submitPayment()"
+                        :disabled="processing"
+                        class="btn-process disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span x-show="processing">Processing...</span>
+                    <span x-show="!processing">Process Payment</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
