@@ -32,8 +32,9 @@ const MCP_INSTRUCTIONS = `
 
 **launch_dashboard** - Start web dashboard interface
 • Parameters: port (number, optional) - default: 4567
-• Returns: Dashboard URL (http://localhost:4567)
+• Returns: Dashboard URL (http://localhost:PORT)
 • Usage: Launch CRUD interface for visual spec management
+• IMPORTANT: Run refresh_metadata first to populate dashboard with specs
 
 ### 📋 WORKFLOW INTEGRATION
 
@@ -49,8 +50,12 @@ refresh_metadata(reason: "engineer command completed")
 
 **For dashboard access:**
 \`\`\`
-launch_dashboard() // Spawns at http://localhost:3000
+# IMPORTANT: Always refresh metadata before launching dashboard
+refresh_metadata(reason: "preparing dashboard data")
+launch_dashboard(port: 3000) // Spawns dashboard with all specs visible
 \`\`\`
+
+**Note:** The dashboard requires metadata to be refreshed first to see all specifications from subdirectories.
 
 ### 📁 FILE STRUCTURE
 • Specs: ../docs/SPEC-*.md

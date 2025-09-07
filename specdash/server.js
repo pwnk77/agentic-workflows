@@ -4,7 +4,7 @@ const path = require('path');
 const chokidar = require('chokidar');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4567;
 const DOCS_PATH = path.resolve(__dirname, '../docs');
 const METADATA_FILE = path.join(DOCS_PATH, '.spec-metadata.json'); // SHARED with MCP
 
@@ -19,34 +19,53 @@ let watcher = null;
 // Helper functions inline
 async function scanDocs() {
   try {
-    const files = await fs.readdir(DOCS_PATH);
+    // Recursively scan for SPEC files in all subdirectories
+    const scanDirectory = async (dir) => {
+      const results = [];
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          // Recursively scan subdirectories
+          const subResults = await scanDirectory(fullPath);
+          results.push(...subResults);
+        } else if (entry.name.startsWith('SPEC-') && entry.name.endsWith('.md')) {
+          results.push(fullPath);
+        }
+      }
+      return results;
+    };
+    
+    const specFiles = await scanDirectory(DOCS_PATH);
     const specs = {};
     
-    for (const file of files) {
-      if (file.startsWith('SPEC-') && file.endsWith('.md')) {
-        const filePath = path.join(DOCS_PATH, file);
-        const content = await fs.readFile(filePath, 'utf-8');
-        const stats = await fs.stat(filePath);
-        const title = content.match(/^#\s+(.+)/m)?.[1] || file;
-        
-        // Check if we have existing metadata with manual overrides
-        const existingMeta = metadataCache[file];
-        const hasManualStatus = existingMeta?.manualStatus;
-        const hasManualPriority = existingMeta?.manualPriority;
-        
-        specs[file] = {
-          filename: file,
-          title,
-          category: detectCategory(content),
-          status: hasManualStatus ? existingMeta.status : detectStatus(content),
-          priority: hasManualPriority ? existingMeta.priority : detectPriority(content),
-          modified: stats.mtime.toISOString(),
-          created: stats.birthtime.toISOString(),
-          manualStatus: hasManualStatus || false,
-          manualPriority: hasManualPriority || false
-        };
-        
-      }
+    for (const filePath of specFiles) {
+      const file = path.basename(filePath);
+      const content = await fs.readFile(filePath, 'utf-8');
+      const stats = await fs.stat(filePath);
+      const title = content.match(/^#\s+(.+)/m)?.[1] || file;
+      
+      // Calculate relative path from DOCS_PATH
+      const relativePath = path.relative(DOCS_PATH, filePath);
+      
+      // Check if we have existing metadata with manual overrides
+      const existingMeta = metadataCache[file];
+      const hasManualStatus = existingMeta?.manualStatus;
+      const hasManualPriority = existingMeta?.manualPriority;
+      
+      specs[file] = {
+        filename: file,
+        relativePath: relativePath,  // Store the relative path
+        title,
+        category: detectCategory(content),
+        status: hasManualStatus ? existingMeta.status : detectStatus(content),
+        priority: hasManualPriority ? existingMeta.priority : detectPriority(content),
+        modified: stats.mtime.toISOString(),
+        created: stats.birthtime.toISOString(),
+        manualStatus: hasManualStatus || false,
+        manualPriority: hasManualPriority || false
+      };
     }
     
     const metadata = {
@@ -146,11 +165,22 @@ app.get('/api/specs', async (req, res) => {
 
 app.get('/api/specs/:filename', async (req, res) => {
   try {
-    const filePath = path.join(DOCS_PATH, req.params.filename);
+    // Get the relative path from metadata cache
+    const specMetadata = metadataCache[req.params.filename];
+    let filePath;
+    
+    if (specMetadata && specMetadata.relativePath) {
+      // Use the stored relative path
+      filePath = path.join(DOCS_PATH, specMetadata.relativePath);
+    } else {
+      // Fallback to root docs folder (for backward compatibility)
+      filePath = path.join(DOCS_PATH, req.params.filename);
+    }
+    
     const content = await fs.readFile(filePath, 'utf-8');
     res.json({ 
       content, 
-      metadata: metadataCache[req.params.filename] || {}
+      metadata: specMetadata || {}
     });
   } catch (err) {
     console.error('Error getting spec:', err);
@@ -168,7 +198,17 @@ app.put('/api/specs/:filename', async (req, res) => {
       return res.status(400).json({ error: 'Content is required' });
     }
     
-    const filePath = path.join(DOCS_PATH, req.params.filename);
+    // Get the relative path from metadata cache
+    const specMetadata = metadataCache[req.params.filename];
+    let filePath;
+    
+    if (specMetadata && specMetadata.relativePath) {
+      // Use the stored relative path
+      filePath = path.join(DOCS_PATH, specMetadata.relativePath);
+    } else {
+      // Fallback to root docs folder (for backward compatibility)
+      filePath = path.join(DOCS_PATH, req.params.filename);
+    }
     
     // 1. Update content with metadata if provided
     let updatedContent = content;
@@ -251,7 +291,18 @@ app.put('/api/specs/:filename', async (req, res) => {
 
 app.delete('/api/specs/:filename', async (req, res) => {
   try {
-    const filePath = path.join(DOCS_PATH, req.params.filename);
+    // Get the relative path from metadata cache
+    const specMetadata = metadataCache[req.params.filename];
+    let filePath;
+    
+    if (specMetadata && specMetadata.relativePath) {
+      // Use the stored relative path
+      filePath = path.join(DOCS_PATH, specMetadata.relativePath);
+    } else {
+      // Fallback to root docs folder (for backward compatibility)
+      filePath = path.join(DOCS_PATH, req.params.filename);
+    }
+    
     await fs.unlink(filePath);
     await scanDocs(); // Refresh metadata
     
@@ -281,7 +332,8 @@ function startWatcher() {
     watcher.close();
   }
   
-  watcher = chokidar.watch(path.join(DOCS_PATH, 'SPEC-*.md'), {
+  // Watch for SPEC-*.md files in all subdirectories
+  watcher = chokidar.watch(path.join(DOCS_PATH, '**/SPEC-*.md'), {
     persistent: true,
     ignoreInitial: true,
     usePolling: false
