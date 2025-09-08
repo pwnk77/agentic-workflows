@@ -147,10 +147,8 @@ npm install -g specgen-mcp
 claude mcp add specgen -s user -- npx -y specgen-mcp@latest
 
 # Initialize in your project
-specgen init
+specgen-setup
 
-# Launch dashboard
-specgen dashboard
 ```
 
 See [QUICKSTART.md](./QUICKSTART.md) for detailed setup instructions.
