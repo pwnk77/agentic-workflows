@@ -144,7 +144,7 @@ Once installed, try your first workflow:
 npm install -g specgen-mcp
 
 # Configure Claude Code (if not auto-configured)
-claude mcp add specgen -s user -- npx -y specgen-mcp@latest
+claude mcp add specgen -s project -- npx -y specgen-mcp@latest
 
 # Initialize in your project
 specgen-setup
