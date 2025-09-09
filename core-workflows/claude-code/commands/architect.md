@@ -1,58 +1,27 @@
 ---
-description: MCP-integrated systematic feature analysis and specification generation through requirement crystallization and codebase exploration
-allowed-tools: Task, TodoWrite, Read, Write, Edit, Glob, Grep, WebFetch, mcp__specgen-mcp__get_spec, mcp__specgen-mcp__search_specs, mcp__specgen-mcp__list_specs, mcp__specgen-mcp__launch_dashboard, mcp__specgen-mcp__refresh_metadata, mcp__static-analysis__*
+description: Systematic feature analysis and SPEC document generation through requirement crystallization and precise codebase exploration using specialized explorer agents
+allowed-tools: Task, TodoWrite, Read, Glob, Grep, WebFetch, mcp__specgen-mcp__get_spec, mcp__specgen-mcp__search_specs, mcp__specgen-mcp__list_specs, mcp__specgen-mcp__launch_dashboard, mcp__specgen-mcp__refresh_metadata, mcp__static-analysis__*
 argument-hint: <feature-description>
 ---
 
 # ARCHITECT MODE SPECIFICATION COMMAND
 
-**Goal**: This command guides the AI through a structured process to analyze a feature request, explore the codebase, and create detailed specifications using MCP (Model Context Protocol) integration.
+**Goal**: To be executed in Claude Code. This command guides the AI through a structured process to analyze a feature request, explore the codebase using specialized explorer agents, and prepare a detailed plan for a specification document with precise implementation details.
 
-**Process Overview**: You will act as a senior architect. You will perform requirement crystallization, codebase exploration, and specification generation using MCP tools. The analysis leverages SpecGen MCP for specification management and optionally Static Analysis MCP for TypeScript codebases.
+**Process Overview**: You will act as a senior architect. You will perform requirement crystallization, deploy specialized explorer agents for codebase analysis, and generate comprehensive specification documents. The analysis will conclude when you have gathered all necessary information and achieved a high confidence level.
 
-**MCP Integration**: This command uses MCP tools for enhanced specification management:
-- **specgen MCP** (`mcp__specgen-mcp__*`) for specification management with intelligent categorization
-- **Static Analysis MCP** (`mcp__static-analysis__*`) for TypeScript analysis (optional)
+**Variable Definitions**: 
+- `$FILENAME` = `docs/SPEC-[YYYYMMDD]-[feature-name].md` (primary SPEC file path)
+- `$SPEC_PATH` = `docs/SPEC-[YYYYMMDD]-[feature-name].md` (file path reference)
+- `$PROJECT_ROOT` = current working directory (for relative path consistency)
 
-**Auto-Categorization**: SpecGen automatically categorizes specifications based on:
-- **Content Analysis**: Keywords, frameworks, and architectural patterns automatically detect feature groups
-- **Existing Categories**: Uses MCP to discover existing categories and assign specs to appropriate groups  
-- **Category Intelligence**: Dashboard organizes specs by categories for improved navigation and project structure
-- **Metadata Enrichment**: Automatically adds frontmatter with category, status, and priority for enhanced searchability
-
-<codebase-analysis-protocol>
-IF TYPESCRIPT DETECTED:
-Use mcp__static-analysis__* tools for enhanced code understanding:
-- mcp__static-analysis__analyze_file: Analyze individual TypeScript files for symbols, imports, exports
-- mcp__static-analysis__find_references: Track symbol usage across codebase  
-- mcp__static-analysis__get_compilation_errors: Identify TypeScript compilation issues
-
-Usage: Start with key files (main.ts, app.ts, index.ts), trace dependencies, check compilation errors
-
-ELSE (Non-TypeScript):
-Use traditional bash commands for code discovery:
-- find . -name "*.js" -o -name "*.py" -o -name "*.php" | head -20
-- grep -r "function\|class\|def" src/ | head -10
-- find . -name "package.json" -o -name "requirements.txt" -o -name "composer.json"
-
-CRITICAL: Always detect language first, then choose appropriate analysis approach
-</codebase-analysis-protocol>
-
-## CONTEXT MANAGEMENT PROTOCOL
-
-**SPEC Document as Central Context**: The SPEC document serves as the single source of truth for all architectural analysis, subagent contexts, and implementation planning.
-
-**MCP Operations (Read-Only)**:
-- Use `mcp__specgen-mcp__list_specs` to discover existing specifications and categories
-- Use `mcp__specgen-mcp__search_specs` to find related specifications for context
-- Use `mcp__specgen-mcp__get_spec` to load existing specifications for reference
-- Use `mcp__specgen-mcp__refresh_metadata` after SPEC creation for dashboard synchronization
-
-**Direct File Operations (Write)**:
-- **SPEC Creation**: Use Write tool to create `docs/SPEC-[YYYYMMDD]-[feature-name].md`
-- **Architecture Updates**: Use Edit tool to add analysis sections (Backend Architecture, Frontend Architecture, etc.)
-- **Implementation Plans**: Use Edit tool to append implementation plan after user approval
-- **Context Consolidation**: All subagent insights are consolidated into the single SPEC document
+**Directory Structure Pattern**:
+```
+docs/
+├── SPEC-20240115-user-authentication.md
+├── SPEC-20240115-payment-integration.md
+└── SPEC-20240116-notification-system.md
+```
 
 ## PHASE 1: REQUIREMENT CRYSTALLIZATION
 
@@ -79,7 +48,6 @@ Before asking any questions, perform a deep analysis and ULTRA THINK the ask fro
    - What is the biggest risk that could cause this project to fail? (e.g., technical uncertainty, unclear requirements, dependency on another team).
    - How can I de-risk the project early? Can I build a small proof-of-concept?
    - What are the explicit non-goals for this version? What are we consciously choosing *not* to build?
-   - Ensure the solution is appropriately scoped and avoid over-engineering the implementation.
 </thinking>
 
 **Initial Understanding Protocol:**
@@ -88,335 +56,292 @@ Based on the deep analysis, formulate an initial understanding of the core requi
 **Iterative Clarification Cycle:**
 The goal is to move from uncertainty to a >95% confidence level by asking targeted questions.
 
-1. **Generate Clarification Questions (Upto 10 per iteration):**
-   Generate clarification questions (Upto a maximum of 10 per iteration, not compulsory) to eliminate ambiguity
-   - Based on the risks and ambiguities identified in the deep analysis, formulate up to questions with options for the user.
-   - Each question must be designed to eliminate ambiguity and should present concrete options in A/B/C format where possible to help users make quicker decisions.
+1. **Generate Clarification Questions (Max 5 per iteration):**
+   Generate clarification questions (Max 5 per iteration) to eliminate ambiguity
+   - Based on the risks and ambiguities identified in the deep analysis, formulate up to 5 specific questions.
+   - Each question must be designed to eliminate ambiguity and should present concrete options or examples where possible.
    - Focus on a logical progression: start with high-level conceptual questions and move towards detailed behavior, edge cases, and integration points.
-   - **IMPORTANT: Number all questions (1., 2., 3., etc.) so users can easily respond by referencing question numbers**
-   - Example format: "1. For user authentication, would you prefer: A) OAuth integration, B) Custom JWT implementation, or C) Third-party service like Auth0?"
-   - Tell users: "Please respond with question numbers and your answers (e.g., '1A, 2B, 3C')"
 2. **Synthesize Answers & Update Understanding:**
    - After receiving answers, update the internal understanding of the requirements.
    - Re-evaluate the confidence level.
 3. **Repeat or Proceed:**
    - If confidence is still below 95%, repeat the cycle with a new set of questions.
-   - If confidence is >95%, create initial SPEC document and proceed to Phase 2.
+   - If confidence is >95%, proceed to Phase 2.
 
-**SPEC Creation Protocol:**
-Once requirements are crystallized (95%+ confidence), immediately create the specification:
+## PHASE 2: SPECIALIZED CODEBASE EXPLORATION
 
-**Dynamic Category Assignment Protocol:**
-Use MCP to determine the appropriate category before SPEC creation:
+Deploy context-driven explorer agents with precise task definitions and structured output requirements to prevent token blocking.
 
-1. **Get Category Metadata**: Use `mcp__specgen-mcp__list_specs` to retrieve all existing categories
-2. **Category Selection**: Analyze feature requirements against existing categories and select the best match
-3. **Category Assignment**: Include determined category in SPEC frontmatter
+**Context Management Protocol:**
+- All explorers read problem context from $FILENAME using standardized Glob + Read pattern
+- Each explorer updates specific SPEC sections using Edit tool with structured format
+- Focus analysis on solving the stated user problem with architectural relevance
+- Use variable consistency ($FILENAME, $PROJECT_ROOT, $SPEC_PATH) throughout
 
-**Automated Context Discovery Protocol:**
-For existing repositories with SPEC files, gather related context before SPEC creation:
+**Explorer Agent Deployment Protocol:**
 
-1. **Repository Detection**: Check if `docs/` folder exists with SPEC files
-2. **Context Search**: Use `mcp__specgen-mcp__search_specs(query: [feature-keywords])` to find related specifications
-3. **Related SPEC Discovery**: Use `mcp__specgen-mcp__list_specs()` for category context and existing patterns
-4. **Context Integration**: Pass relevant context to agents via SPEC document by including related findings in the initial SPEC content
-
-**SPEC Creation Process:**
-
-1. **Create docs/ folder** if it doesn't exist (especially for new repositories)
-2. **Use Write tool** to create: `docs/SPEC-[YYYYMMDD]-[feature-name].md`
-3. **Include frontmatter** with determined category:
-   ```yaml
-   ---
-   title: "SPEC-[YYYYMMDD]-[feature-name]"
-   status: "draft"
-   category: "[determined-category]"
-   priority: "medium"
-   created_at: "[timestamp]"
-   updated_at: "[timestamp]"
-   created_via: "architect"
-   related_specs: []
-   parent_spec_id: null
-   tags: []
-   effort_estimate: null
-   completion: 0
-   ---
-   ```
-
-**Launch Dashboard Immediately:**
-After creating the SPEC template, immediately refresh metadata and launch the dashboard:
-1. **Refresh Metadata**: Call `mcp__specgen-mcp__refresh_metadata(reason: "SPEC template created - preparing dashboard")`
-2. **Launch Dashboard**: Call `mcp__specgen-mcp__launch_dashboard(port: 4567)`
-3. **User Experience**: Dashboard shows the initial SPEC template while analysis continues
-4. **Live Updates**: As explorers add analysis, the SPEC updates are visible in real-time
-
-**Note:** The SPEC document is the single source of truth where all subagent contexts and architectural analysis are consolidated.
-
-## PHASE 2: DYNAMIC CODEBASE EXPLORATION
-
-Deploy context-driven explorer subagents based on feature requirements and codebase characteristics.
-
-**Exploration Strategy Decision Matrix:**
-
-<exploration-decision-protocol>
-**Repository Assessment:**
-1. **NEW REPOSITORY DETECTION**: Check for minimal codebase (< 10 files, no package.json/requirements.txt)
-   - IF NEW REPO: Deploy researcher subagent ONLY for external research and documentation
-   - ELSE: Proceed with selective explorer deployment
-
-2. **FEATURE CONTEXT ANALYSIS**: Analyze feature request to determine required exploration areas
-   - Backend-heavy features: Deploy backend-explorer, database-explorer, integration-explorer
-   - Frontend-heavy features: Deploy frontend-explorer, integration-explorer
-   - Full-stack features: Deploy relevant combination based on complexity
-   - Research-only requests: Deploy researcher subagent only
-
-3. **CODEBASE CHARACTERISTICS**: Detect technology stack and complexity
-   - TypeScript detection: Enable enhanced static analysis protocols
-   - Framework detection: Adapt exploration protocols accordingly
-   - Scale detection: Adjust depth of analysis based on codebase size
-</exploration-decision-protocol>
-
-**Context Engineering Protocol:**
-
-**Pre-Deployment Setup:**
-1. **Context Integration**: Use existing SPEC document (MCP or markdown) as single source of truth for context
-2. **Feature-Specific Task Definition**: Clear scope and boundaries embedded in SPEC document
-3. **Expected Output Format**: Direct integration into SPEC document sections
-4. **Success Criteria**: Measurable completion criteria defined in SPEC document
-
-**Dynamic Subagent Deployment Protocol:**
-
-**BACKEND-FOCUSED DEPLOYMENT**
+### Backend Architecture Analysis
 ```
 Use the backend-explorer subagent for backend architecture analysis.
 
-Context: Current SPEC document (MCP or docs/SPEC-[YYYYMMDD]-[feature-name].md)
-Feature Context: [Backend service, API development, authentication, business logic]
-Task: Analyze service patterns, API design, error handling, authentication flows
-Expected Output: Update SPEC "### 🔧 Backend Architecture" section with actionable insights
-Constraints: research-only, focus on architectural patterns and implementation strategies
+Context: Read problem context from $FILENAME using Glob pattern `docs/SPEC-*[feature]*.md` then Read tool
+Feature Context: Backend service analysis, API development, authentication flows, business logic patterns
+Task: Analyze service patterns, API design, error handling, authentication flows relevant to solving the stated user problem
+Expected Output: Update $FILENAME "### 🔧 Backend Architecture" section via Edit tool with structured insights
+Constraints: 
+- Focus on backend components directly needed to solve the user problem
+- Use structured output format from backend-explorer agent definition
+- Include service patterns, API design, authentication, and error handling
+- Reference specific backend services and patterns relevant to feature implementation
+Success Criteria: SPEC document updated with actionable backend architectural insights
 ```
 
-**DATABASE-FOCUSED DEPLOYMENT**
+### Frontend Architecture Analysis
 ```
-Use the database-explorer subagent for data architecture analysis.
+Use the frontend-explorer subagent for frontend architecture analysis.
 
-Context: Current SPEC document (MCP or docs/SPEC-[YYYYMMDD]-[feature-name].md)
-Feature Context: [Data modeling, migrations, performance, relationships]
-Task: Analyze schema design, relationship patterns, migration strategies, ORM usage
-Expected Output: Update SPEC "### 🗄️ Database Architecture" section with schema insights
-Constraints: research-only, focus on data architecture and performance considerations
-```
-
-**FRONTEND-FOCUSED DEPLOYMENT**
-```
-Use the frontend-explorer subagent for user interface architecture analysis.
-
-Context: Current SPEC document (MCP or docs/SPEC-[YYYYMMDD]-[feature-name].md)
-Feature Context: [UI components, state management, routing, user experience]
-Task: Analyze component architecture, state patterns, routing strategies, design systems
-Expected Output: Update SPEC "### 🎨 Frontend Architecture" section with component insights
-Constraints: research-only, focus on component patterns and user experience architecture
+Context: Read problem context from $FILENAME using Glob pattern `docs/SPEC-*[feature]*.md` then Read tool  
+Feature Context: UI component analysis, state management, routing patterns, user experience design
+Task: Analyze component architecture, state management, routing strategies, design systems relevant to solving the stated user problem
+Expected Output: Update $FILENAME "### 🎨 Frontend Architecture" section via Edit tool with structured insights
+Constraints:
+- Focus on UI components and interactions needed to solve the user problem
+- Use structured output format from frontend-explorer agent definition
+- Include component patterns, state management, routing, and design systems
+- Reference specific UI components and user flows relevant to feature implementation
+Success Criteria: SPEC document updated with actionable frontend architectural insights
 ```
 
-**INTEGRATION-FOCUSED DEPLOYMENT**
+### Database Architecture Analysis
 ```
-Use the integration-explorer subagent for external service and deployment analysis.
+Use the database-explorer subagent for database architecture analysis.
 
-Context: Current SPEC document (MCP or docs/SPEC-[YYYYMMDD]-[feature-name].md)
-Feature Context: [External APIs, deployment, monitoring, third-party services]
-Task: Analyze external integrations, deployment patterns, configuration management
-Expected Output: Update SPEC "### 🔗 Integration Architecture" section with integration insights
-Constraints: research-only, focus on external dependencies and deployment strategies
+Context: Read problem context from $FILENAME using Glob pattern `docs/SPEC-*[feature]*.md` then Read tool
+Feature Context: Data modeling, schema design, relationship patterns, migration strategies, performance optimization
+Task: Analyze schema design, relationship patterns, migration strategies, ORM usage relevant to solving the stated user problem
+Expected Output: Update $FILENAME "### 🗄️ Database Architecture" section via Edit tool with structured insights
+Constraints:
+- Focus on data models and relationships needed to solve the user problem
+- Use structured output format from database-explorer agent definition
+- Include schema design, relationships, migrations, and performance considerations
+- Connect to live database when possible using available MCP tools
+- Reference specific data models and relationships relevant to feature implementation
+Success Criteria: SPEC document updated with actionable database architectural insights
 ```
 
-**RESEARCH-FOCUSED DEPLOYMENT**
+### Integration Architecture Analysis
+```
+Use the integration-explorer subagent for integration architecture analysis.
+
+Context: Read problem context from $FILENAME using Glob pattern `docs/SPEC-*[feature]*.md` then Read tool
+Feature Context: External service integration, deployment patterns, configuration management, monitoring strategies
+Task: Analyze external integrations, deployment patterns, configuration management relevant to solving the stated user problem
+Expected Output: Update $FILENAME "### 🔗 Integration Architecture" section via Edit tool with structured insights
+Constraints:
+- Focus on external services and deployment patterns needed to solve the user problem
+- Use structured output format from integration-explorer agent definition
+- Include service integrations, configuration, deployment, and monitoring
+- Reference specific external services and infrastructure relevant to feature implementation  
+Success Criteria: SPEC document updated with actionable integration architectural insights
+```
+
+### Research and Documentation Analysis
 ```
 Use the researcher subagent for specification research and documentation analysis.
 
-Context: Current SPEC document (MCP or docs/SPEC-[YYYYMMDD]-[feature-name].md)
-Feature Context: [Documentation research, best practices, industry standards]
-Task: Research existing specifications, industry best practices, relevant documentation
-Expected Output: Update SPEC "### 📚 Research Findings" section with comprehensive research insights
-Constraints: research-only, focus on external research and documentation synthesis
-
-DEPLOYMENT CONDITIONS:
-- Always deploy for new repositories (external research only)
-- Deploy for features requiring external API documentation research
-- Deploy for features needing industry best practice research
-- Deploy when existing specification dependencies need analysis
+Context: Read problem context from $FILENAME using Glob pattern `docs/SPEC-*[feature]*.md` then Read tool
+Feature Context: Documentation research, industry best practices, existing specification analysis, external knowledge synthesis
+Task: Research existing specifications, industry best practices, relevant documentation to support solving the stated user problem
+Expected Output: Update $FILENAME "### 📚 Research Findings" section via Edit tool with structured insights
+Constraints:
+- Focus on research that directly supports solving the stated user problem
+- Use structured output format from researcher agent definition
+- Include specification dependencies, external documentation, industry standards
+- Use MCP tools for existing spec analysis and web research for external knowledge
+- Reference specific patterns and best practices relevant to feature implementation
+Success Criteria: SPEC document updated with actionable research insights and recommendations
 ```
 
-**Universal Retrieval Pattern for Each Sub-Agent:**
-1. Read feature context from current SPEC document using Read tool (docs/SPEC-[YYYYMMDD]-[feature-name].md)
-2. Execute specialized research/analysis within defined constraints and scope
-3. Generate structured findings in expected format for SPEC integration
-4. Update SPEC document using Edit tool to modify architectural analysis sections
-5. File watcher automatically updates search index and metadata
-6. Return actionable summary with architectural insights and next steps
-
-**Expected Return Format from Each Agent:**
+**Universal Explorer Response Pattern:**
+Each explorer must return in this format:
 ```
-Task completed: [Summary of architectural findings]
-Output saved: SPEC document "### [Icon] [Section] Architecture" section updated
-Context learned: [Key architectural patterns/constraints discovered]
-Next steps: [Actionable recommendations for architectural decisions]
+Task completed: [Analysis type] finished - [X] components analyzed, [Y] patterns identified for solving [PROBLEM STATEMENT]
+Output saved: SPEC document "### [Icon] [Section] Architecture" section updated via Edit tool with [specific insights]
+Context learned: [Key architectural patterns that address the user problem]
+Next steps: [Actionable recommendations for implementation that solve the user needs]
 ```
 
 ## PHASE 3: REFINEMENT AND FINALIZATION
 
+**MCP Integration (if available):**
+- Use Context7 MCP for Vercel AI SDK & API documentation
+- Use Sequential Thinking (seq-think) MCP for complex task breakdown
+- Research example implementations for complex patterns
+
 **Validation Protocol:**
-1. **Review Architecture Analysis** section in SPEC for cross-layer patterns and constraints 
-2. **Validate Technical Feasibility** against discovered architectural patterns
-3. **Ensure Requirements Coverage** and realistic time estimates
-4. **Engineering Elegance** - ensure that the solution is engineered for elegant solve from the user ask and not overengineered with UNNECESSARY features
-5. **Confidence Level**: Must achieve 95%+ before proceeding
+1. Verify all functional requirements have been considered.
+2. Ensure test scenarios for each requirement are planned.
+3. Validate that time estimates are realistic.
+4. Confirm dependencies are properly mapped.
+5. Check that risk mitigation strategies are in place.
+6. **Confidence Level**: Must achieve 95%+ before proceeding.
 
-**Ready for Implementation Planning:**
-SPEC document contains: Executive Summary, Product Specs, Architecture Analysis (5 perspectives), Technical constraints identified, Dependencies mapped.
+**Feature Breakdown Summary:**
+```
+Specifications ready for generation:
+1. $FILENAME - [Core functionality and architecture analysis]
 
-## PHASE 4: PLAN PRESENTATION  
-
-Present the final plan to the user:
-- Feature summary with technical approach
-- Implementation timeline and effort estimates  
-- Dependencies and risks from Architecture Analysis
-- Request user approval before adding implementation plan to SPEC
-
-## PHASE 5: IMPLEMENTATION PLAN ADDITION
-
-Add detailed implementation plan to the existing SPEC document after user approval.
-
-**User Approval Required**: Present the implementation plan summary and request approval before adding to SPEC.
-
-**Update SPEC with Implementation Plan:**
-Use Edit tool to add `## Implementation Plan` section to existing SPEC document:
-
-**Direct File Update Process:**
-1. Use Edit tool to append `## Implementation Plan` section to existing SPEC file
-2. File watcher automatically detects changes and updates search index
-3. Metadata synchronization happens in real-time
-4. Dashboard reflects changes immediately without manual refresh
-
-**Complete SPEC Document Template Structure:**
-The architect creates SPEC documents with the following standardized template for optimal dashboard rendering:
-
-```markdown
----
-title: "SPEC-[YYYYMMDD]-[feature-name]"
-status: "draft"
-category: "[determined-category]"
-priority: "medium"
-created_at: "[timestamp]"
-updated_at: "[timestamp]"
-created_via: "architect"
-related_specs: []
-parent_spec_id: null
-tags: []
-effort_estimate: null
-completion: 0
----
-
-# 📋 SPEC: [Feature Name]
-
-## 📊 Executive Summary
-Brief overview of the feature, its purpose, and key benefits.
-
-## 📝 Product Specifications
-Detailed functional requirements, user stories, and acceptance criteria.
-
-## 🏗️ Architecture Analysis
-
-### 🔧 Backend Architecture
-*[Updated by backend-explorer subagent]*
-Service patterns, API design, authentication flows, and business logic analysis.
-
-### 🎨 Frontend Architecture  
-*[Updated by frontend-explorer subagent]*
-Component patterns, state management, routing strategies, and design systems.
-
-### 🗄️ Database Architecture
-*[Updated by database-explorer subagent]*
-Schema design, relationship patterns, migration strategies, and ORM usage.
-
-### 🔗 Integration Architecture
-*[Updated by integration-explorer subagent]*
-External integrations, deployment patterns, and configuration management.
-
-### 📚 Research Findings
-*[Updated by researcher subagent]*
-External research, industry best practices, and relevant documentation.
-
-## 🚀 Implementation Plan
-
-### 📋 Task Breakdown by Layer
-
-#### 🗄️ Database Layer
-- [TASK-DB-001]: Schema design and migration scripts
-- [TASK-DB-002]: Data model relationships setup
-- [TASK-DB-003]: Database indexing and optimization
-
-#### ⚙️ Backend Layer
-- [TASK-BE-001]: Core service implementation
-- [TASK-BE-002]: API endpoint creation
-- [TASK-BE-003]: Authentication and authorization
-
-#### 🎨 Frontend Layer
-- [TASK-FE-001]: Component architecture setup
-- [TASK-FE-002]: User interface implementation
-- [TASK-FE-003]: State management integration
-
-#### 🔗 Integration Layer
-- [TASK-INT-001]: External service connections
-- [TASK-INT-002]: Configuration management
-- [TASK-INT-003]: Deployment pipeline setup
-
-#### 🧪 Testing Layer
-- [TASK-TEST-001]: Unit test coverage
-- [TASK-TEST-002]: Integration testing
-- [TASK-TEST-003]: End-to-end validation
-
-### 📊 Dependencies and Sequencing
-- Database layer must complete before Backend layer
-- Backend API must be ready before Frontend integration
-- Core functionality before Integration layer
-- Testing throughout all layers
-
-### ⏱️ Timeline and Effort Estimates
-- Database Layer: [X] hours/days
-- Backend Layer: [X] hours/days
-- Frontend Layer: [X] hours/days
-- Integration Layer: [X] hours/days
-- Testing Layer: [X] hours/days
-- **Total Estimated Effort**: [X] hours/days
-
-### ✅ Success Metrics
-- All unit tests passing
-- Integration tests functional
-- Performance benchmarks met
-- Security requirements satisfied
-- User acceptance criteria fulfilled
-
-## 📈 Execution Logs
-*[Updated by engineer command during implementation]*
-
-## 🐛 Debug Logs
-*[Updated by engineer command during debugging]*
+Total effort: [X days]
+Dependencies mapped: [feature relationships from explorer analysis]
 ```
 
-**Completion:**
+## PHASE 4: SPECIFICATION DOCUMENT GENERATION
 
-**Final Metadata Refresh**:
-Use `mcp__specgen-mcp__refresh_metadata` to finalize the metadata after all analysis:
-- Call `refresh_metadata(reason: "architect command completed - SPEC finalized")`
-- Ensures dashboard shows the complete SPEC with all explorer analysis
-- Updates final status and completion percentage
+Generate SPEC documents based on the user's ask and explorer analysis; the major layers to define are - DATABASE, BACKEND, FRONTEND, INTEGRATION & TESTING; add layers as required if there are nuances in the tasks
 
-**Dashboard Status**:
-- Dashboard was launched earlier and has been showing live updates
-- User can review the complete SPEC in the already-running dashboard
-- All architecture analysis sections are now visible
+**Document Structure:**
+```markdown
 
-🔔 ARCHITECT_COMPLETE: Specification ready with architecture analysis and implementation plan
+# SPEC-[YYYYMMDD]-[feature-name] = [$FILENAME]
 
-"ARCHITECT analysis complete with [X]% confidence. SPEC document contains comprehensive architecture analysis from dynamic explorer deployment and detailed implementation plan. Dashboard is running with complete SPEC visible. Ready for engineer command execution."
+## Executive Summary
+**Feature**: [A concise, descriptive name for the feature.]
+**Impact**: [Describe the business value. What key metric will this improve? (e.g., "Increase user engagement by 15%," "Reduce support tickets by 10%").]
+**Effort**: [High-level estimation in developer-days or sprints.]
+**Risk**: [Assess potential technical, product, and schedule risks with a brief rationale (e.g., "High - requires integration with a poorly documented legacy system").]
+**Dependencies**: [List any other SPEC files or external projects this feature depends on.]
+
+## Product Specifications
+
+### Elevator Pitch
+[A single, compelling sentence that explains the feature's value proposition (e.g., "A seamless one-click checkout experience to boost conversion rates.")]
+
+### Target Users
+- **Primary**: [Who is the main user? Describe their role and how often they'll use this feature (e.g., "Marketing Managers, daily").]
+- **Secondary**: [Who else is affected by this feature? (e.g., "Sales team, weekly").]
+
+### Core Goals
+1. **Performance**: [Specific, measurable performance targets (e.g., "API response time < 200ms," "Page load time < 1s").]
+2. **Usability**: [How will this improve user experience? (e.g., "Reduce clicks to complete task from 5 to 2").]
+3. **Scale**: [Capacity targets (e.g., "Support 10,000 concurrent users").]
+
+### Functional Requirements
+- **FR-001**: [Use Gherkin syntax (Given/When/Then) for clarity. Core behavior description.]
+  - **Given**: [The initial state or context.]
+  - **When**: [The user action or system event.]
+  - **Then**: [The expected outcome.]
+  - **Acceptance**: [How to verify the requirement is met (e.g., "Verified by E2E test `test_case_name`").]
+
+### User Stories
+- **US-001**: As a [user role], I want to [action] so that [benefit].
+  - **Acceptance Criteria**:
+    1. [A checklist of testable outcomes that define "done".]
+    2. [Include positive/negative paths and edge cases.]
+
+### Non-Goals
+- [What is explicitly out of scope for this spec. Be specific.] - **Reason**: [Explain why it's deferred (e.g., "Deferred to V2 to expedite initial release").]
+
+## Technical Specifications
+
+### System Architecture
+- **Pattern**: [The chosen architectural pattern (e.g., "Microservice," "Serverless Function," "MVC").]
+- **Flow**: [A high-level diagram or description of the request lifecycle. How does data move through the system?]
+- **Security**: [Authentication and authorization strategy (e.g., "JWT-based auth, role-based access control").]
+
+### Database Design
+- **Schema Changes**: [Include `CREATE`/`ALTER` table statements or ORM model definitions.]
+- **Migration Approach**: [Describe the migration strategy (e.g., "Zero-downtime migration using `pg_online_schema_change`").]
+- **Data Seeding**: [Mention if any seed data is required.]
+
+### API Specifications
+- [Use OpenAPI/Swagger format for endpoints.]
+- **Endpoint**: `[HTTP_METHOD] /api/v1/resource`
+  - **Request**: [Payload schema, parameters, headers with types and validation.]
+  - **Response**: [Success (2xx) and error (4xx, 5xx) schemas.]
+
+### Component Design
+- **Service Components**: [Detail new or modified services, their responsibilities, and interactions.]
+- **UI Components**: [Describe new or modified UI components, their state, props, and where they fit in the component tree.]
+
+### Testing Strategy
+- **Test Scenarios** - Describe high-level test scenarios and user flows to be validated
+- Ensure that you write tests to ensure high confidence for the user that the requested feature works perfectly, seamlessly and to the extent to which user has requested
+- Examples: "Verify a new user can sign up and log in," "Confirm that an invalid input to the API returns a 400 error"
+
+## Implementation Plan
+
+Generate detailed implementation plan showing sequential, atomic tasks with exact file paths and symbol references.
+
+**CRITICAL**: Tasks must be sequential, atomic, and logically ordered to avoid breaking existing functionality. Each task should be independently testable. Include specific file paths using $PROJECT_ROOT variable and symbol references from explorer analysis.
+
+### Task Breakdown
+
+#### Database Layer (DB-XXX)
+- [ ] **DB-001**: [Specific migration task based on database explorer analysis] [Estimate: Xhr]
+  - **Files**: [`$PROJECT_ROOT/migrations/[timestamp]_[migration_name].sql`]
+  - **Details**: [Exact migration commands from database explorer schema analysis]
+  - **Schema**: [Table structures, relationships, indexes from database architecture findings]
+  - **Dependencies**: [None for first migration, or reference to prior DB tasks]
+
+#### Backend Services (BE-XXX)
+- [ ] **BE-001**: [Specific service logic task based on backend explorer analysis] [Estimate: Xhr]
+  - **Files**: [`$PROJECT_ROOT/services/[service_name].ts`, `$PROJECT_ROOT/models/[model_name].py`]
+  - **Details**: [Implementation specifics based on backend architecture patterns]
+  - **Symbols**: [Function names, class definitions, interfaces from backend analysis]
+  - **Dependencies**: [DB-001 completion required]
+  
+- [ ] **BE-002**: [API endpoint implementation task] [Estimate: Xhr]
+  - **Files**: [`$PROJECT_ROOT/controllers/[controller_name].ts`, `$PROJECT_ROOT/routes/[route_file].py`]
+  - **Details**: [REST endpoint implementation from backend explorer API analysis]
+  - **Symbols**: [Controller methods, route handlers, middleware functions]
+  - **Dependencies**: [BE-001 service layer completion]
+
+#### Frontend Components (FE-XXX)
+- [ ] **FE-001**: [Component architecture task based on frontend explorer analysis] [Estimate: Xhr]
+  - **Files**: [`$PROJECT_ROOT/components/[Component].tsx`, `$PROJECT_ROOT/pages/[Page].vue`]
+  - **Details**: [Component implementation from frontend architecture patterns]
+  - **Symbols**: [Component names, hook functions, state management patterns]
+  - **Dependencies**: [Backend API endpoints from BE-002]
+
+- [ ] **FE-002**: [State management integration task] [Estimate: Xhr]
+  - **Files**: [`$PROJECT_ROOT/store/[store_name].ts`, `$PROJECT_ROOT/hooks/[hook_name].js`]
+  - **Details**: [State implementation from frontend explorer state analysis]
+  - **Symbols**: [Store actions, selectors, state interfaces]
+  - **Dependencies**: [FE-001 component structure completion]
+
+#### Integration Layer (INT-XXX)
+- [ ] **INT-001**: [External service integration based on integration explorer analysis] [Estimate: Xhr]
+  - **Files**: [`$PROJECT_ROOT/lib/[service_client].js`, `$PROJECT_ROOT/config/[service_config].yaml`]
+  - **Details**: [Integration implementation from integration architecture analysis]
+  - **Symbols**: [Client classes, configuration interfaces, connection methods]
+  - **Dependencies**: [Core feature functionality from FE-002, BE-002]
+
+#### Testing Layer (TEST-XXX)
+- [ ] **TEST-001**: [Unit & Integration Tests] [Estimate: Xhr]
+  - **Files**: [`$PROJECT_ROOT/tests/services/[service].test.ts`, `$PROJECT_ROOT/tests/components/[Component].test.jsx`]
+  - **Details**: [Test implementation covering all layers and explorer analysis findings]
+  - **Symbols**: [Test functions, mock objects, assertion patterns]
+  - **Dependencies**: [All implementation layers completed]
+
+- [ ] **TEST-002**: [End-to-End Tests] [Estimate: Xhr]
+  - **Files**: [`$PROJECT_ROOT/e2e/[feature_name].spec.ts`]
+  - **Details**: [E2E test scenarios covering complete user workflows]
+  - **Symbols**: [Test scenarios, page objects, user flow functions]
+  - **Dependencies**: [TEST-001 unit test coverage completed]
+
+### Dependencies
+[Map dependencies between tasks (e.g., "BE-002 depends on DB-001", "TEST-001 depends on all implementation tasks"). Include cross-layer dependencies from explorer analysis.]
+
+## Success Metrics
+[Define SMART (Specific, Measurable, Achievable, Relevant, Time-bound) goals to measure feature success post-launch (e.g., "Achieve 5% increase in conversion rate within one month").]
+
+## Timeline
+**Total Effort**: [Sum of all task estimates in hours/days from detailed breakdown.]
+**Critical Path**: [The sequence of dependent tasks determining the minimum project duration. Highlight bottlenecks.]
+**Parallel Work**: [Tasks that can be executed in parallel to optimize timeline.]
+```
+
+**Notification & Exit Instructions:**
+🔔 ARCHITECT_COMPLETE: Specification document ready - Architecture analysis complete, all layers documented with precise implementation plan
+
+"Analysis and planning are complete with [X]% confidence. Specification document contains comprehensive architecture analysis from specialized explorer agents and detailed implementation plan with exact file paths and symbol references. File created at $FILENAME with all architectural insights integrated. Ready for engineer command execution."
