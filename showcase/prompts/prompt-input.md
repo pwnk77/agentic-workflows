@@ -1,6 +1,6 @@
-/architect build me the project below
+/architect build me the project below, it is a fresh project and needs to be built in /Users/pawanraviee/Documents/GitHub/agentic-workflows/showcase/showcase.md folder
 
-Relatable Approval Workflow: Expense Reimbursement System
+Expense Reimbursement System
 Problem Statement:
 Build a mini-app to manage employee expense reimbursements through a three-stage workflow that’s instantly familiar in any organization:
 
