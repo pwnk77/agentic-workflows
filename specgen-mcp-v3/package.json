@@ -14,7 +14,9 @@
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "setup": "npm install && npm run install-grammars",
-    "install-grammars": "node scripts/install-grammars.js"
+    "install-grammars": "node scripts/install-grammars.js",
+    "dashboard": "node specdash/server.js",
+    "dashboard:dev": "nodemon specdash/server.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.18.0",
@@ -25,7 +27,9 @@
     "uuid": "^9.0.0",
     "zod": "^3.22.0",
     "simple-git": "^3.19.0",
-    "node-fetch": "^3.3.0"
+    "node-fetch": "^3.3.0",
+    "express": "^4.18.0",
+    "chokidar": "^4.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -40,7 +44,10 @@
     "jest": "^29.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.2.0",
-    "ts-jest": "^29.0.0"
+    "ts-jest": "^29.0.0",
+    "nodemon": "^3.0.0",
+    "supertest": "^6.3.0",
+    "@types/supertest": "^2.0.0"
   },
   "keywords": [
     "mcp",
