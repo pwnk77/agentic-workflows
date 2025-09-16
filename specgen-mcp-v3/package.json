@@ -1,0 +1,63 @@
+{
+  "name": "specgen-mcp-v3",
+  "version": "3.0.0",
+  "description": "Advanced SpecGen MCP Server with tree-sitter analysis and self-sustained workflows",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "setup": "npm install && npm run install-grammars",
+    "install-grammars": "node scripts/install-grammars.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.18.0",
+    "ws": "^8.0.0",
+    "fs-extra": "^11.0.0",
+    "glob": "^10.0.0",
+    "lodash": "^4.17.21",
+    "uuid": "^9.0.0",
+    "zod": "^3.22.0",
+    "simple-git": "^3.19.0",
+    "node-fetch": "^3.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/ws": "^8.0.0",
+    "@types/fs-extra": "^11.0.0",
+    "@types/lodash": "^4.14.0",
+    "@types/uuid": "^9.0.0",
+    "@types/jest": "^29.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.2.0",
+    "ts-jest": "^29.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "specgen",
+    "tree-sitter",
+    "code-analysis",
+    "workflow-orchestration",
+    "git-worktree"
+  ],
+  "author": "SpecGen Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentic-workflows/specgen-mcp-v3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
