@@ -39,9 +39,11 @@ app.use((req, res, next) => {
 
 // Import routes
 const claimsRoutes = require('./routes/claims');
+const reportsRoutes = require('./routes/reports');
 
 // Mount routes
 app.use('/api/claims', claimsRoutes);
+app.use('/api/reports', reportsRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ 
