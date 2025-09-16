@@ -36,6 +36,12 @@ function getConfig() {
     docsPath: path.resolve(projectRoot, 'docs'),
     metadataFile: path.resolve(projectRoot, 'docs/.spec-metadata.json'),
 
+    // JSON Storage paths for v3.1 (safe from worktree pruning)
+    specgenPath: path.resolve(projectRoot, '.specgen'),
+    jsonSpecsPath: path.resolve(projectRoot, '.specgen/specs'),
+    markdownSpecsPath: path.resolve(projectRoot, '.specgen/markdown'),
+    backupsPath: path.resolve(projectRoot, '.specgen/backups'),
+
     // Dashboard path - depends on where package is installed
     dashboardPath: isGlobal
       ? path.resolve(__dirname, '..', 'specdash')    // Global: /opt/homebrew/lib/node_modules/specgen-mcp/specdash

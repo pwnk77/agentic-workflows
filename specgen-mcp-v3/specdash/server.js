@@ -23,6 +23,42 @@ let metadataCache = {};
 let watcher = null;
 
 // Helper functions inline
+async function scanJSONSpecs() {
+  try {
+    const jsonFiles = await fs.readdir(JSON_SPECS_PATH).catch(() => []);
+    const specs = {};
+
+    for (const file of jsonFiles) {
+      if (!file.endsWith('.json')) continue;
+
+      const filePath = path.join(JSON_SPECS_PATH, file);
+      const jsonContent = await fs.readFile(filePath, 'utf-8');
+      const spec = JSON.parse(jsonContent);
+      const stats = await fs.stat(filePath);
+
+      // Convert JSON spec to metadata format
+      const filename = `${spec.id}.json`;
+      specs[filename] = {
+        filename: filename,
+        title: spec.metadata.title,
+        category: spec.metadata.category,
+        status: spec.metadata.status,
+        priority: spec.metadata.priority,
+        modified: spec.metadata.updated_at,
+        created: spec.metadata.created_at,
+        manualStatus: false,
+        manualPriority: false,
+        source: 'json' // Mark as JSON source
+      };
+    }
+
+    return specs;
+  } catch (error) {
+    console.error('Error scanning JSON specs:', error);
+    return {};
+  }
+}
+
 async function migrateLegacySpecs() {
   try {
     const legacyExists = await fs.access(LEGACY_DOCS_PATH).then(() => true).catch(() => false);
@@ -79,6 +115,10 @@ async function scanDocs() {
       console.log(`✅ Migrated ${migrationResult.migrated} legacy specs to .specgen/markdown/`);
     }
 
+    // Scan JSON specs first (canonical storage)
+    const jsonSpecs = await scanJSONSpecs();
+    console.log(`📦 Found ${Object.keys(jsonSpecs).length} JSON specs`);
+
     // Scan unified markdown location (.specgen/markdown/)
     const scanDirectory = async (dir) => {
       try {
@@ -105,7 +145,10 @@ async function scanDocs() {
     };
 
     const specFiles = await scanDirectory(DOCS_PATH);
-    const specs = {};
+
+    // Start with JSON specs (canonical source with precedence)
+    const specs = { ...jsonSpecs };
+    console.log(`📄 Found ${specFiles.length} markdown specs`);
 
     for (const filePath of specFiles) {
       const file = path.basename(filePath);
@@ -128,7 +171,7 @@ async function scanDocs() {
         created: stats.birthtime.toISOString(),
         manualStatus: hasManualStatus || false,
         manualPriority: hasManualPriority || false,
-        source: 'unified' // Single source
+        source: 'markdown' // Markdown source
       };
     }
 
@@ -229,13 +272,63 @@ app.get('/api/specs', async (req, res) => {
 
 app.get('/api/specs/:filename', async (req, res) => {
   try {
-    // Use unified markdown path (.specgen/markdown/)
-    const filePath = path.join(DOCS_PATH, req.params.filename);
-    const content = await fs.readFile(filePath, 'utf-8');
+    const { format } = req.query; // 'json' or 'markdown' or undefined (auto)
+    const filename = req.params.filename;
+    const metadata = metadataCache[filename];
+
+    // Check if this is a JSON spec
+    if (metadata?.source === 'json') {
+      const id = filename.replace('.json', '');
+      const jsonFilePath = path.join(JSON_SPECS_PATH, `${id}.json`);
+
+      if (await fs.access(jsonFilePath).then(() => true).catch(() => false)) {
+        const jsonContent = await fs.readFile(jsonFilePath, 'utf-8');
+        const spec = JSON.parse(jsonContent);
+
+        if (format === 'markdown') {
+          // Convert JSON to markdown for display
+          const { MarkdownGenerator } = await import('../src/core/markdown-generator.js');
+          const markdownContent = MarkdownGenerator.generateFromJSON(spec);
+          return res.json({
+            content: markdownContent,
+            metadata,
+            source: 'json',
+            format: 'markdown'
+          });
+        } else {
+          // Return JSON format
+          return res.json({
+            content: format === 'json' ? JSON.stringify(spec, null, 2) : jsonContent,
+            metadata,
+            source: 'json',
+            format: 'json'
+          });
+        }
+      }
+    }
+
+    // Handle markdown specs
+    const markdownPath = path.join(DOCS_PATH, filename);
+    const content = await fs.readFile(markdownPath, 'utf-8');
+
+    if (format === 'json') {
+      // Convert markdown to JSON
+      const { MarkdownGenerator } = await import('../src/core/markdown-generator.js');
+      const spec = MarkdownGenerator.parseToJSON(content);
+      return res.json({
+        content: JSON.stringify(spec, null, 2),
+        metadata: metadata || {},
+        source: 'markdown',
+        format: 'json'
+      });
+    }
+
+    // Return markdown as-is
     res.json({
       content,
-      metadata: metadataCache[req.params.filename] || {},
-      source: 'unified'
+      metadata: metadata || {},
+      source: 'markdown',
+      format: 'markdown'
     });
   } catch (err) {
     console.error('Error getting spec:', err);

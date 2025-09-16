@@ -14,6 +14,7 @@ export interface SpecInfo {
   priority: string;
   modified: string;
   created: string;
+  source?: string;
   manualStatus?: boolean;
   manualPriority?: boolean;
 }
@@ -60,4 +61,31 @@ export interface ToolConfig {
   timeout?: number;
   caching?: CacheConfig;
   security?: SecurityConfig;
+}
+
+// JSON Storage Types for v3.1
+export interface SpecDocument {
+  id: string;
+  metadata: {
+    title: string;
+    status: string;
+    category: string;
+    priority: string;
+    created_at: string;
+    updated_at: string;
+    created_via?: string;
+    related_specs?: string[];
+    parent_spec_id?: string | null;
+    tags?: string[];
+    effort_estimate?: string;
+    completion?: number;
+  };
+  sections: {
+    summary: string;
+    requirements: string;
+    architecture: string;
+    implementation?: string;
+    execution_logs?: string;
+    debug_logs?: string;
+  };
 }

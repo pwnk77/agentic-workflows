@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "specgen-mcp-v3": {
+      "command": "npm",
+      "args": [
+        "run",
+        "dev"
+      ]
+    }
+  }
+}
