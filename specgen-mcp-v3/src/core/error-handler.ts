@@ -108,4 +108,27 @@ ${structuredError.recovery}` : ''}`;
       })
     ]);
   }
+
+  // Backward compatibility method
+  handleError(toolName: string, error: any, context?: any): { content: [{ type: string; text: string }] } {
+    const structuredError = StructuredErrorHandler.createError(
+      error.message || String(error),
+      `${toolName}_error`,
+      context,
+      context?.suggestions || [
+        'Check the input parameters',
+        'Verify file paths exist',
+        'Ensure proper permissions'
+      ],
+      context?.recovery || 'Review the error details and try again with corrected parameters'
+    );
+
+    const result = StructuredErrorHandler.formatAsCallToolResult(structuredError);
+    return {
+      content: [{
+        type: 'text',
+        text: (result.content[0] as any)?.text || 'Unknown error occurred'
+      }]
+    };
+  }
 }

@@ -1,13 +1,9 @@
 {
   "mcpServers": {
-    "specgen-mcp": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "specgen-mcp@latest"
-      ],
-      "env": {}
+    "specgen-mcp-v3": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "cwd": "/Users/pawanraviee/Documents/GitHub/agentic-workflows/specgen-mcp-v3"
     }
   }
 }

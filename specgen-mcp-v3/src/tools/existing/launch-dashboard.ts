@@ -3,6 +3,11 @@ import { CONFIG } from '../../core/config.js';
 import { spawn } from 'child_process';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export interface LaunchDashboardArgs {
   port?: number;

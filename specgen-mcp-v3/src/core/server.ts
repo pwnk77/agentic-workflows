@@ -15,6 +15,29 @@ import { getSpecJSON } from '../tools/json/get-spec-json.js';
 import { syncSpecFormats } from '../tools/json/sync-spec-formats.js';
 import { createSpecJSON } from '../tools/json/create-spec-json.js';
 
+// Import research tools (existing but not registered)
+import { analyzeCode } from '../tools/research/analyze.js';
+import { searchCode } from '../tools/research/search.js';
+import { fetchResearch } from '../tools/research/fetch.js';
+import { analyzeDependencies } from '../tools/research/dependencies.js';
+
+// Import new spec management tools
+import { createSpec } from '../tools/spec/create.js';
+import { orchestrateSpec } from '../tools/spec/orchestrate.js';
+
+// Import new build orchestrator tools
+import { buildArchitect } from '../tools/build/architect.js';
+import { buildEngineer } from '../tools/build/engineer.js';
+import { buildReviewer } from '../tools/build/reviewer.js';
+
+// Import worktree management tools
+import { createWorktree } from '../tools/worktree/create.js';
+import { listWorktrees } from '../tools/worktree/list.js';
+import { worktreeStatus } from '../tools/worktree/status.js';
+import { mergeWorktree } from '../tools/worktree/merge.js';
+import { removeWorktree } from '../tools/worktree/remove.js';
+import { pruneWorktrees } from '../tools/worktree/prune.js';
+
 export class SpecGenServer {
   private server: Server;
 
@@ -152,6 +175,219 @@ export class SpecGenServer {
             },
             required: ['title']
           }
+        },
+
+        // NEW v3.0 TOOLS - Enhanced Specification Management (2 tools)
+        {
+          name: 'specgen.spec.create',
+          description: 'Create new SPEC document with auto-generated metadata and optional worktree setup',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              title: { type: 'string', minLength: 5, maxLength: 100, description: 'Specification title' },
+              description: { type: 'string', minLength: 10, description: 'Feature description' },
+              category: { type: 'string', enum: ['Architecture', 'Feature', 'Bugfix', 'Research'], description: 'Spec category' },
+              createWorktree: { type: 'boolean', description: 'Create isolated worktree for development' },
+              baseBranch: { type: 'string', description: 'Base branch for worktree' }
+            },
+            required: ['title', 'description']
+          }
+        },
+        {
+          name: 'specgen.spec.orchestrate',
+          description: 'Smart orchestrator that determines next actions based on spec status and user intent',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              specId: { type: 'string', description: 'Specification ID' },
+              intent: { type: 'string', enum: ['analyze', 'implement', 'review', 'deploy'], description: 'User intent' },
+              context: { type: 'string', description: 'Additional context (optional)' }
+            },
+            required: ['specId', 'intent']
+          }
+        },
+
+        // Self-Sustained Build Orchestrators (3 tools)
+        {
+          name: 'specgen.build.architect',
+          description: 'Multi-phase feature analysis using sequential thinking patterns',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              specId: { type: 'string', description: 'Specification ID' },
+              feature: { type: 'string', minLength: 10, description: 'Feature description for analysis' },
+              depth: { type: 'string', enum: ['shallow', 'deep', 'comprehensive'], description: 'Analysis depth' },
+              autoCreateWorktree: { type: 'boolean', description: 'Auto-create worktree for development' }
+            },
+            required: ['specId', 'feature']
+          }
+        },
+        {
+          name: 'specgen.build.engineer',
+          description: 'Implementation pipeline with debug protocols',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              specId: { type: 'string', description: 'Specification ID' },
+              mode: { type: 'string', enum: ['implement', 'debug', 'continue'], description: 'Implementation mode' },
+              layer: { type: 'string', enum: ['database', 'backend', 'frontend', 'integration', 'testing', 'all'], description: 'Implementation layer' },
+              dryRun: { type: 'boolean', description: 'Simulate implementation without changes' }
+            },
+            required: ['specId']
+          }
+        },
+        {
+          name: 'specgen.build.reviewer',
+          description: 'Multi-domain code assessment generating improvement specifications',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              specId: { type: 'string', description: 'Specification ID' },
+              scope: { type: 'array', items: { enum: ['security', 'performance', 'quality', 'architecture'] }, description: 'Review scope' },
+              generateImprovementSpec: { type: 'boolean', description: 'Auto-generate improvement specification' },
+              severity: { type: 'string', enum: ['critical', 'high', 'medium', 'low', 'all'], description: 'Minimum severity level' }
+            },
+            required: ['specId']
+          }
+        },
+
+        // Tree-Sitter Research Tools (4 tools)
+        {
+          name: 'specgen.research.analyze',
+          description: 'Language-agnostic codebase analysis using tree-sitter parsing',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              paths: { type: 'array', items: { type: 'string' }, description: 'File/directory paths to analyze' },
+              language: { type: 'string', enum: ['typescript', 'python', 'go', 'rust', 'javascript', 'auto'], description: 'Target language' },
+              extractSymbols: { type: 'boolean', description: 'Extract symbol information' },
+              findPatterns: { type: 'array', items: { type: 'string' }, description: 'Patterns to search for' },
+              includeTests: { type: 'boolean', description: 'Include test files' }
+            },
+            required: ['paths']
+          }
+        },
+        {
+          name: 'specgen.research.search',
+          description: 'Semantic code search across languages using AST queries',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              query: { type: 'string', minLength: 3, description: 'Search query' },
+              scope: { type: 'string', enum: ['symbols', 'imports', 'patterns', 'all'], description: 'Search scope' },
+              language: { type: 'string', description: 'Target language (optional)' },
+              maxResults: { type: 'number', minimum: 1, maximum: 100, description: 'Maximum results' },
+              includeContext: { type: 'boolean', description: 'Include code context' }
+            },
+            required: ['query']
+          }
+        },
+        {
+          name: 'specgen.research.fetch',
+          description: 'Web documentation and API reference gathering with intelligent caching',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              topics: { type: 'array', items: { type: 'string' }, minItems: 1, description: 'Research topics' },
+              sources: { type: 'array', items: { type: 'string' }, description: 'Preferred sources (optional)' },
+              depth: { type: 'string', enum: ['quick', 'thorough', 'comprehensive'], description: 'Research depth' },
+              maxPages: { type: 'number', minimum: 1, maximum: 50, description: 'Maximum pages to fetch' }
+            },
+            required: ['topics']
+          }
+        },
+        {
+          name: 'specgen.research.dependencies',
+          description: 'Project dependency analysis with cross-language mapping',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              includeTransitive: { type: 'boolean', description: 'Include transitive dependencies' },
+              checkOutdated: { type: 'boolean', description: 'Check for outdated packages' },
+              language: { type: 'string', description: 'Target language (optional)' }
+            }
+          }
+        },
+
+        // Git Worktree Management (6 tools)
+        {
+          name: 'specgen.worktree.create',
+          description: 'Create isolated git worktree for spec development',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              specId: { type: 'string', description: 'Specification ID' },
+              baseBranch: { type: 'string', description: 'Base branch for worktree' },
+              branchName: { type: 'string', description: 'Branch name (auto-generated if not provided)' },
+              autoSetup: { type: 'boolean', description: 'Auto-configure worktree environment' },
+              preserveOnError: { type: 'boolean', description: 'Preserve worktree on creation errors' }
+            },
+            required: ['specId']
+          }
+        },
+        {
+          name: 'specgen.worktree.list',
+          description: 'List all active worktrees with git status and spec metadata',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              includeStatus: { type: 'boolean', description: 'Include git status information' },
+              filterActive: { type: 'boolean', description: 'Filter to active/dirty worktrees only' }
+            }
+          }
+        },
+        {
+          name: 'specgen.worktree.status',
+          description: 'Real-time git status for spec worktree with conflict detection',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              specId: { type: 'string', description: 'Specification ID' },
+              detailed: { type: 'boolean', description: 'Include detailed file changes' },
+              checkUpstream: { type: 'boolean', description: 'Check upstream branch status' }
+            },
+            required: ['specId']
+          }
+        },
+        {
+          name: 'specgen.worktree.merge',
+          description: 'Safe merge with pre-validation and conflict detection',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              specId: { type: 'string', description: 'Specification ID' },
+              targetBranch: { type: 'string', description: 'Target branch for merge' },
+              strategy: { type: 'string', enum: ['merge', 'squash', 'rebase'], description: 'Merge strategy' },
+              createPR: { type: 'boolean', description: 'Create pull request instead of direct merge' },
+              removeAfterMerge: { type: 'boolean', description: 'Remove worktree after successful merge' },
+              force: { type: 'boolean', description: 'Force merge (skip pre-checks)' }
+            },
+            required: ['specId']
+          }
+        },
+        {
+          name: 'specgen.worktree.remove',
+          description: 'Safe removal with validation and cleanup',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              specId: { type: 'string', description: 'Specification ID' },
+              force: { type: 'boolean', description: 'Force removal (ignore uncommitted changes)' },
+              cleanup: { type: 'boolean', description: 'Clean up metadata references' }
+            },
+            required: ['specId']
+          }
+        },
+        {
+          name: 'specgen.worktree.prune',
+          description: 'Intelligent cleanup of stale and orphaned worktrees',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              dryRun: { type: 'boolean', description: 'Preview changes without applying' },
+              olderThan: { type: 'string', description: 'Age threshold (e.g., "7d", "2h", "30m")' }
+            }
+          }
         }
       ]
     }));
@@ -159,6 +395,8 @@ export class SpecGenServer {
     // Handle tool calls
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: args } = request.params;
+
+      // Debug logging removed - CLI parameter parsing issue confirmed to be in MCP Inspector, not server
 
       try {
         switch (name) {
@@ -183,6 +421,44 @@ export class SpecGenServer {
             return await syncSpecFormats(args as any);
           case 'mcp__specgen-mcp__create_spec_json':
             return await createSpecJSON(args as any);
+
+          // Enhanced Specification Management Tools
+          case 'specgen.spec.create':
+            return await createSpec(args as any);
+          case 'specgen.spec.orchestrate':
+            return await orchestrateSpec(args as any);
+
+          // Build Orchestrator Tools
+          case 'specgen.build.architect':
+            return await buildArchitect(args as any);
+          case 'specgen.build.engineer':
+            return await buildEngineer(args as any);
+          case 'specgen.build.reviewer':
+            return await buildReviewer(args as any);
+
+          // Research Tools
+          case 'specgen.research.analyze':
+            return await analyzeCode(args as any);
+          case 'specgen.research.search':
+            return await searchCode(args as any);
+          case 'specgen.research.fetch':
+            return await fetchResearch(args as any);
+          case 'specgen.research.dependencies':
+            return await analyzeDependencies(args as any);
+
+          // Worktree Management Tools
+          case 'specgen.worktree.create':
+            return await createWorktree(args as any);
+          case 'specgen.worktree.list':
+            return await listWorktrees(args as any);
+          case 'specgen.worktree.status':
+            return await worktreeStatus(args as any);
+          case 'specgen.worktree.merge':
+            return await mergeWorktree(args as any);
+          case 'specgen.worktree.remove':
+            return await removeWorktree(args as any);
+          case 'specgen.worktree.prune':
+            return await pruneWorktrees(args as any);
 
           default:
             throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);

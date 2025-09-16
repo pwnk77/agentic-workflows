@@ -175,6 +175,26 @@ export class SequentialThinkingManager {
   cleanupSession(sessionId: string): void {
     this.thoughtProgress.delete(sessionId);
   }
+
+  // Backward compatibility methods
+  startSession(phase: string): string {
+    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return this.startThinking(sessionId, 10, phase);
+  }
+
+  progressThought(sessionId: string, reasoning: string): ThoughtState {
+    return this.addThought(sessionId, reasoning, true, false);
+  }
+
+  getProgress(sessionId: string): ThoughtProgress | null {
+    return this.getThoughtProgress(sessionId);
+  }
+
+  endSession(sessionId: string): ThoughtProgress {
+    const result = this.completeThinking(sessionId);
+    this.cleanupSession(sessionId);
+    return result;
+  }
 }
 
 // Global instance for use across tools

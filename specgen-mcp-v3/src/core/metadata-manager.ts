@@ -28,6 +28,7 @@ export interface SpecMetadata {
       created: string;
       manualStatus?: boolean;
       manualPriority?: boolean;
+      source?: string; // 'json' or 'markdown'
     };
   };
 }
@@ -109,7 +110,8 @@ export class JSONMetadataService {
           status,
           priority,
           modified: stats.mtime.toISOString(),
-          created: stats.birthtime.toISOString()
+          created: stats.birthtime.toISOString(),
+          source: 'markdown'
         };
       }
     } catch (error) {
@@ -157,5 +159,17 @@ export class JSONMetadataService {
     // Convert markdown specs to SpecDocument format if needed
     // For now, just return JSON specs as they're the canonical format
     return jsonSpecs;
+  }
+}
+
+// Backward compatibility alias
+export class MetadataManager {
+  async refresh(reason?: string): Promise<void> {
+    await JSONMetadataService.scanSpecs();
+  }
+
+  async listSpecs(args: any): Promise<any[]> {
+    const metadata = await JSONMetadataService.loadMetadata();
+    return Object.values(metadata.specs);
   }
 }

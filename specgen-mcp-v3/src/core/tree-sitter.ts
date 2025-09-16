@@ -234,4 +234,51 @@ export class TreeSitterParser {
 
     return patterns[language] || patterns.typescript;
   }
+
+  // Backward compatibility methods
+  async analyzeCodebase(paths: string[]): Promise<any> {
+    const results = {
+      filesAnalyzed: 0,
+      symbolCount: 0,
+      codebasePatterns: []
+    };
+
+    for (const path of paths.slice(0, 10)) { // Limit to prevent timeout
+      try {
+        const parsed = await this.parseFile(path);
+        const symbols = await this.extractSymbols(parsed);
+        results.filesAnalyzed++;
+        results.symbolCount += symbols.length;
+
+        // Extract common patterns
+        const patterns = symbols.map(s => s.type).filter((v, i, a) => a.indexOf(v) === i);
+        results.codebasePatterns.push(...patterns);
+      } catch (error) {
+        console.warn(`Failed to analyze ${path}:`, error);
+      }
+    }
+
+    return results;
+  }
+
+  async analyzeDependencies(rootPath: string = '.'): Promise<any> {
+    // Simple dependency analysis
+    try {
+      const packageJsonPath = `${rootPath}/package.json`;
+      const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
+
+      return {
+        dependencies: Object.keys(packageJson.dependencies || {}),
+        devDependencies: Object.keys(packageJson.devDependencies || {}),
+        totalCount: Object.keys(packageJson.dependencies || {}).length + Object.keys(packageJson.devDependencies || {}).length
+      };
+    } catch (error) {
+      return {
+        dependencies: [],
+        devDependencies: [],
+        totalCount: 0,
+        error: 'Could not analyze dependencies'
+      };
+    }
+  }
 }

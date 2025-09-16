@@ -50,3 +50,6 @@ function getConfig() {
 }
 
 export const CONFIG = getConfig();
+
+// Backward compatibility
+export const config = CONFIG;
