@@ -1,9 +1,9 @@
 {
   "mcpServers": {
-    "specgen-mcp-v3": {
+    "specgen-v3": {
       "command": "node",
-      "args": ["dist/index.js"],
-      "cwd": "/Users/pawanraviee/Documents/GitHub/agentic-workflows/specgen-mcp-v3"
+      "args": ["specgen-mcp-v3/dist/index.js"],
+      "cwd": "/Users/pawanraviee/Documents/GitHub/agentic-workflows"
     }
   }
 }
