@@ -246,7 +246,7 @@ function generateSearchSummary(results: any[], query: string, scope: string, tot
       summary += `\n\n... and ${results.length - 5} more files with matches`;
     }
 
-    summary += `\n\n💡 Use specgen.research.analyze for deeper symbol analysis`;
+    summary += `\n\n💡 Use specgen_research_analyze for deeper symbol analysis`;
   }
 
   return summary;

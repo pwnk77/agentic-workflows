@@ -6,7 +6,7 @@ import { MetadataManager } from '../../core/metadata-manager.js';
 import { StructuredErrorHandler } from '../../core/error-handler.js';
 import { config } from '../../core/config.js';
 
-// Schema for specgen.spec.create
+// Schema for specgen_spec_create
 const CreateSpecSchema = z.object({
   title: z.string().min(5).max(100),
   description: z.string().min(10),
@@ -62,7 +62,7 @@ export async function createSpec(args: CreateSpecInput): Promise<{ content: [{ t
       priority: 'medium' as const,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      created_via: 'specgen.spec.create',
+      created_via: 'specgen_spec_create',
       related_specs: [],
       parent_spec_id: null,
       tags: [category.toLowerCase()],
@@ -144,7 +144,7 @@ ${description}
         // The actual worktree.create tool will handle this
         result.worktree = {
           requested: true,
-          message: 'Worktree creation requested but not yet implemented. Use specgen.worktree.create after implementation.'
+          message: 'Worktree creation requested but not yet implemented. Use specgen_worktree_create after implementation.'
         };
       } catch (error) {
         // Log worktree error but don't fail spec creation
@@ -179,16 +179,16 @@ ${createWorktree ? `
 
 **Next Steps**:
 1. Edit the specification content in ${filename}
-2. Use \`specgen.spec.orchestrate\` to get recommended next actions
+2. Use \`specgen_spec_orchestrate\` to get recommended next actions
 3. Run \`mcp__specgen-mcp__refresh_metadata\` to update the registry${createWorktree && !result.worktree?.error ? `
-4. Use \`specgen.worktree.create\` to set up isolated development environment` : ''}
+4. Use \`specgen_worktree_create\` to set up isolated development environment` : ''}
 
 The specification template has been created with standard sections. You can now start filling in the details for your ${category.toLowerCase()} specification.`
       }]
     };
 
   } catch (error: any) {
-    return errorHandler.handleError('specgen.spec.create', error, {
+    return errorHandler.handleError('specgen_spec_create', error, {
       args,
       context: 'Creating new specification document'
     });

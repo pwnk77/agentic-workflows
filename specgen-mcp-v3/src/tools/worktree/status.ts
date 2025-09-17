@@ -4,7 +4,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { StructuredErrorHandler } from '../../core/error-handler.js';
 
-// Schema for specgen.worktree.status
+// Schema for specgen_worktree_status
 const StatusWorktreeSchema = z.object({
   specId: z.string(),
   detailed: z.boolean().default(false),
@@ -121,21 +121,21 @@ ${detailed && fileDetails ? `## 📁 File Changes\n\`\`\`\n${fileDetails}\`\`\`\
 ## 🚀 Available Actions
 ${isDirty ? '- **Commit Changes**: Use git commands in worktree directory' : ''}
 ${conflicts.length > 0 ? '- **Resolve Conflicts**: Fix conflicts before merging' : ''}
-- **Merge**: \`specgen.worktree.merge(specId: "${specId}")\`
-- **Remove**: \`specgen.worktree.remove(specId: "${specId}")\`
+- **Merge**: \`specgen_worktree_merge(specId: "${specId}")\`
+- **Remove**: \`specgen_worktree_remove(specId: "${specId}")\`
 
 ## 💡 Next Steps
 ${isDirty ? '1. Navigate to worktree and commit your changes' : '1. Ready for merge or continued development'}
 ${conflicts.length > 0 ? '2. Resolve conflicts before proceeding' : ''}
-2. Use \`specgen.worktree.merge\` when ready to integrate
-3. Use \`specgen.build.engineer\` to continue implementation
+2. Use \`specgen_worktree_merge\` when ready to integrate
+3. Use \`specgen_build_engineer\` to continue implementation
 
 **Status**: ${isDirty ? 'Development in progress' : 'Ready for next action'}`
       }]
     };
 
   } catch (error: any) {
-    return errorHandler.handleError('specgen.worktree.status', error, {
+    return errorHandler.handleError('specgen_worktree_status', error, {
       args,
       context: 'Checking worktree git status'
     });

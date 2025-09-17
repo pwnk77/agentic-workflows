@@ -73,7 +73,7 @@ The isolated development environment for ${specId} has been safely removed.`
     };
 
   } catch (error: any) {
-    return errorHandler.handleError('specgen.worktree.remove', error, { args, context: 'Removing worktree' });
+    return errorHandler.handleError('specgen_worktree_remove', error, { args, context: 'Removing worktree' });
   }
 }
 

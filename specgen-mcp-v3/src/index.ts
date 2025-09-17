@@ -18,27 +18,27 @@ const MCP_INSTRUCTIONS = `
 **mcp__specgen-mcp__launch_dashboard** - Start web dashboard interface
 
 ## Enhanced Spec Management (2 tools)
-**specgen.spec.create** - Create new SPEC document with auto-generated metadata and optional worktree setup
-**specgen.spec.orchestrate** - Smart orchestrator that determines next actions based on spec status and user intent
+**specgen_spec_create** - Create new SPEC document with auto-generated metadata and optional worktree setup
+**specgen_spec_orchestrate** - Smart orchestrator that determines next actions based on spec status and user intent
 
 ## Self-Sustained Build Orchestrators (3 tools)
-**specgen.build.architect** - Multi-phase feature analysis using sequential thinking patterns
-**specgen.build.engineer** - Implementation pipeline with debug protocols
-**specgen.build.reviewer** - Multi-domain code assessment generating improvement specifications
+**specgen_build_architect** - Multi-phase feature analysis using sequential thinking patterns
+**specgen_build_engineer** - Implementation pipeline with debug protocols
+**specgen_build_reviewer** - Multi-domain code assessment generating improvement specifications
 
 ## Tree-Sitter Research Tools (4 tools)
-**specgen.research.analyze** - Language-agnostic codebase analysis using tree-sitter parsing
-**specgen.research.search** - Semantic code search across languages using AST queries
-**specgen.research.fetch** - Web documentation and API reference gathering with intelligent caching
-**specgen.research.dependencies** - Project dependency analysis with cross-language mapping
+**specgen_research_analyze** - Language-agnostic codebase analysis using tree-sitter parsing
+**specgen_research_search** - Semantic code search across languages using AST queries
+**specgen_research_fetch** - Web documentation and API reference gathering with intelligent caching
+**specgen_research_dependencies** - Project dependency analysis with cross-language mapping
 
 ## Git Worktree Management (6 tools)
-**specgen.worktree.create** - Create isolated git worktree for spec development
-**specgen.worktree.list** - List all active worktrees with git status and spec metadata
-**specgen.worktree.status** - Real-time git status for spec worktree with conflict detection
-**specgen.worktree.merge** - Safe merge with pre-validation, conflict detection, and optional PR creation
-**specgen.worktree.remove** - Safe removal with validation, backup options, and cleanup
-**specgen.worktree.prune** - Intelligent cleanup of stale and orphaned worktrees
+**specgen_worktree_create** - Create isolated git worktree for spec development
+**specgen_worktree_list** - List all active worktrees with git status and spec metadata
+**specgen_worktree_status** - Real-time git status for spec worktree with conflict detection
+**specgen_worktree_merge** - Safe merge with pre-validation, conflict detection, and optional PR creation
+**specgen_worktree_remove** - Safe removal with validation, backup options, and cleanup
+**specgen_worktree_prune** - Intelligent cleanup of stale and orphaned worktrees
 
 ### 🧠 SEQUENTIAL THINKING INTEGRATION
 All build tools use sequential thinking patterns for transparency:
@@ -55,10 +55,10 @@ All build tools use sequential thinking patterns for transparency:
 
 ### 🔧 WORKFLOW ORCHESTRATION
 Instead of manual tool selection, use intelligent orchestrators:
-- **specgen.build.architect** replaces manual research coordination
-- **specgen.build.engineer** replaces manual implementation steps
-- **specgen.build.reviewer** replaces manual code assessment
-- **specgen.spec.orchestrate** provides smart next-action recommendations
+- **specgen_build_architect** replaces manual research coordination
+- **specgen_build_engineer** replaces manual implementation steps
+- **specgen_build_reviewer** replaces manual code assessment
+- **specgen_spec_orchestrate** provides smart next-action recommendations
 
 ### 🚀 KEY IMPROVEMENTS OVER V2
 1. **Self-Sustained Workflows**: Tools coordinate automatically instead of manual orchestration
@@ -92,16 +92,16 @@ mcp__specgen-mcp__get_spec(feature: "auth-system")
 
 **Modern Approach (v3):**
 \`\`\`
-specgen.build.architect(specId: "auth-system", feature: "JWT authentication with refresh tokens")
+specgen_build_architect(specId: "auth-system", feature: "JWT authentication with refresh tokens")
 // Automatically coordinates research, analysis, and planning
 // Returns comprehensive architectural analysis with next steps
 \`\`\`
 
 **Worktree Development:**
 \`\`\`
-specgen.worktree.create(specId: "payment-integration", autoSetup: true)
-specgen.build.engineer(specId: "payment-integration", mode: "implement")
-specgen.worktree.merge(specId: "payment-integration", createPR: true)
+specgen_worktree_create(specId: "payment-integration", autoSetup: true)
+specgen_build_engineer(specId: "payment-integration", mode: "implement")
+specgen_worktree_merge(specId: "payment-integration", createPR: true)
 \`\`\`
 `;
 

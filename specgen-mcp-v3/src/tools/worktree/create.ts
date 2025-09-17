@@ -5,7 +5,7 @@ import { execSync } from 'child_process';
 import { MetadataManager } from '../../core/metadata-manager.js';
 import { StructuredErrorHandler } from '../../core/error-handler.js';
 
-// Schema for specgen.worktree.create
+// Schema for specgen_worktree_create
 const CreateWorktreeSchema = z.object({
   specId: z.string(),
   baseBranch: z.string().default('main'),
@@ -118,19 +118,19 @@ ${sessionId ? `**Session ID**: ${sessionId}` : ''}
 
 ## 🚀 Next Steps
 1. Navigate to worktree: \`cd "${worktreePath}"\`
-2. Start implementation: \`specgen.build.engineer(specId: "${specId}", mode: "implement")\`
-3. Check status anytime: \`specgen.worktree.status(specId: "${specId}")\`
+2. Start implementation: \`specgen_build_engineer(specId: "${specId}", mode: "implement")\`
+3. Check status anytime: \`specgen_worktree_status(specId: "${specId}")\`
 
 ## 📋 Available Commands
-- **Status**: \`specgen.worktree.status(specId: "${specId}")\`
-- **Merge**: \`specgen.worktree.merge(specId: "${specId}")\`
-- **Remove**: \`specgen.worktree.remove(specId: "${specId}")\`
+- **Status**: \`specgen_worktree_status(specId: "${specId}")\`
+- **Merge**: \`specgen_worktree_merge(specId: "${specId}")\`
+- **Remove**: \`specgen_worktree_remove(specId: "${specId}")\`
 
 ## 💡 Development Tips
 - Use \`git status\` to check local changes
 - Commit regularly to track progress
-- Use \`specgen.worktree.status\` for conflict detection
-- Run \`specgen.worktree.merge\` when ready to integrate
+- Use \`specgen_worktree_status\` for conflict detection
+- Run \`specgen_worktree_merge\` when ready to integrate
 
 **Isolated development environment ready for ${specId}!**`
         }]
@@ -149,7 +149,7 @@ ${sessionId ? `**Session ID**: ${sessionId}` : ''}
     }
 
   } catch (error: any) {
-    return errorHandler.handleError('specgen.worktree.create', error, {
+    return errorHandler.handleError('specgen_worktree_create', error, {
       args,
       context: 'Creating isolated git worktree',
       suggestions: [
@@ -254,13 +254,13 @@ This is an isolated development environment for ${specId}.
 ## Quick Start
 1. Install dependencies: \`npm install\` (if package.json exists)
 2. Start development: Use MCP tools to coordinate implementation
-3. Check status: \`specgen.worktree.status(specId: "${specId}")\`
+3. Check status: \`specgen_worktree_status(specId: "${specId}")\`
 
 ## MCP Integration
 This worktree is managed by SpecGen MCP v3. Use the following tools:
-- \`specgen.build.engineer\` - Implementation coordination
-- \`specgen.worktree.status\` - Git status and conflict detection
-- \`specgen.worktree.merge\` - Safe integration with main branch
+- \`specgen_build_engineer\` - Implementation coordination
+- \`specgen_worktree_status\` - Git status and conflict detection
+- \`specgen_worktree_merge\` - Safe integration with main branch
 
 Created: ${new Date().toISOString()}
 `;

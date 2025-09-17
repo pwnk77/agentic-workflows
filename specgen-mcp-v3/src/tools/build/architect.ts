@@ -65,8 +65,8 @@ ${analysis.recommendations.map(r => `• ${r}`).join('\n')}
 5. **Testing Layer**: Comprehensive test coverage
 
 ## 🚀 Next Steps:
-- Use \`specgen.build.engineer\` to start implementation
-- Consider \`specgen.worktree.create\` for isolated development
+- Use \`specgen_build_engineer\` to start implementation
+- Consider \`specgen_worktree_create\` for isolated development
 - Review existing codebase patterns for consistency
 
 **Architecture analysis ready for implementation planning.**`
@@ -74,7 +74,7 @@ ${analysis.recommendations.map(r => `• ${r}`).join('\n')}
     };
 
   } catch (error: any) {
-    return errorHandler.handleError('specgen.build.architect', error, {
+    return errorHandler.handleError('specgen_build_architect', error, {
       args,
       context: 'Analyzing feature architecture',
       suggestions: [

@@ -4,7 +4,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { StructuredErrorHandler } from '../../core/error-handler.js';
 
-// Schema for specgen.worktree.list
+// Schema for specgen_worktree_list
 const ListWorktreesSchema = z.object({
   includeStatus: z.boolean().default(true),
   filterActive: z.boolean().default(false)
@@ -104,7 +104,7 @@ export async function listWorktrees(args: ListWorktreesInput): Promise<{ content
 **Active Development**: ${result.metadata.active}
 **With Uncommitted Changes**: ${result.metadata.dirty}
 
-${result.worktrees.length === 0 ? '⚠️ No worktrees found. Use `specgen.worktree.create` to create one.' : ''}
+${result.worktrees.length === 0 ? '⚠️ No worktrees found. Use `specgen_worktree_create` to create one.' : ''}
 
 ## 🌳 Worktree Details
 ${result.worktrees.map((wt, i) => `
@@ -126,7 +126,7 @@ ${result.metadata.dirty > 0 ? `
 ${result.worktrees.filter(wt => wt.status?.dirty).map(wt => `
 - **${wt.specId || wt.branch}**: Uncommitted changes detected
   - Path: ${wt.path}
-  - Action: Commit changes or use \`specgen.worktree.status(specId: "${wt.specId}")\`
+  - Action: Commit changes or use \`specgen_worktree_status(specId: "${wt.specId}")\`
 `).join('')}
 ` : ''}
 
@@ -135,20 +135,20 @@ ${result.worktrees.filter(wt => wt.status?.conflicts && wt.status.conflicts.leng
 ${result.worktrees.filter(wt => wt.status?.conflicts && wt.status.conflicts.length > 0).map(wt => `
 - **${wt.specId || wt.branch}**: ${wt.status?.conflicts.length} conflicted files
   - Resolve conflicts before merging
-  - Use \`specgen.worktree.status(specId: "${wt.specId}")\` for details
+  - Use \`specgen_worktree_status(specId: "${wt.specId}")\` for details
 `).join('')}
 ` : ''}
 
 ## 🚀 Quick Actions
 ${result.worktrees.filter(wt => !wt.isMain).map(wt => `
 - **${wt.specId || wt.branch}**:
-  - Status: \`specgen.worktree.status(specId: "${wt.specId}")\`
-  - Merge: \`specgen.worktree.merge(specId: "${wt.specId}")\`
-  - Remove: \`specgen.worktree.remove(specId: "${wt.specId}")\`
+  - Status: \`specgen_worktree_status(specId: "${wt.specId}")\`
+  - Merge: \`specgen_worktree_merge(specId: "${wt.specId}")\`
+  - Remove: \`specgen_worktree_remove(specId: "${wt.specId}")\`
 `).join('')}
 
 ## 💡 Management Tips
-- Use \`specgen.worktree.prune\` to clean up stale worktrees
+- Use \`specgen_worktree_prune\` to clean up stale worktrees
 - Check status regularly to avoid conflicts
 - Commit changes frequently to track progress
 - Use descriptive commit messages for better tracking
@@ -158,7 +158,7 @@ ${result.worktrees.filter(wt => !wt.isMain).map(wt => `
     };
 
   } catch (error: any) {
-    return errorHandler.handleError('specgen.worktree.list', error, {
+    return errorHandler.handleError('specgen_worktree_list', error, {
       args,
       context: 'Listing git worktrees',
       suggestions: [

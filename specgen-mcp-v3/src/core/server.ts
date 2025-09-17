@@ -179,7 +179,7 @@ export class SpecGenServer {
 
         // NEW v3.0 TOOLS - Enhanced Specification Management (2 tools)
         {
-          name: 'specgen.spec.create',
+          name: 'specgen_spec_create',
           description: 'Create new SPEC document with auto-generated metadata and optional worktree setup',
           inputSchema: {
             type: 'object',
@@ -194,7 +194,7 @@ export class SpecGenServer {
           }
         },
         {
-          name: 'specgen.spec.orchestrate',
+          name: 'specgen_spec_orchestrate',
           description: 'Smart orchestrator that determines next actions based on spec status and user intent',
           inputSchema: {
             type: 'object',
@@ -209,7 +209,7 @@ export class SpecGenServer {
 
         // Self-Sustained Build Orchestrators (3 tools)
         {
-          name: 'specgen.build.architect',
+          name: 'specgen_build_architect',
           description: 'Multi-phase feature analysis using sequential thinking patterns',
           inputSchema: {
             type: 'object',
@@ -223,7 +223,7 @@ export class SpecGenServer {
           }
         },
         {
-          name: 'specgen.build.engineer',
+          name: 'specgen_build_engineer',
           description: 'Implementation pipeline with debug protocols',
           inputSchema: {
             type: 'object',
@@ -237,7 +237,7 @@ export class SpecGenServer {
           }
         },
         {
-          name: 'specgen.build.reviewer',
+          name: 'specgen_build_reviewer',
           description: 'Multi-domain code assessment generating improvement specifications',
           inputSchema: {
             type: 'object',
@@ -253,7 +253,7 @@ export class SpecGenServer {
 
         // Tree-Sitter Research Tools (4 tools)
         {
-          name: 'specgen.research.analyze',
+          name: 'specgen_research_analyze',
           description: 'Language-agnostic codebase analysis using tree-sitter parsing',
           inputSchema: {
             type: 'object',
@@ -268,7 +268,7 @@ export class SpecGenServer {
           }
         },
         {
-          name: 'specgen.research.search',
+          name: 'specgen_research_search',
           description: 'Semantic code search across languages using AST queries',
           inputSchema: {
             type: 'object',
@@ -283,7 +283,7 @@ export class SpecGenServer {
           }
         },
         {
-          name: 'specgen.research.fetch',
+          name: 'specgen_research_fetch',
           description: 'Web documentation and API reference gathering with intelligent caching',
           inputSchema: {
             type: 'object',
@@ -297,7 +297,7 @@ export class SpecGenServer {
           }
         },
         {
-          name: 'specgen.research.dependencies',
+          name: 'specgen_research_dependencies',
           description: 'Project dependency analysis with cross-language mapping',
           inputSchema: {
             type: 'object',
@@ -311,7 +311,7 @@ export class SpecGenServer {
 
         // Git Worktree Management (6 tools)
         {
-          name: 'specgen.worktree.create',
+          name: 'specgen_worktree_create',
           description: 'Create isolated git worktree for spec development',
           inputSchema: {
             type: 'object',
@@ -326,7 +326,7 @@ export class SpecGenServer {
           }
         },
         {
-          name: 'specgen.worktree.list',
+          name: 'specgen_worktree_list',
           description: 'List all active worktrees with git status and spec metadata',
           inputSchema: {
             type: 'object',
@@ -337,7 +337,7 @@ export class SpecGenServer {
           }
         },
         {
-          name: 'specgen.worktree.status',
+          name: 'specgen_worktree_status',
           description: 'Real-time git status for spec worktree with conflict detection',
           inputSchema: {
             type: 'object',
@@ -350,7 +350,7 @@ export class SpecGenServer {
           }
         },
         {
-          name: 'specgen.worktree.merge',
+          name: 'specgen_worktree_merge',
           description: 'Safe merge with pre-validation and conflict detection',
           inputSchema: {
             type: 'object',
@@ -366,7 +366,7 @@ export class SpecGenServer {
           }
         },
         {
-          name: 'specgen.worktree.remove',
+          name: 'specgen_worktree_remove',
           description: 'Safe removal with validation and cleanup',
           inputSchema: {
             type: 'object',
@@ -379,7 +379,7 @@ export class SpecGenServer {
           }
         },
         {
-          name: 'specgen.worktree.prune',
+          name: 'specgen_worktree_prune',
           description: 'Intelligent cleanup of stale and orphaned worktrees',
           inputSchema: {
             type: 'object',
@@ -423,41 +423,41 @@ export class SpecGenServer {
             return await createSpecJSON(args as any);
 
           // Enhanced Specification Management Tools
-          case 'specgen.spec.create':
+          case 'specgen_spec_create':
             return await createSpec(args as any);
-          case 'specgen.spec.orchestrate':
+          case 'specgen_spec_orchestrate':
             return await orchestrateSpec(args as any);
 
           // Build Orchestrator Tools
-          case 'specgen.build.architect':
+          case 'specgen_build_architect':
             return await buildArchitect(args as any);
-          case 'specgen.build.engineer':
+          case 'specgen_build_engineer':
             return await buildEngineer(args as any);
-          case 'specgen.build.reviewer':
+          case 'specgen_build_reviewer':
             return await buildReviewer(args as any);
 
           // Research Tools
-          case 'specgen.research.analyze':
+          case 'specgen_research_analyze':
             return await analyzeCode(args as any);
-          case 'specgen.research.search':
+          case 'specgen_research_search':
             return await searchCode(args as any);
-          case 'specgen.research.fetch':
+          case 'specgen_research_fetch':
             return await fetchResearch(args as any);
-          case 'specgen.research.dependencies':
+          case 'specgen_research_dependencies':
             return await analyzeDependencies(args as any);
 
           // Worktree Management Tools
-          case 'specgen.worktree.create':
+          case 'specgen_worktree_create':
             return await createWorktree(args as any);
-          case 'specgen.worktree.list':
+          case 'specgen_worktree_list':
             return await listWorktrees(args as any);
-          case 'specgen.worktree.status':
+          case 'specgen_worktree_status':
             return await worktreeStatus(args as any);
-          case 'specgen.worktree.merge':
+          case 'specgen_worktree_merge':
             return await mergeWorktree(args as any);
-          case 'specgen.worktree.remove':
+          case 'specgen_worktree_remove':
             return await removeWorktree(args as any);
-          case 'specgen.worktree.prune':
+          case 'specgen_worktree_prune':
             return await pruneWorktrees(args as any);
 
           default:

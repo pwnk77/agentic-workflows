@@ -4,7 +4,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { StructuredErrorHandler } from '../../core/error-handler.js';
 
-// Schema for specgen.worktree.merge
+// Schema for specgen_worktree_merge
 const MergeWorktreeSchema = z.object({
   specId: z.string(),
   targetBranch: z.string().default('main'),
@@ -94,7 +94,7 @@ ${conflicts.map(conflict => `- ${conflict}`).join('\n')}
 1. Navigate to worktree: \`cd "${worktreePath}"\`
 2. Resolve conflicts manually
 3. Commit resolved changes
-4. Retry merge: \`specgen.worktree.merge(specId: "${specId}", force: true)\`
+4. Retry merge: \`specgen_worktree_merge(specId: "${specId}", force: true)\`
 ` : ''}
 
 ${merged ? `## ✅ Merge Successful
@@ -114,11 +114,11 @@ ${createPR && !merged ? `## 📝 Pull Request Created
 ${merged ?
   `1. Verify changes in ${targetBranch}
 2. Run tests: \`npm test\` or project-specific commands
-3. Deploy if ready: \`specgen.spec.orchestrate(intent: "deploy")\`` :
+3. Deploy if ready: \`specgen_spec_orchestrate(intent: "deploy")\`` :
   createPR ?
     `1. Review PR and request feedback
 2. Merge through GitHub interface when approved
-3. Clean up: \`specgen.worktree.remove(specId: "${specId}")\`` :
+3. Clean up: \`specgen_worktree_remove(specId: "${specId}")\`` :
     `1. Resolve conflicts listed above
 2. Retry merge with force flag
 3. Or use PR workflow: \`createPR: true\``
@@ -146,7 +146,7 @@ ${merged ?
     }
 
   } catch (error: any) {
-    return errorHandler.handleError('specgen.worktree.merge', error, {
+    return errorHandler.handleError('specgen_worktree_merge', error, {
       args,
       context: 'Merging worktree changes',
       suggestions: [

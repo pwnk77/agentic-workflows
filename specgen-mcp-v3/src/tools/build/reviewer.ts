@@ -126,7 +126,7 @@ ${generateImprovementSpec ? 'A new improvement specification would be generated 
 
 ## 🚀 Next Steps:
 - Address findings in order of severity
-- Use \`specgen.build.engineer\` to implement fixes
+- Use \`specgen_build_engineer\` to implement fixes
 - Re-run review after improvements
 - Consider adding automated checks to prevent future issues
 
@@ -135,7 +135,7 @@ ${generateImprovementSpec ? 'A new improvement specification would be generated 
     };
 
   } catch (error: any) {
-    return errorHandler.handleError('specgen.build.reviewer', error, {
+    return errorHandler.handleError('specgen_build_reviewer', error, {
       args,
       context: 'Performing code review analysis',
       suggestions: [

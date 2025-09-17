@@ -254,5 +254,5 @@ ${languageBreakdown}
 
 ${patterns.length > 0 ? `🔍 Pattern Matches: ${patterns.reduce((sum, p) => sum + p.patterns.length, 0)}` : ''}
 
-💡 Analysis completed successfully. Use specgen.research.search for targeted symbol queries.`;
+💡 Analysis completed successfully. Use specgen_research_search for targeted symbol queries.`;
 }

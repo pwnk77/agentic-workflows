@@ -100,15 +100,15 @@ ${dryRun ? '⚠️ **DRY RUN MODE**: This is a simulation - no actual changes wi
 ## 🚀 Next Steps:
 - Use appropriate development tools for your stack
 - Run tests frequently during development
-- Use \`specgen.worktree.status\` to track changes
-- Review with \`specgen.build.reviewer\` when complete
+- Use \`specgen_worktree_status\` to track changes
+- Review with \`specgen_build_reviewer\` when complete
 
 **Implementation pipeline ready for execution.**`
       }]
     };
 
   } catch (error: any) {
-    return errorHandler.handleError('specgen.build.engineer', error, {
+    return errorHandler.handleError('specgen_build_engineer', error, {
       args,
       context: 'Setting up implementation pipeline',
       suggestions: [

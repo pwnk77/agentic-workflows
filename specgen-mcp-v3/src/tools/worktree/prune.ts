@@ -105,7 +105,7 @@ ${preserved.map(spec => `- ${spec}`).join('\n')}
 
 ${dryRun ? `## 🔄 To Execute
 Run without dry run flag to apply these changes:
-\`specgen.worktree.prune(dryRun: false)\`
+\`specgen_worktree_prune(dryRun: false)\`
 ` : `## ✅ Cleanup Complete
 ${prunedSpecs.length + orphaned.length} worktrees cleaned up successfully.
 `}
@@ -115,7 +115,7 @@ ${prunedSpecs.length + orphaned.length} worktrees cleaned up successfully.
     };
 
   } catch (error: any) {
-    return errorHandler.handleError('specgen.worktree.prune', error, { args, context: 'Pruning stale worktrees' });
+    return errorHandler.handleError('specgen_worktree_prune', error, { args, context: 'Pruning stale worktrees' });
   }
 }
 

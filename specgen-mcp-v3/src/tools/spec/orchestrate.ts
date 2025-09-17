@@ -5,7 +5,7 @@ import { MetadataManager } from '../../core/metadata-manager.js';
 import { StructuredErrorHandler } from '../../core/error-handler.js';
 import { config } from '../../core/config.js';
 
-// Schema for specgen.spec.orchestrate
+// Schema for specgen_spec_orchestrate
 const OrchestrateSpecSchema = z.object({
   specId: z.string(),
   intent: z.enum(['analyze', 'implement', 'review', 'deploy']),
@@ -74,42 +74,42 @@ export async function orchestrateSpec(args: OrchestrateSpecInput): Promise<{ con
       case 'analyze':
         if (!hasArchitecture) {
           result.recommendedTools = [
-            'specgen.build.architect',
-            'specgen.research.analyze',
-            'specgen.research.search',
-            'specgen.research.dependencies'
+            'specgen_build_architect',
+            'specgen_research_analyze',
+            'specgen_research_search',
+            'specgen_research_dependencies'
           ];
           result.workflowPlan = [
             {
               phase: 'Requirements Analysis',
               description: 'Analyze requirements and existing codebase patterns',
-              tools: ['specgen.build.architect'],
+              tools: ['specgen_build_architect'],
               estimated_time: '30-45 minutes'
             },
             {
               phase: 'Research & Discovery',
               description: 'Research similar patterns and dependencies',
-              tools: ['specgen.research.analyze', 'specgen.research.search'],
+              tools: ['specgen_research_analyze', 'specgen_research_search'],
               estimated_time: '15-30 minutes'
             },
             {
               phase: 'Architecture Design',
               description: 'Create comprehensive architecture analysis',
-              tools: ['specgen.research.dependencies'],
+              tools: ['specgen_research_dependencies'],
               estimated_time: '20-30 minutes'
             }
           ];
           result.nextActions = [
-            `Run: specgen.build.architect(specId: "${specId}", feature: "${spec.title}", depth: "comprehensive")`,
+            `Run: specgen_build_architect(specId: "${specId}", feature: "${spec.title}", depth: "comprehensive")`,
             'This will automatically coordinate all research tools and generate architecture analysis'
           ];
         } else {
-          result.recommendedTools = ['specgen.research.search', 'specgen.research.fetch'];
+          result.recommendedTools = ['specgen_research_search', 'specgen_research_fetch'];
           result.workflowPlan = [
             {
               phase: 'Enhanced Analysis',
               description: 'Deep dive into specific areas of the existing architecture',
-              tools: ['specgen.research.search', 'specgen.research.fetch'],
+              tools: ['specgen_research_search', 'specgen_research_fetch'],
               estimated_time: '15-20 minutes'
             }
           ];
@@ -122,61 +122,61 @@ export async function orchestrateSpec(args: OrchestrateSpecInput): Promise<{ con
 
       case 'implement':
         if (!hasArchitecture) {
-          result.recommendedTools = ['specgen.build.architect'];
+          result.recommendedTools = ['specgen_build_architect'];
           result.workflowPlan = [
             {
               phase: 'Prerequisites',
               description: 'Complete architecture analysis before implementation',
-              tools: ['specgen.build.architect'],
+              tools: ['specgen_build_architect'],
               estimated_time: '45-60 minutes'
             }
           ];
           result.nextActions = [
             'Architecture analysis required before implementation',
-            `Run: specgen.build.architect(specId: "${specId}", feature: "${spec.title}")`,
+            `Run: specgen_build_architect(specId: "${specId}", feature: "${spec.title}")`,
             'Then return to implementation intent'
           ];
         } else if (!hasImplementation) {
-          result.recommendedTools = ['specgen.build.engineer'];
+          result.recommendedTools = ['specgen_build_engineer'];
           result.workflowPlan = [
             {
               phase: 'Implementation Setup',
               description: 'Set up implementation environment and begin coding',
-              tools: ['specgen.build.engineer', 'specgen.worktree.create'],
+              tools: ['specgen_build_engineer', 'specgen_worktree_create'],
               estimated_time: '2-4 hours'
             }
           ];
           result.nextActions = [
-            `Run: specgen.worktree.create(specId: "${specId}", autoSetup: true)`,
-            `Then: specgen.build.engineer(specId: "${specId}", mode: "implement")`,
+            `Run: specgen_worktree_create(specId: "${specId}", autoSetup: true)`,
+            `Then: specgen_build_engineer(specId: "${specId}", mode: "implement")`,
             'Engineer tool will coordinate layer-by-layer implementation'
           ];
         } else if (hasExecutionLogs) {
-          result.recommendedTools = ['specgen.build.engineer'];
+          result.recommendedTools = ['specgen_build_engineer'];
           result.workflowPlan = [
             {
               phase: 'Continue Implementation',
               description: 'Resume ongoing implementation work',
-              tools: ['specgen.build.engineer'],
+              tools: ['specgen_build_engineer'],
               estimated_time: '1-2 hours'
             }
           ];
           result.nextActions = [
-            `Run: specgen.build.engineer(specId: "${specId}", mode: "continue")`,
+            `Run: specgen_build_engineer(specId: "${specId}", mode: "continue")`,
             'This will resume from where implementation left off'
           ];
         } else {
-          result.recommendedTools = ['specgen.build.engineer'];
+          result.recommendedTools = ['specgen_build_engineer'];
           result.workflowPlan = [
             {
               phase: 'Begin Implementation',
               description: 'Start implementation with worktree setup',
-              tools: ['specgen.build.engineer', 'specgen.worktree.create'],
+              tools: ['specgen_build_engineer', 'specgen_worktree_create'],
               estimated_time: '2-4 hours'
             }
           ];
           result.nextActions = [
-            `Run: specgen.build.engineer(specId: "${specId}", mode: "implement")`,
+            `Run: specgen_build_engineer(specId: "${specId}", mode: "implement")`,
             'Engineer will handle worktree setup and implementation coordination'
           ];
         }
@@ -184,12 +184,12 @@ export async function orchestrateSpec(args: OrchestrateSpecInput): Promise<{ con
 
       case 'review':
         if (!hasExecutionLogs) {
-          result.recommendedTools = ['specgen.build.engineer'];
+          result.recommendedTools = ['specgen_build_engineer'];
           result.workflowPlan = [
             {
               phase: 'Implementation Required',
               description: 'Complete implementation before review',
-              tools: ['specgen.build.engineer'],
+              tools: ['specgen_build_engineer'],
               estimated_time: '2-4 hours'
             }
           ];
@@ -198,17 +198,17 @@ export async function orchestrateSpec(args: OrchestrateSpecInput): Promise<{ con
             'Switch to "implement" intent first'
           ];
         } else {
-          result.recommendedTools = ['specgen.build.reviewer'];
+          result.recommendedTools = ['specgen_build_reviewer'];
           result.workflowPlan = [
             {
               phase: 'Multi-Domain Assessment',
               description: 'Comprehensive code review across security, performance, quality',
-              tools: ['specgen.build.reviewer'],
+              tools: ['specgen_build_reviewer'],
               estimated_time: '30-45 minutes'
             }
           ];
           result.nextActions = [
-            `Run: specgen.build.reviewer(specId: "${specId}", scope: ["security", "performance", "quality"])`,
+            `Run: specgen_build_reviewer(specId: "${specId}", scope: ["security", "performance", "quality"])`,
             'This will generate improvement specifications automatically'
           ];
         }
@@ -216,12 +216,12 @@ export async function orchestrateSpec(args: OrchestrateSpecInput): Promise<{ con
 
       case 'deploy':
         if (!hasExecutionLogs) {
-          result.recommendedTools = ['specgen.build.engineer'];
+          result.recommendedTools = ['specgen_build_engineer'];
           result.workflowPlan = [
             {
               phase: 'Implementation Required',
               description: 'Complete implementation before deployment',
-              tools: ['specgen.build.engineer'],
+              tools: ['specgen_build_engineer'],
               estimated_time: '2-4 hours'
             }
           ];
@@ -230,24 +230,24 @@ export async function orchestrateSpec(args: OrchestrateSpecInput): Promise<{ con
             'Switch to "implement" intent first'
           ];
         } else {
-          result.recommendedTools = ['specgen.worktree.merge'];
+          result.recommendedTools = ['specgen_worktree_merge'];
           result.workflowPlan = [
             {
               phase: 'Pre-Deployment Review',
               description: 'Final review and testing before merge',
-              tools: ['specgen.build.reviewer', 'specgen.worktree.status'],
+              tools: ['specgen_build_reviewer', 'specgen_worktree_status'],
               estimated_time: '20-30 minutes'
             },
             {
               phase: 'Deployment',
               description: 'Merge changes and deploy',
-              tools: ['specgen.worktree.merge'],
+              tools: ['specgen_worktree_merge'],
               estimated_time: '10-15 minutes'
             }
           ];
           result.nextActions = [
-            `Run: specgen.worktree.status(specId: "${specId}")`,
-            `Then: specgen.worktree.merge(specId: "${specId}", createPR: true)`,
+            `Run: specgen_worktree_status(specId: "${specId}")`,
+            `Then: specgen_worktree_merge(specId: "${specId}", createPR: true)`,
             'This will create PR and handle safe merging'
           ];
         }
@@ -296,7 +296,7 @@ ${result.nextActions.map((action, i) => `${i + 1}. ${action}`).join('\n')}
     };
 
   } catch (error: any) {
-    return errorHandler.handleError('specgen.spec.orchestrate', error, {
+    return errorHandler.handleError('specgen_spec_orchestrate', error, {
       args,
       context: 'Orchestrating specification workflow'
     });
