@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "specgen-mcp-v3": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "dist/index.js"
+      ],
+      "env": {}
+    }
+  }
+}
