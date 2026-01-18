@@ -1,0 +1,34 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "description": "Agentic Workflows - MiniMax M2.1 Model Configuration",
+  "agents": {
+    "sisyphus": {
+      "model": "minimaxai/minimax-m2.1"
+    },
+    "oracle": {
+      "model": "minimaxai/minimax-m2.1"
+    },
+    "librarian": {
+      "model": "minimaxai/minimax-m2.1"
+    },
+    "explore": {
+      "model": "minimaxai/minimax-m2.1"
+    },
+    "frontend-ui-ux-engineer": {
+      "model": "minimaxai/minimax-m2.1"
+    },
+    "document-writer": {
+      "model": "minimaxai/minimax-m2.1"
+    },
+    "multimodal-looker": {
+      "model": "minimaxai/minimax-m2.1"
+    },
+    "code-simplicity-reviewer": {
+      "model": "minimaxai/minimax-m2.1"
+    }
+  },
+  "settings": {
+    "model": "minimaxai/minimax-m2.1",
+    "default_reasoning_effort": "high"
+  }
+}
